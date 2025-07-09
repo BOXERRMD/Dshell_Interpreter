@@ -19,11 +19,11 @@ context = TypeVar('context', AutoShardedBot, GuildChannel, PrivateChannel)
 
 class DshellInterpreteur:
 
-    def __init__(self, ast_or_code: Union[list[All_nodes], str], ctx: context, auto=False, debug: bool = False):
+    def __init__(self, ast_or_code: Union[list[All_nodes], str], ctx: context, debug: bool = False):
         """
         Interpreter Dshell code or AST.
         """
-        self.ast: StartNode = parse(DshellTokenizer(ast_or_code).start(), StartNode([]))[0][0]
+        self.ast: StartNode = parse(DshellTokenizer(ast_or_code).start(), StartNode([]))[0]
         self.env: dict[str, Any] = {}
         self.ctx: context = ctx
         if debug:
@@ -33,6 +33,8 @@ class DshellInterpreteur:
         """
         Execute l'arbre syntaxique.
         """
+        if ast is None:
+            ast = self.ast
 
         for node in ast:
 

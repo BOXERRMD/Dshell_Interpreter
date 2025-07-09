@@ -20,7 +20,8 @@ from .ast_nodes import (ASTNode,
                         SleepNode,
                         IdentOperationNode,
                         EmbedNode,
-                        FieldEmbedNode)
+                        FieldEmbedNode,
+                        StartNode)
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
 
@@ -270,8 +271,11 @@ def parse_postfix_expression(postfix_tokens: list[Token]) -> list[IdentOperation
     return stack
 
 
-def print_ast(ast: ASTNode, decalage: int = 0):
-    for i in ast.body:
+def print_ast(ast: list[ASTNode], decalage: int = 0):
+    for i in ast:
+
+        if isinstance(i, StartNode):
+            print_ast(i.body, decalage)
 
         if isinstance(i, LoopNode):
             print(f"{' ' * decalage}LOOP -> {i.variable.name} : {i.variable.body}")
