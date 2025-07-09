@@ -14,7 +14,8 @@ class DshellTokenType(Enum):
     INT = auto()
     FLOAT = auto()
     STR = auto()
-    BOOL = auto()
+    BOOL = auto(),
+    NONE = auto(),
     LIST = auto()
     CALL_ARGS = auto()
     DICT = auto()

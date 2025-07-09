@@ -29,6 +29,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.FLOAT: compile(r"(\d+\.\d+)"),
     DTT.INT: compile(r"(\d+)"),
     DTT.BOOL: compile(r"(True|False)", flags=IGNORECASE),
+    DTT.NONE: compile(r"(None)", flags=IGNORECASE),
     DTT.IDENT: compile(rf"([A-Za-z0-9_]+)")
 }
 

@@ -2,7 +2,7 @@ from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
 
-from discord import AutoShardedBot, Embed, Colour
+from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions
 from discord.abc import GuildChannel, PrivateChannel
 
 from .._DshellTokenizer.dshell_keywords import *
@@ -75,6 +75,9 @@ class DshellInterpreteur:
                 elif isinstance(first_node, EmbedNode):
                     self.env[node.name.value] = build_embed(first_node.body, first_node.fields, self)
 
+                elif isinstance(first_node, PermissionNode):
+                    self.env[node.name.value] = build_permission(first_node.body, self)
+
                 else:
                     self.env[node.name.value] = eval_expression(node.body, self)
 
@@ -93,6 +96,7 @@ class DshellInterpreteur:
 
                 await sleep(sleep_time)
 
+
             elif isinstance(node, EndNode):
                 raise RuntimeError(f"Execution interromput -> #end atteint")
 
@@ -110,6 +114,8 @@ class DshellInterpreteur:
             return float(token.value)
         elif token.type == DTT.BOOL:
             return token.value.lower() == "true"
+        elif token.type == DTT.NONE:
+            return None
         elif token.type == DTT.LIST:
             return ListNode(
                 [self.eval_data_token(tok) for tok in token.value])  # token.value contient déjà une liste de Token
@@ -190,7 +196,7 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
     return await function(*absolute_args, **keyword_args)
 
 
-def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> dict[Union[str, Token], list[Token]]:
+def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> dict[Union[str, Token], list[Any]]:
     """
     Regroupe les arguments de la commande sous la forme d'un dictionnaire python.
     Sachant que l'on peut spécifier le paramètre que l'on souhaite passer via -- suivit du nom du paramètre. Mais ce n'est pas obligatoire !
@@ -221,7 +227,7 @@ def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: Ds
     """
     Construit un embed à partir des informations de la commande.
     """
-    args_main_embed: dict[Union[str, Token], list[Token]] = regroupe_commandes(body, interpreter)
+    args_main_embed: dict[Union[str, Token], list[Any]] = regroupe_commandes(body, interpreter)
     args_main_embed.pop('*')  # on enlève les paramètres non spécifié pour l'embed
     args_main_embed: dict[str, Token]  # on précise se qu'il contient dorénavant
 
@@ -241,6 +247,32 @@ def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: Ds
         embed.add_field(**field)  # on joute tous les fields
 
     return embed
+
+def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> PermissionOverwrite:
+    """
+    Construit un dictionnaire de permissions à partir des informations de la commande.
+    """
+    args_permissions: dict[Union[str, Token], list[Any]] = regroupe_commandes(body, interpreter)
+    args_permissions.pop('*')  # on enlève les paramètres non spécifié pour les permissions
+    args_permissions: dict[str, Token]  # on précise se qu'il contient dorénavant
+
+    permissions = PermissionOverwrite()
+
+    for key, value in args_permissions.items():
+
+        if key == 'allowed':
+            permissions.update(**PermissionOverwrite.from_pair(Permissions(value), Permissions())._values)
+
+        elif key == 'denied':
+            permissions.update(**PermissionOverwrite.from_pair(Permissions(), Permissions(value))._values)
+
+        elif key == 'default':
+            permissions.update(**{i[0]: None for i in iter(PermissionOverwrite.from_pair(Permissions(value), Permissions())._values)})
+
+        else:
+            permissions.update(**{key: value})
+
+    return permissions
 
 
 class DshellIterator:
