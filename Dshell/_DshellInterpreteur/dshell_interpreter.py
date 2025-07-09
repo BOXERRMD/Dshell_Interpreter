@@ -23,7 +23,7 @@ class DshellInterpreteur:
         """
         Interpreter Dshell code or AST.
         """
-        self.ast: StartNode = parse(DshellTokenizer(ast_or_code).start(), StartNode([]))[0]
+        self.ast: list[ASTNode] = parse(DshellTokenizer(ast_or_code).start(), StartNode([]))[0]
         self.env: dict[str, Any] = {}
         self.ctx: context = ctx
         if debug:

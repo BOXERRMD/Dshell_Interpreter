@@ -21,6 +21,7 @@ from .ast_nodes import (ASTNode,
                         IdentOperationNode,
                         EmbedNode,
                         FieldEmbedNode,
+                        PermissionNode,
                         StartNode)
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
@@ -156,6 +157,19 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if not isinstance(last_block, EmbedNode):
                     raise SyntaxError(f'[FIELD] Aucun embed ouvert ligne {first_token_line.position} !')
                 last_block.fields.append(FieldEmbedNode(tokens_by_line[1:]))
+
+            elif first_token_line.value in ('perm', 'permission'):
+                perm_node = PermissionNode(body=[])
+                var_node = VarNode(tokens_by_line[1], body=[perm_node])
+                last_block.body.append(var_node)
+                _, p = parse(token_lines[pointeur + 1:], perm_node)
+                pointeur += p + 1
+
+            elif first_token_line.value in ('#perm', '#permission'):
+                if not isinstance(last_block, PermissionNode):
+                    raise SyntaxError(f'[#PERM] Aucun permission ouvert ligne {first_token_line.position} !')
+                blocks.pop()
+                return blocks, pointeur
 
         ############################## AUTRE ##############################
 

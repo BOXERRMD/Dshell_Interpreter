@@ -17,7 +17,8 @@ __all__ = [
     'EmbedNode',
     'SleepNode',
     'IdentOperationNode',
-    'ListNode'
+    'ListNode',
+    'PermissionNode'
 ]
 
 class ASTNode:
@@ -120,6 +121,13 @@ class EmbedNode(ASTNode):
 
     def __repr__(self):
         return f"<EMBED> - {self.body}"
+
+class PermissionNode(ASTNode):
+    def __init__(self, body: list[Token]):
+        self.body = body
+
+    def __repr__(self):
+        return f"<PERMISSION> - {self.body}"
 
 
 class SleepNode(ASTNode):

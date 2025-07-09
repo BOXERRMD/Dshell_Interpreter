@@ -14,10 +14,10 @@ dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep'
 }
 
-dshell_discord_keyword: set[str] = {
-    'embed', '#embed', 'field'
-}
 
+dshell_discord_keyword: set[str] = {
+    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission'
+}
 dshell_commands: dict[str, Callable] = {
     "sm": dshell_send_message,  # send message
     "dm": dshell_delete_message,
