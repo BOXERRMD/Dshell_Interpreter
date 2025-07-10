@@ -21,6 +21,7 @@ __all__ = [
     'PermissionNode'
 ]
 
+
 class ASTNode:
     pass
 
@@ -121,6 +122,7 @@ class EmbedNode(ASTNode):
 
     def __repr__(self):
         return f"<EMBED> - {self.body}"
+
 
 class PermissionNode(ASTNode):
     def __init__(self, body: list[Token]):

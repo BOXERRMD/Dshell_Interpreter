@@ -1,16 +1,15 @@
 from discord import Embed
 from discord.abc import GuildChannel
 
-from .._DshellParser.ast_nodes import ListNode
-
 __all__ = [
     'dshell_send_message',
     'dshell_delete_message',
     'dshell_purge_message'
 ]
 
-async def dshell_send_message(ctx: GuildChannel, message=None, delete=None, channel=None, embeds: ListNode = None,
-                              embed=None):
+
+async def dshell_send_message(ctx: GuildChannel, message=None, delete=None, channel=None, embeds=None, embed=None):
+    from .._DshellParser.ast_nodes import ListNode
     """
     Envoie un message sur Discord
     """

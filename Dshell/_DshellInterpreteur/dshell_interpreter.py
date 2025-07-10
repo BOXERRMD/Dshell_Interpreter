@@ -1,14 +1,16 @@
 from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
+from logging import Logger
 
-from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions
+
+from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role
 from discord.abc import GuildChannel, PrivateChannel
 
-from .._DshellTokenizer.dshell_keywords import *
 from .._DshellParser.ast_nodes import *
 from .._DshellParser.dshell_parser import parse
 from .._DshellParser.dshell_parser import to_postfix, print_ast
+from .._DshellTokenizer.dshell_keywords import *
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
@@ -182,7 +184,7 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
     """
     Appelle une fonction avec évaluation des arguments Dshell en valeurs Python
     """
-    reformatted = regroupe_commandes(args.body, interpreter)
+    reformatted = regroupe_commandes(args.body, interpreter)[0]
 
     # conversion des args en valeurs Python
     absolute_args = reformatted.pop('*', list())
@@ -196,7 +198,7 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
     return await function(*absolute_args, **keyword_args)
 
 
-def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> dict[Union[str, Token], list[Any]]:
+def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> list[dict[str, list[Any]]]:
     """
     Regroupe les arguments de la commande sous la forme d'un dictionnaire python.
     Sachant que l'on peut spécifier le paramètre que l'on souhaite passer via -- suivit du nom du paramètre. Mais ce n'est pas obligatoire !
@@ -206,6 +208,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> di
     tokens = {'*': []}  # les tokens à renvoyer
     current_arg = '*'  # les clés des arguments sont les types auquels ils appartiennent. L'* sert à tous les arguments non explicité par un séparateur et un IDENT
     n = len(body)
+    list_tokens: list[dict] = [tokens]
 
     i = 0
     while i < n:
@@ -214,26 +217,36 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> di
             current_arg = body[i + 1].value  # on change l'argument actuel. Il sera donc impossible de revenir à l'*
             tokens[current_arg] = ''  # on lui crée une paire clé/valeur
             i += 2  # on skip l'IDENT qu'il y a après le séparateur car on vient de le traiter
+
+        elif body[
+            i].type == DTT.SUB_SEPARATOR:  # permet de délimiter les paramètres et de pouvoir en mettre plusieurs ayant le même nom
+            list_tokens += regroupe_commandes(
+                [Token(
+                    type_=DTT.SEPARATOR, value=body[i].value, position=body[i].position)
+                ] + body[i + 1:], interpreter
+            )  # on ajoute un sous-dictionnaire pour les sous-commandes
+            return list_tokens
+
         else:
             if current_arg == '*':
                 tokens[current_arg].append(interpreter.eval_data_token(body[i]))
             else:
                 tokens[current_arg] = interpreter.eval_data_token(body[i])  # on ajoute le token à l'argument actuel
             i += 1
-    return tokens
+    return list_tokens
 
 
 def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
     """
     Construit un embed à partir des informations de la commande.
     """
-    args_main_embed: dict[Union[str, Token], list[Any]] = regroupe_commandes(body, interpreter)
+    args_main_embed: dict[str, list[Any]] = regroupe_commandes(body, interpreter)[0]
     args_main_embed.pop('*')  # on enlève les paramètres non spécifié pour l'embed
     args_main_embed: dict[str, Token]  # on précise se qu'il contient dorénavant
 
     args_fields: list[dict[str, Token]] = []
     for field in fields:  # on fait la même chose pour tous les fields
-        a = regroupe_commandes(field.body, interpreter)
+        a = regroupe_commandes(field.body, interpreter)[0]
         a.pop('*')
         a: dict[str, Token]
         args_fields.append(a)
@@ -248,29 +261,18 @@ def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: Ds
 
     return embed
 
-def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> PermissionOverwrite:
+
+def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
+    Union[Member, Role], PermissionOverwrite]:
     """
     Construit un dictionnaire de permissions à partir des informations de la commande.
     """
-    args_permissions: dict[Union[str, Token], list[Any]] = regroupe_commandes(body, interpreter)
-    args_permissions.pop('*')  # on enlève les paramètres non spécifié pour les permissions
-    args_permissions: dict[str, Token]  # on précise se qu'il contient dorénavant
+    args_permissions: list[dict[str, list[Any]]] = regroupe_commandes(body, interpreter)
+    permissions: dict[Union[Member, Role], PermissionOverwrite] = {}
 
-    permissions = PermissionOverwrite()
-
-    for key, value in args_permissions.items():
-
-        if key == 'allowed':
-            permissions.update(**PermissionOverwrite.from_pair(Permissions(value), Permissions())._values)
-
-        elif key == 'denied':
-            permissions.update(**PermissionOverwrite.from_pair(Permissions(), Permissions(value))._values)
-
-        elif key == 'default':
-            permissions.update(**{i[0]: None for i in iter(PermissionOverwrite.from_pair(Permissions(value), Permissions())._values)})
-
-        else:
-            permissions.update(**{key: value})
+    for i in args_permissions:
+        i.pop('*')
+        permissions.update(DshellPermissions(i).get_permission_overwrite(interpreter.ctx.guild))
 
     return permissions
 
@@ -281,17 +283,13 @@ class DshellIterator:
     """
 
     def __init__(self, data):
-        if isinstance(data, ListNode):
-            self.data = data
-        else:
-            self.data = data if isinstance(data, (str, list)) else range(int(data))
+        self.data = data if isinstance(data, (str, list, ListNode)) else range(int(data))
         self.current = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-
         if self.current >= len(self.data):
             self.current = 0
             raise StopIteration
@@ -299,3 +297,100 @@ class DshellIterator:
         value = self.data[self.current]
         self.current += 1
         return value
+
+
+class DshellPermissions:
+
+    def __init__(self, target: dict[str, list[int]]):
+        """
+        Permet de créer un objet de permissions Dshell.
+        :param target: Un dictionnaire contenant les paramètres et leurs valeurs.
+        Paramètres attendus : "allow", "deny", "members", "roles".
+        Pour "members" et "roles", les valeurs doivent être des ListNode d'IDs.
+        """
+        self.target: dict[str, Union[ListNode, int]] = target
+
+    @staticmethod
+    def get_instance(guild: Guild, target_id: int) -> Union[Member, Role]:
+        """
+        Retourne l'instance correspondante à l'id donné. Uniquement un Member ou un Role.
+        :param guild: Le serveur Discord dans lequel chercher
+        :param target_id: L'ID du membre ou du rôle
+        :return: Une instance de Member ou Role
+        """
+        try:
+            member = DshellPermissions.get_member(guild, target_id)
+        except ValueError:
+            member = None
+
+        try:
+            role = DshellPermissions.get_role(guild, target_id)
+        except ValueError:
+            role = None
+
+        if member is not None:
+            return member
+
+        if role is not None:
+            return role
+
+        raise ValueError(f"Aucun membre ou rôle trouvé avec l'ID {target_id} dans le serveur {guild.name}.")
+
+    @staticmethod
+    def get_member(guild: Guild, target_id: int) -> Member:
+        """
+        Retourne l'instance de Member correspondante à l'id donné.
+        :param guild: Le serveur Discord dans lequel chercher
+        :param target_id: L'ID du membre
+        :return: Une instance de Member
+        """
+        member = guild.get_member(target_id)
+        if member is not None:
+            return member
+
+        raise ValueError(f"Aucun membre trouvé avec l'ID {target_id} dans le serveur {guild.name}.")
+
+    @staticmethod
+    def get_role(guild: Guild, target_id: int) -> Role:
+        """
+        Retourne l'instance de Role correspondante à l'id donné.
+        :param guild: Le serveur Discord dans lequel chercher
+        :param target_id: L'ID du rôle
+        :return: Une instance de Role
+        """
+        role = guild.get_role(target_id)
+        if role is not None:
+            return role
+
+        raise ValueError(f"Aucun rôle trouvé avec l'ID {target_id} dans le serveur {guild.name}.")
+
+    def get_permission_overwrite(self, guild: Guild) -> dict[Union[Member, Role], PermissionOverwrite]:
+        """
+        Retourne un objet PermissionOverwrite avec les permissions des membres et rôles.
+        :param guild: Le serveur Discord
+        :return: Un objet PermissionOverwrite
+        """
+        permissions: dict[Union[Member, Role], PermissionOverwrite] = {}
+        target_keys = self.target.keys()
+
+        if 'members' in target_keys:
+            for member_id in (
+            self.target['members'] if isinstance(self.target['members'], ListNode) else [self.target['members']]): # accepte un seul ID
+                member = self.get_member(guild, member_id)
+                permissions[member] = PermissionOverwrite.from_pair(
+                    allow=Permissions(permissions=self.target.get('allow', 0)),
+                    deny=Permissions(permissions=self.target.get('deny', 0))
+                )
+
+        elif 'roles' in target_keys:
+            for role_id in (
+            self.target['roles'] if isinstance(self.target['roles'], ListNode) else [self.target['roles']]): ## accepte un seul ID
+                role = self.get_role(guild, role_id)
+                permissions[role] = PermissionOverwrite.from_pair(
+                    allow=Permissions(permissions=self.target.get('allow', 0)),
+                    deny=Permissions(permissions=self.target.get('deny', 0))
+                )
+        else:
+            raise ValueError("Aucun membre ou rôle spécifié dans les permissions.")
+
+        return permissions

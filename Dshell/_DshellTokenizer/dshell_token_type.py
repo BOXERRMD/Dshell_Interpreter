@@ -24,7 +24,8 @@ class DshellTokenType(Enum):
     KEYWORD = auto()  # if, let, end, etc.
     DISCORD_KEYWORD = auto()  # embed, #embed...
     COMMAND = auto()
-    SEPARATOR = auto()
+    SEPARATOR = auto()  # --
+    SUB_SEPARATOR = auto(),  # ~~
     MATHS_OPERATOR = auto()  # ==, +, -, *, etc.
     LOGIC_OPERATOR = auto(),
     COMMENT = auto()  # lignes commençant par ##

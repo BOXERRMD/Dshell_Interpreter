@@ -6,14 +6,15 @@ __all__ = [
     "dshell_logical_operators",
     "dshell_operators"
 ]
+
 from typing import Callable
+
 from ..DISCORD_COMMANDS.dshell_channel import *
 from ..DISCORD_COMMANDS.dshell_message import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep'
 }
-
 
 dshell_discord_keyword: set[str] = {
     'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission'
@@ -67,8 +68,6 @@ dshell_logical_operators: dict[str, tuple[Callable, int]] = {
 
 dshell_operators: dict[str, tuple[Callable, int]] = dshell_logical_operators.copy()
 dshell_operators.update(dshell_mathematical_operators)
-
-
 
 '''
 C_create_var = "var"

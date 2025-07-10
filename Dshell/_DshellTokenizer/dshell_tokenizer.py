@@ -23,6 +23,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
     DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
     DTT.SEPARATOR: compile(rf"(--)"),
+    DTT.SUB_SEPARATOR: compile(rf"(~~)"),
     DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b"),
     DTT.MATHS_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_mathematical_operators.keys()])})"),
     DTT.LOGIC_OPERATOR: compile(rf"(?<!\w)({'|'.join([escape(i) for i in dshell_logical_operators.keys()])})(?<!\w)"),

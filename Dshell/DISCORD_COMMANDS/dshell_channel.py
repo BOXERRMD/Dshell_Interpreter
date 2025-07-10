@@ -1,7 +1,8 @@
 from asyncio import sleep
 from re import search
+from typing import Union
 
-from discord import MISSING
+from discord import MISSING, PermissionOverwrite, Member, Role
 from discord.abc import GuildChannel
 
 __all__ = [
@@ -10,8 +11,10 @@ __all__ = [
     'dshell_delete_channels'
 ]
 
+
 async def dshell_create_text_channel(ctx: GuildChannel, name, category=None, position=MISSING, slowmode=MISSING,
-                                     topic=MISSING, nsfw=MISSING):
+                                     topic=MISSING, nsfw=MISSING,
+                                     permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING):
     """
     Crée un salon textuel sur le serveur
     """
@@ -23,7 +26,8 @@ async def dshell_create_text_channel(ctx: GuildChannel, name, category=None, pos
                                                           position=position,
                                                           slowmode_delay=slowmode,
                                                           topic=topic,
-                                                          nsfw=nsfw)
+                                                          nsfw=nsfw,
+                                                          overwrites=permission)
 
     return created_channel.id
 
