@@ -59,6 +59,7 @@ class DshellTokenizer:
         """
         tokens: list[list[Token]] = []
 
+        line_number = 1
         for ligne in commandes_lines:  # iter chaque ligne du code
             tokens_par_ligne: list[Token] = []
 
@@ -66,7 +67,7 @@ class DshellTokenizer:
 
                 for match in finditer(pattern, ligne):  # iter les résultat du match pour avoir leur position
                     if token_type != DTT.COMMENT:  # si ce n'est pas un commentaire
-                        token = Token(token_type, match.group(1), match.start())  # on enregistre son token
+                        token = Token(token_type, match.group(1), (line_number, match.start()))  # on enregistre son token
                         tokens_par_ligne.append(token)
 
                     len_match = len(match.group(0))
@@ -81,7 +82,7 @@ class DshellTokenizer:
                             result) > 0 else result  # gère si la structure de donnée est vide ou non
 
             tokens_par_ligne.sort(key=lambda
-                token: token.position)  # trie la position par rapport aux positions de match des tokens pour les avoir dans l'ordre du code
+                token: token.position[1])  # trie la position par rapport aux positions de match des tokens pour les avoir dans l'ordre du code
             if tokens_par_ligne:
                 tokens.append(tokens_par_ligne)
 

@@ -11,6 +11,7 @@ from typing import Callable
 
 from ..DISCORD_COMMANDS.dshell_channel import *
 from ..DISCORD_COMMANDS.dshell_message import *
+from ..DISCORD_COMMANDS.dshell_member import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep'
@@ -24,11 +25,12 @@ dshell_commands: dict[str, Callable] = {
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
     "cc": dshell_create_text_channel,  # create channel
+    "cvc": dshell_create_voice_channel,  # create voice channel
     "dc": dshell_delete_channel,  # delete channel
-    "dcs": dshell_delete_channels,
-    "uc": dshell_send_message,
-    # update channel (aura toutes les modifications possible -> servira à ne faire qu'une commande pour modifier plusieurs chose sur le salon)
-    "rc": dshell_send_message  # rename channel
+    "dcs": dshell_delete_channels, # delete several channels by name or regex
+    "bm": dshell_ban_member,  # ban member
+    "um": dshell_unban_member,  # unban member
+    "km": dshell_kick_member,  # kick member
 }
 
 dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
@@ -43,11 +45,11 @@ dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
     r"=>": (lambda a, b: a >= b, 4),
 
     r".": (lambda a, b: a.b, 9),
-    r"->": (lambda a: a.at, 10),  # équivalent à l'appel .at(key)
+    r"->": (lambda a: a.at, 10),  # equivalent to calling .at(key)
 
     r"+": (lambda a, b: a + b, 6),
     r"-": (lambda a, b=None: -a if b is None else a - b, 6),
-    # attention : ambiguïté entre unaire et binaire à traiter dans ton parseur
+    # warning: ambiguity between unary and binary to be handled in your parser
     r"**": (lambda a, b: a ** b, 8),
     r"*": (lambda a, b: a * b, 7),
     r"%": (lambda a, b: a % b, 7),
@@ -71,7 +73,7 @@ dshell_operators.update(dshell_mathematical_operators)
 
 '''
 C_create_var = "var"
-    C_obligate_var = "ovar" # rend obligatoire les variables
+    C_obligate_var = "ovar" # makes variables mandatory
 
     # guild
     C_create_channel = "cc"
@@ -120,5 +122,5 @@ C_create_var = "var"
     C_clear_emoji = "ce"
     C_remove_reaction = "rre"
 
-    # bouton
+    # button
     C_create_button = "b"'''

@@ -32,7 +32,7 @@ class DshellTokenType(Enum):
 
 
 class Token:
-    def __init__(self, type_: "DTT", value: Union[str, list], position: int):
+    def __init__(self, type_: "DTT", value: Union[str, list], position: tuple[int, int]):
         self.type = type_
         self.value = value
         self.position = position

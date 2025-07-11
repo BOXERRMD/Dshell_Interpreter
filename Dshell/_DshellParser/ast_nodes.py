@@ -23,10 +23,16 @@ __all__ = [
 
 
 class ASTNode:
+    """
+    Base class for all AST nodes.
+    """
     pass
 
 
 class StartNode(ASTNode):
+    """
+    Node representing the start of the AST.
+    """
     def __init__(self, body: list):
         self.body = body
 
@@ -35,7 +41,13 @@ class StartNode(ASTNode):
 
 
 class ElseNode(ASTNode):
+    """
+    Node representing the 'else' part of an if statement.
+    """
     def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the body of the else statement
+        """
         self.body = body
 
     def __repr__(self):
@@ -43,7 +55,15 @@ class ElseNode(ASTNode):
 
 
 class ElifNode(ASTNode):
+    """
+    Node representing an 'elif' part of an if statement.
+    """
     def __init__(self, condition: list[Token], body: list[Token], parent: "IfNode"):
+        """
+        :param condition: list of tokens representing the condition for the elif
+        :param body: list of tokens representing the body of the elif
+        :param parent: the if node that this elif belongs to
+        """
         self.condition = condition
         self.body = body
         self.parent = parent
@@ -53,8 +73,17 @@ class ElifNode(ASTNode):
 
 
 class IfNode(ASTNode):
+    """
+    Node representing an 'if' statement, which can contain 'elif' and 'else' parts.
+    """
     def __init__(self, condition: list[Token], body: list[Token], elif_nodes: Optional[list[ElifNode]] = None,
                  else_body: Optional[ElseNode] = None):
+        """
+        :param condition: list of tokens representing the condition for the if statement
+        :param body: list of tokens representing the body of the if statement
+        :param elif_nodes: optional list of ElifNode instances representing 'elif' parts
+        :param else_body: optional ElseNode instance representing the 'else' part
+        """
         self.condition = condition
         self.body = body
         self.elif_nodes = elif_nodes
@@ -65,8 +94,15 @@ class IfNode(ASTNode):
 
 
 class LoopNode(ASTNode):
+    """
+    Node representing a loop structure in the AST.
+    """
     def __init__(self, variable: "VarNode", body: list):
-        self.variable = variable  # content l'itérable dans son body
+        """
+        :param variable: VarNode representing the loop variable. This variable will be used to iterate over the body. Can contain a ListNode, string or integer.
+        :param body: list of tokens representing the body of the loop
+        """
+        self.variable = variable
         self.body = body
 
     def __repr__(self):
@@ -74,7 +110,13 @@ class LoopNode(ASTNode):
 
 
 class ArgsCommandNode(ASTNode):
+    """
+    Node representing the arguments of a command in the AST.
+    """
     def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the arguments of the command
+        """
         self.body: list[Token] = body
 
     def __repr__(self):
@@ -82,7 +124,14 @@ class ArgsCommandNode(ASTNode):
 
 
 class CommandNode(ASTNode):
+    """
+    Node representing a command in the AST.
+    """
     def __init__(self, name: str, body: ArgsCommandNode):
+        """
+        :param name: The command name (e.g., "sm", "cc")
+        :param body: ArgsCommandNode containing the arguments of the command
+        """
         self.name = name
         self.body = body
 
@@ -91,7 +140,14 @@ class CommandNode(ASTNode):
 
 
 class VarNode(ASTNode):
+    """
+    Node representing a variable declaration in the AST.
+    """
     def __init__(self, name: Token, body: list[Token]):
+        """
+        :param name: Token representing the variable name
+        :param body: list of tokens representing the body of the variable
+        """
         self.name = name
         self.body = body
 
@@ -100,6 +156,9 @@ class VarNode(ASTNode):
 
 
 class EndNode(ASTNode):
+    """
+    Node representing the end of the AST.
+    """
     def __init__(self):
         pass
 
@@ -108,7 +167,13 @@ class EndNode(ASTNode):
 
 
 class FieldEmbedNode(ASTNode):
+    """
+    Node representing a field in an embed structure.
+    """
     def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the field content
+        """
         self.body: list[Token] = body
 
     def __repr__(self):
@@ -116,7 +181,14 @@ class FieldEmbedNode(ASTNode):
 
 
 class EmbedNode(ASTNode):
+    """
+    Node representing an embed structure in the AST.
+    """
     def __init__(self, body: list[Token], fields: list[FieldEmbedNode]):
+        """
+        :param body: list of tokens representing the embed content
+        :param fields: list of FieldEmbedNode instances representing the fields of the embed
+        """
         self.body = body
         self.fields = fields
 
@@ -125,7 +197,13 @@ class EmbedNode(ASTNode):
 
 
 class PermissionNode(ASTNode):
+    """
+    Node representing a permission structure in the AST.
+    """
     def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the permission content
+        """
         self.body = body
 
     def __repr__(self):
@@ -133,7 +211,13 @@ class PermissionNode(ASTNode):
 
 
 class SleepNode(ASTNode):
+    """
+    Node representing a sleep command in the AST.
+    """
     def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the sleep duration
+        """
         self.body = body
 
     def __repr__(self):
@@ -142,14 +226,20 @@ class SleepNode(ASTNode):
 
 class IdentOperationNode(ASTNode):
     """
-    Gère les opération sur les idendificateur (appel de fonctions)
-    Faire en sorte que l'appel de la fonction renvoie la class associé pour permettre les imbrications. Pas obligatoire en soit si elle renvoie quelque chose
+    Node representing an operation on an identifier in the AST.
+    Manages operations on idendifiers (function calls)
+    Ensure that the function call returns the associated class to allow nesting. Not mandatory in itself if it returns something
     """
 
     def __init__(self, ident: Token, function: Token, args: Token):
-        self.ident = ident  # content la "class"
-        self.function = function  # contient la méthode appelé
-        self.args = args  # contient une liste de tokens des arguments passé en paramètre
+        """
+        :param ident: Token representing the identifier (e.g., a class or object)
+        :param function: Token representing the function to be called on the identifier
+        :param args: Token representing the arguments passed to the function
+        """
+        self.ident = ident
+        self.function = function
+        self.args = args
 
     def __repr__(self):
         return f"<IDENT OPERATION> - {self.ident}.{self.function}({self.args})"
@@ -157,33 +247,42 @@ class IdentOperationNode(ASTNode):
 
 class ListNode(ASTNode):
     """
-    Class iterable permettant de parcourir les listes créé à partir du code Dshell.
-    Cette class permet aussi d'intéragir avec la liste via des méthodes spécifique non built-in par python.
+    Node representing a list structure in the AST.
+    Iterable class for browsing lists created from Dshell code.
+    This class also lets you interact with the list via specific methods not built in by python.
     """
 
     def __init__(self, body: list[Any]):
+        """
+        :param body: list of elements to initialize the ListNode with
+        """
         self.iterable: list[Any] = body
         self.len_iterable: int = len(body)
         self.iterateur_count: int = 0
 
     def add(self, value: Any):
         """
-        Ajoute un token à la liste
+        Add a value to the list.
         """
         if self.len_iterable > 10000:
-            raise PermissionError('Une liste ne peut dépasser les 10.000 éléments !')
+            raise PermissionError('The list is too long, it must not exceed 10,000 elements !')
 
         self.iterable.append(value)
         self.len_iterable += 1
 
     def remove(self, value: Any, number: int = 1):
         """
-        Enlève un ou plusieurs token de la liste
+        Remove a value from the list.
         """
         if number < 1:
-            raise Exception(f"Le nombre d'élément à retirer doit-être égale ou supperieur à 1 !")
+            raise Exception(f"The number of elements to remove must be at least 1, not {number} !")
 
     def __add__(self, other: "ListNode"):
+        """
+        Add another ListNode to this one.
+        :param other: Another ListNode to add to this one.
+        :return: Instance of ListNode with combined elements.
+        """
         for i in other:
             self.add(i)
         return self
@@ -192,6 +291,10 @@ class ListNode(ASTNode):
         return self
 
     def __next__(self):
+        """
+        Iterate over the elements of the list.
+        :return: an element from the list.
+        """
 
         if self.iterateur_count >= self.len_iterable:
             self.iterateur_count = 0

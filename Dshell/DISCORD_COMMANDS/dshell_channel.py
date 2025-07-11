@@ -8,15 +8,21 @@ from discord.abc import GuildChannel
 __all__ = [
     'dshell_create_text_channel',
     'dshell_delete_channel',
-    'dshell_delete_channels'
+    'dshell_delete_channels',
+    'dshell_create_voice_channel'
 ]
 
 
-async def dshell_create_text_channel(ctx: GuildChannel, name, category=None, position=MISSING, slowmode=MISSING,
+async def dshell_create_text_channel(ctx: GuildChannel,
+                                     name,
+                                     category=None,
+                                     position=MISSING,
+                                     slowmode=MISSING,
                                      topic=MISSING, nsfw=MISSING,
-                                     permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING):
+                                     permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                     reason=None):
     """
-    Crée un salon textuel sur le serveur
+    Creates a text channel on the server
     """
 
     channel_category = ctx.guild.get_channel(category)
@@ -27,15 +33,38 @@ async def dshell_create_text_channel(ctx: GuildChannel, name, category=None, pos
                                                           slowmode_delay=slowmode,
                                                           topic=topic,
                                                           nsfw=nsfw,
-                                                          overwrites=permission)
+                                                          overwrites=permission,
+                                                          reason=reason)
+
+    return created_channel.id
+
+async def dshell_create_voice_channel(ctx: GuildChannel,
+                                      name,
+                                      category=None,
+                                      position=MISSING,
+                                      bitrate=MISSING,
+                                      permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                      reason=None):
+    """
+    Creates a voice channel on the server
+    """
+
+    channel_category = ctx.guild.get_channel(category)
+
+    created_channel = await ctx.guild.create_voice_channel(name,
+                                                           category=channel_category,
+                                                           position=position,
+                                                           bitrate=bitrate,
+                                                           overwrites=permission,
+                                                           reason=reason)
 
     return created_channel.id
 
 
 async def dshell_delete_channel(ctx: GuildChannel, channel=None, reason=None, timeout=0):
     """
-    Supprime un salon.
-    Possibilité de lui rajouter un temps d'attente avant qu'il ne le supprime (en seconde)
+    Deletes a channel.
+    You can add a waiting time before it is deleted (in seconds)
     """
 
     channel_to_delete = ctx if channel is None else ctx.guild.get_channel(channel)
@@ -52,8 +81,8 @@ async def dshell_delete_channel(ctx: GuildChannel, channel=None, reason=None, ti
 
 async def dshell_delete_channels(ctx: GuildChannel, name=None, regex=None, reason=None):
     """
-    Supprime tous les salons ayant le même nom et/ou le même regex.
-    Si aucun des deux n'est mis, il supprimera tous les salons comportant le même nom que celui ou a été fait la commande
+    Deletes all channels with the same name and/or matching the same regex.
+    If neither is set, it will delete all channels with the same name as the one where the command was executed.
     """
     for channel in ctx.guild.channels:
 

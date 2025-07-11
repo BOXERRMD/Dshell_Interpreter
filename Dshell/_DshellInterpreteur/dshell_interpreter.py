@@ -1,7 +1,6 @@
 from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
-from logging import Logger
 
 
 from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role
@@ -20,12 +19,17 @@ context = TypeVar('context', AutoShardedBot, GuildChannel, PrivateChannel)
 
 
 class DshellInterpreteur:
+    """
+    Discord Dshell interpreter.
+    Make what you want with Dshell code to interact with Discord !
+    """
 
-    def __init__(self, ast_or_code: Union[list[All_nodes], str], ctx: context, debug: bool = False):
+    def __init__(self, code: str, ctx: context, debug: bool = False):
         """
-        Interpreter Dshell code or AST.
+        Interpreter Dshell code
+        :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
         """
-        self.ast: list[ASTNode] = parse(DshellTokenizer(ast_or_code).start(), StartNode([]))[0]
+        self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
         self.env: dict[str, Any] = {}
         self.ctx: context = ctx
         if debug:
@@ -33,7 +37,16 @@ class DshellInterpreteur:
 
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """
-        Execute l'arbre syntaxique.
+        Executes the abstract syntax tree (AST) generated from the Dshell code.
+
+        This asynchronous method traverses and interprets each node in the AST, executing commands,
+        handling control flow structures (such as if, elif, else, and loops), managing variables,
+        and interacting with Discord through the provided context. It supports command execution,
+        variable assignment, sleep operations, and permission handling, among other features.
+
+        :param ast: Optional list of AST nodes to execute. If None, uses the interpreter's main AST.
+        :raises RuntimeError: If an EndNode is encountered, indicating execution should be stopped.
+        :raises Exception: If sleep duration is out of allowed bounds.
         """
         if ast is None:
             ast = self.ast
@@ -92,19 +105,20 @@ class DshellInterpreteur:
             elif isinstance(node, SleepNode):
                 sleep_time = eval_expression(node.body, self)
                 if sleep_time > 3600:
-                    raise Exception(f'Le temps maximal de sommeil est de 3600 secondes !')
+                    raise Exception(f"Sleep time is too long! ({sleep_time} seconds) - maximum is 3600 seconds)")
                 elif sleep_time < 1:
-                    raise Exception(f'Le temps minimal de sommeil est de 1 seconde !')
+                    raise Exception(f"Sleep time is too short! ({sleep_time} seconds) - minimum is 1 second)")
 
                 await sleep(sleep_time)
 
 
             elif isinstance(node, EndNode):
-                raise RuntimeError(f"Execution interromput -> #end atteint")
+                raise RuntimeError("Execution stopped - EndNode encountered")
 
     def eval_data_token(self, token: Token):
         """
-        Evalue les tokens de data
+        Eval a data token and returns its value in Python.
+        :param token: The token to evaluate.
         """
 
         if not hasattr(token, 'type'):
@@ -137,7 +151,9 @@ class DshellInterpreteur:
 
 def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
     """
-    Evalue une expression en ligne des variables
+    Eval a conditional expression inline.
+    :param if_node: The IfNode to evaluate.
+    :param interpreter: The Dshell interpreter instance.
     """
     if eval_expression(if_node.condition, interpreter):
         return eval_expression(if_node.body, interpreter)
@@ -147,7 +163,9 @@ def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> 
 
 def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any:
     """
-    Evalue une expressions arithmétique et logique et renvoie son résultat. Cela peut-être un booléen, un entier, un flottant, une chaîne de caractère ou une liste
+    Evaluates an arithmetic and logical expression.
+    :param tokens: A list of tokens representing the expression.
+    :param interpreter: The Dshell interpreter instance.
     """
     postfix = to_postfix(tokens)
     stack = []
@@ -172,24 +190,28 @@ def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any
             stack.append(result)
 
         else:
-            raise SyntaxError(f"Token inattendu en condition: {token}")
+            raise SyntaxError(f"Unexpected token type: {token.type} - {token.value}")
 
     if len(stack) != 1:
-        raise SyntaxError("Condition mal formée")
+        raise SyntaxError("Invalid expression: stack should contain exactly one element after evaluation.")
 
     return stack[0]
 
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):
     """
-    Appelle une fonction avec évaluation des arguments Dshell en valeurs Python
+    Call the function with the given arguments.
+    It can be an async function !
+    :param function: The function to call.
+    :param args: The arguments to pass to the function.
+    :param interpreter: The Dshell interpreter instance.
     """
     reformatted = regroupe_commandes(args.body, interpreter)[0]
 
     # conversion des args en valeurs Python
     absolute_args = reformatted.pop('*', list())
 
-    reformatted: dict[str, Token]  # ne sert à rien, juste à indiquer ce qu'il contient dorénanvant
+    reformatted: dict[str, Token]
 
     absolute_args.insert(0, interpreter.ctx)
     keyword_args = {
@@ -200,64 +222,69 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
 
 def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> list[dict[str, list[Any]]]:
     """
-    Regroupe les arguments de la commande sous la forme d'un dictionnaire python.
-    Sachant que l'on peut spécifier le paramètre que l'on souhaite passer via -- suivit du nom du paramètre. Mais ce n'est pas obligatoire !
-    Les paramètres non obligatoire seront stocké dans une liste sous la forme de tokens avec comme clé '*'.
-    Les autres ayant été spécifié via un séparateur, ils seront sous la forme d'une liste de tokens avec comme clé le token IDENT qui suivra le séparateur pour chaque argument.
+    Groups the command arguments in the form of a python dictionary.
+    Note that you can specify the parameter you wish to pass via -- followed by the parameter name. But this is not mandatory!
+    Non-mandatory parameters will be stored in a list in the form of tokens with the key ‘*’.
+    The others, having been specified via a separator, will be in the form of a list of tokens with the IDENT token as key, following the separator for each argument.
+    If two parameters have the same name, the last one will overwrite the previous one.
+    To accept duplicates, use the SUB_SEPARATOR (~~) to create a sub-dictionary for parameters with the same name.
+
+    :param body: The list of tokens to group.
+    :param interpreter: The Dshell interpreter instance.
     """
-    tokens = {'*': []}  # les tokens à renvoyer
-    current_arg = '*'  # les clés des arguments sont les types auquels ils appartiennent. L'* sert à tous les arguments non explicité par un séparateur et un IDENT
+    tokens = {'*': []}  # tokens to return
+    current_arg = '*'  # the argument keys are the types they belong to. '*' is for all arguments not explicitly specified by a separator and an IDENT
     n = len(body)
     list_tokens: list[dict] = [tokens]
 
     i = 0
     while i < n:
         if body[i].type == DTT.SEPARATOR and body[
-            i + 1].type == DTT.IDENT:  # On regarde si c'est un séparateur et si le token suivant est un IDENT
-            current_arg = body[i + 1].value  # on change l'argument actuel. Il sera donc impossible de revenir à l'*
-            tokens[current_arg] = ''  # on lui crée une paire clé/valeur
-            i += 2  # on skip l'IDENT qu'il y a après le séparateur car on vient de le traiter
+            i + 1].type == DTT.IDENT:  # Check if it's a separator and if the next token is an IDENT
+            current_arg = body[i + 1].value  # change the current argument. It will be impossible to return to '*'
+            tokens[current_arg] = ''  # create a key/value pair for it
+            i += 2  # skip the IDENT after the separator since it has just been processed
 
         elif body[
-            i].type == DTT.SUB_SEPARATOR:  # permet de délimiter les paramètres et de pouvoir en mettre plusieurs ayant le même nom
+            i].type == DTT.SUB_SEPARATOR:  # allows to delimit parameters and to have several with the same name
             list_tokens += regroupe_commandes(
                 [Token(
                     type_=DTT.SEPARATOR, value=body[i].value, position=body[i].position)
                 ] + body[i + 1:], interpreter
-            )  # on ajoute un sous-dictionnaire pour les sous-commandes
+            )  # add a sub-dictionary for sub-commands
             return list_tokens
 
         else:
             if current_arg == '*':
                 tokens[current_arg].append(interpreter.eval_data_token(body[i]))
             else:
-                tokens[current_arg] = interpreter.eval_data_token(body[i])  # on ajoute le token à l'argument actuel
+                tokens[current_arg] = interpreter.eval_data_token(body[i])  # add the token to the current argument
             i += 1
     return list_tokens
 
 
 def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
     """
-    Construit un embed à partir des informations de la commande.
+    Builds an embed from the command information.
     """
     args_main_embed: dict[str, list[Any]] = regroupe_commandes(body, interpreter)[0]
-    args_main_embed.pop('*')  # on enlève les paramètres non spécifié pour l'embed
-    args_main_embed: dict[str, Token]  # on précise se qu'il contient dorénavant
+    args_main_embed.pop('*')  # remove unspecified parameters for the embed
+    args_main_embed: dict[str, Token]  # specify what it contains from now on
 
     args_fields: list[dict[str, Token]] = []
-    for field in fields:  # on fait la même chose pour tous les fields
+    for field in fields:  # do the same for the fields
         a = regroupe_commandes(field.body, interpreter)[0]
         a.pop('*')
         a: dict[str, Token]
         args_fields.append(a)
 
     if 'color' in args_main_embed and isinstance(args_main_embed['color'],
-                                                 ListNode):  # si on passe l'argument de la couleur sous la forme d'une liste RGB
+                                                 ListNode):  # if color is a ListNode, convert it to Colour
         args_main_embed['color'] = Colour.from_rgb(*args_main_embed['color'])
 
-    embed = Embed(**args_main_embed)  # on construit l'embed principal
+    embed = Embed(**args_main_embed)  # build the main embed
     for field in args_fields:
-        embed.add_field(**field)  # on joute tous les fields
+        embed.add_field(**field)  # add all fields
 
     return embed
 
@@ -265,7 +292,7 @@ def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: Ds
 def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
     Union[Member, Role], PermissionOverwrite]:
     """
-    Construit un dictionnaire de permissions à partir des informations de la commande.
+    Builds a dictionary of PermissionOverwrite objects from the command information.
     """
     args_permissions: list[dict[str, list[Any]]] = regroupe_commandes(body, interpreter)
     permissions: dict[Union[Member, Role], PermissionOverwrite] = {}
@@ -279,7 +306,7 @@ def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict
 
 class DshellIterator:
     """
-    Utilisé pour transformer n'importe quoi en un iterable
+    Used to transform anything into an iterable
     """
 
     def __init__(self, data):
@@ -303,20 +330,20 @@ class DshellPermissions:
 
     def __init__(self, target: dict[str, list[int]]):
         """
-        Permet de créer un objet de permissions Dshell.
-        :param target: Un dictionnaire contenant les paramètres et leurs valeurs.
-        Paramètres attendus : "allow", "deny", "members", "roles".
-        Pour "members" et "roles", les valeurs doivent être des ListNode d'IDs.
+        Creates a Dshell permissions object.
+        :param target: A dictionary containing parameters and their values.
+        Expected parameters: “allow”, “deny”, ‘members’, “roles”.
+        For “members” and “roles”, values must be ID ListNodes.
         """
         self.target: dict[str, Union[ListNode, int]] = target
 
     @staticmethod
     def get_instance(guild: Guild, target_id: int) -> Union[Member, Role]:
         """
-        Retourne l'instance correspondante à l'id donné. Uniquement un Member ou un Role.
-        :param guild: Le serveur Discord dans lequel chercher
-        :param target_id: L'ID du membre ou du rôle
-        :return: Une instance de Member ou Role
+        Returns the instance corresponding to the given id. Only a Member or Role.
+        :param guild: The Discord server in which to search
+        :param target_id: The ID of the member or role
+        :return: An instance of Member or Role
         """
         try:
             member = DshellPermissions.get_member(guild, target_id)
@@ -334,48 +361,46 @@ class DshellPermissions:
         if role is not None:
             return role
 
-        raise ValueError(f"Aucun membre ou rôle trouvé avec l'ID {target_id} dans le serveur {guild.name}.")
-
     @staticmethod
     def get_member(guild: Guild, target_id: int) -> Member:
         """
-        Retourne l'instance de Member correspondante à l'id donné.
-        :param guild: Le serveur Discord dans lequel chercher
-        :param target_id: L'ID du membre
-        :return: Une instance de Member
+        Returns the Member instance corresponding to the given id.
+        :param guild: The Discord server to search
+        :param target_id: The member ID
+        :return: A Member instance
         """
         member = guild.get_member(target_id)
         if member is not None:
             return member
 
-        raise ValueError(f"Aucun membre trouvé avec l'ID {target_id} dans le serveur {guild.name}.")
+        raise ValueError(f"No member found with ID {target_id} in guild {guild.name}.")
 
     @staticmethod
     def get_role(guild: Guild, target_id: int) -> Role:
         """
-        Retourne l'instance de Role correspondante à l'id donné.
-        :param guild: Le serveur Discord dans lequel chercher
-        :param target_id: L'ID du rôle
-        :return: Une instance de Role
+        Returns the Role instance corresponding to the given id.
+        :param guild: The Discord server to search
+        :param target_id: The role ID
+        :return: A Role instance
         """
         role = guild.get_role(target_id)
         if role is not None:
             return role
 
-        raise ValueError(f"Aucun rôle trouvé avec l'ID {target_id} dans le serveur {guild.name}.")
+        raise ValueError(f"No role found with ID {target_id} in guild {guild.name}.")
 
     def get_permission_overwrite(self, guild: Guild) -> dict[Union[Member, Role], PermissionOverwrite]:
         """
-        Retourne un objet PermissionOverwrite avec les permissions des membres et rôles.
-        :param guild: Le serveur Discord
-        :return: Un objet PermissionOverwrite
+        Returns a PermissionOverwrite object with member and role permissions.
+        :param guild: The Discord server
+        :return: A dictionary of PermissionOverwrite objects with members and roles as keys
         """
         permissions: dict[Union[Member, Role], PermissionOverwrite] = {}
         target_keys = self.target.keys()
 
         if 'members' in target_keys:
             for member_id in (
-            self.target['members'] if isinstance(self.target['members'], ListNode) else [self.target['members']]): # accepte un seul ID
+            self.target['members'] if isinstance(self.target['members'], ListNode) else [self.target['members']]): # allow a single ID
                 member = self.get_member(guild, member_id)
                 permissions[member] = PermissionOverwrite.from_pair(
                     allow=Permissions(permissions=self.target.get('allow', 0)),
@@ -384,13 +409,13 @@ class DshellPermissions:
 
         elif 'roles' in target_keys:
             for role_id in (
-            self.target['roles'] if isinstance(self.target['roles'], ListNode) else [self.target['roles']]): ## accepte un seul ID
+            self.target['roles'] if isinstance(self.target['roles'], ListNode) else [self.target['roles']]): # allow a single ID
                 role = self.get_role(guild, role_id)
                 permissions[role] = PermissionOverwrite.from_pair(
                     allow=Permissions(permissions=self.target.get('allow', 0)),
                     deny=Permissions(permissions=self.target.get('deny', 0))
                 )
         else:
-            raise ValueError("Aucun membre ou rôle spécifié dans les permissions.")
+            raise ValueError("No members or roles specified in the permissions target.")
 
         return permissions

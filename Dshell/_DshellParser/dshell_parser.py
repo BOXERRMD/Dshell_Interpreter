@@ -32,7 +32,9 @@ if TYPE_CHECKING:
 
 def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[ASTNode], int]:
     """
-    Commande de base pour parser les tokens
+    Parse the list of tokens and return a list of AST nodes.
+    :param token_lines: table of tokens
+    :param start_node: the node where to start the parsing
     """
     pointeur = 0  # pointeur sur les listes de tokens pour savoir ou parser
     blocks: list[Union[ASTNode, EndNode]] = [start_node]  # liste d'imbrication des blocks pour gérer l'imbrication

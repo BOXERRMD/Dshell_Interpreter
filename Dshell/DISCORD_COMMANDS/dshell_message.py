@@ -11,12 +11,12 @@ __all__ = [
 async def dshell_send_message(ctx: GuildChannel, message=None, delete=None, channel=None, embeds=None, embed=None):
     from .._DshellParser.ast_nodes import ListNode
     """
-    Envoie un message sur Discord
+    Sends a message on Discord
     """
     channel_to_send = ctx if channel is None else ctx.guild.get_channel(channel)
 
     if channel_to_send is None:
-        raise Exception(f'Le channel {channel} est introuvable !')
+        raise Exception(f'Channel {channel} not found!')
 
     if embeds is None:
         embeds = ListNode([])
@@ -36,25 +36,25 @@ async def dshell_send_message(ctx: GuildChannel, message=None, delete=None, chan
 
 async def dshell_delete_message(ctx: GuildChannel, message, reason=None, delay=0):
     """
-    Supprime un message
+    Deletes a message
     """
 
-    delete_message = ctx.get_partial_message(message)  # construit une référence au message (même s'il n'existe pas)
+    delete_message = ctx.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
 
     if delay > 3600:
-        raise Exception(f'Le délait de suppression du message est trop grand ! ({delay} secondes)')
+        raise Exception(f'The message deletion delay is too long! ({delay} seconds)')
 
     await delete_message.delete(delay=delay, reason=reason)
 
 
 async def dshell_purge_message(ctx: GuildChannel, message_number, channel=None, reason=None):
     """
-    Purge les messages d'un salon
+    Purges messages from a channel
     """
 
     purge_channel = ctx if channel is None else ctx.guild.get_channel(channel)
 
     if purge_channel is None:
-        raise Exception(f"Le salon {channel} à purgé est introuvable !")
+        raise Exception(f"Channel {channel} to purge not found!")
 
     await purge_channel.purge(limit=message_number, reason=reason)
