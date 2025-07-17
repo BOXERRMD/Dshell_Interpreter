@@ -3,7 +3,7 @@ from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
 
 
-from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role
+from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message
 from discord.abc import GuildChannel, PrivateChannel
 
 from .._DshellParser.ast_nodes import *
@@ -15,7 +15,7 @@ from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode, IdentOperationNode)
-context = TypeVar('context', AutoShardedBot, GuildChannel, PrivateChannel)
+context = TypeVar('context', AutoShardedBot, Message, PrivateChannel)
 
 
 class DshellInterpreteur:
@@ -299,7 +299,7 @@ def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict
 
     for i in args_permissions:
         i.pop('*')
-        permissions.update(DshellPermissions(i).get_permission_overwrite(interpreter.ctx.guild))
+        permissions.update(DshellPermissions(i).get_permission_overwrite(interpreter.ctx.channel.guild))
 
     return permissions
 

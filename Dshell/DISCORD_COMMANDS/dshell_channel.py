@@ -2,8 +2,7 @@ from asyncio import sleep
 from re import search
 from typing import Union
 
-from discord import MISSING, PermissionOverwrite, Member, Role
-from discord.abc import GuildChannel
+from discord import MISSING, PermissionOverwrite, Member, Role, Message
 
 __all__ = [
     'dshell_create_text_channel',
@@ -13,7 +12,7 @@ __all__ = [
 ]
 
 
-async def dshell_create_text_channel(ctx: GuildChannel,
+async def dshell_create_text_channel(ctx: Message,
                                      name,
                                      category=None,
                                      position=MISSING,
@@ -25,7 +24,7 @@ async def dshell_create_text_channel(ctx: GuildChannel,
     Creates a text channel on the server
     """
 
-    channel_category = ctx.guild.get_channel(category)
+    channel_category = ctx.channel.guild.get_channel(category)
 
     created_channel = await ctx.guild.create_text_channel(name,
                                                           category=channel_category,
@@ -38,7 +37,7 @@ async def dshell_create_text_channel(ctx: GuildChannel,
 
     return created_channel.id
 
-async def dshell_create_voice_channel(ctx: GuildChannel,
+async def dshell_create_voice_channel(ctx: Message,
                                       name,
                                       category=None,
                                       position=MISSING,
@@ -49,7 +48,7 @@ async def dshell_create_voice_channel(ctx: GuildChannel,
     Creates a voice channel on the server
     """
 
-    channel_category = ctx.guild.get_channel(category)
+    channel_category = ctx.channel.guild.get_channel(category)
 
     created_channel = await ctx.guild.create_voice_channel(name,
                                                            category=channel_category,
@@ -61,13 +60,13 @@ async def dshell_create_voice_channel(ctx: GuildChannel,
     return created_channel.id
 
 
-async def dshell_delete_channel(ctx: GuildChannel, channel=None, reason=None, timeout=0):
+async def dshell_delete_channel(ctx: Message, channel=None, reason=None, timeout=0):
     """
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
     """
 
-    channel_to_delete = ctx if channel is None else ctx.guild.get_channel(channel)
+    channel_to_delete = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     if channel_to_delete is None:
         raise Exception(f"Le channel {channel} n'existe pas !")
@@ -79,12 +78,12 @@ async def dshell_delete_channel(ctx: GuildChannel, channel=None, reason=None, ti
     return channel_to_delete.id
 
 
-async def dshell_delete_channels(ctx: GuildChannel, name=None, regex=None, reason=None):
+async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=None):
     """
     Deletes all channels with the same name and/or matching the same regex.
     If neither is set, it will delete all channels with the same name as the one where the command was executed.
     """
-    for channel in ctx.guild.channels:
+    for channel in ctx.channel.guild.channels:
 
         if name is not None and channel.name == str(name):
             await channel.delete(reason=reason)

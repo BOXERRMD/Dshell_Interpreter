@@ -31,6 +31,11 @@ dshell_commands: dict[str, Callable] = {
     "bm": dshell_ban_member,  # ban member
     "um": dshell_unban_member,  # unban member
     "km": dshell_kick_member,  # kick member
+    "em": dshell_edit_message,  # edit message
+    "srm": dshell_research_regex_message,  # research regex in message
+    "src": dshell_research_regex_in_content,  # research regex in content
+    "rm": dshell_rename_member,  # rename member
+
 }
 
 dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
