@@ -35,6 +35,8 @@ dshell_commands: dict[str, Callable] = {
     "srm": dshell_research_regex_message,  # research regex in message
     "src": dshell_research_regex_in_content,  # research regex in content
     "rm": dshell_rename_member,  # rename member
+    "ec": dshell_edit_text_channel,  # edit text channel
+    "evc": dshell_edit_voice_channel,  # edit voice channel
 
 }
 

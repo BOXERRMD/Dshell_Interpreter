@@ -3,7 +3,8 @@ __all__ = [
     "parser_inline",
     "to_postfix",
     "parse_postfix_expression",
-    "print_ast"
+    "print_ast",
+    "ast_to_dict",
 ]
 
 from typing import Union, TYPE_CHECKING
@@ -199,6 +200,14 @@ elif first_token_line.type == DTT.LIST: # si le token est une liste (qui comport
     list_node = ListNode(first_token_line.value) # le .value est une liste python
     last_block.body.append(list_node)
     """
+
+def ast_to_dict(obj):
+    if isinstance(obj, list):
+        return [ast_to_dict(item) for item in obj]
+    elif hasattr(obj, "to_dict"):
+        return obj.to_dict()
+    else:
+        return obj  # fallback for primitives or tokens
 
 
 def parser_inline(tokens: list[Token]) -> tuple[list[list[Token]], bool]:

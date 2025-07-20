@@ -39,3 +39,10 @@ class Token:
 
     def __repr__(self):
         return f"<{self.type.name} '{self.value}'>"
+
+    def to_dict(self):
+        return {
+            "type": self.type.name,
+            "value": self.value,
+            "position": self.position
+        }

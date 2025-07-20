@@ -1,4 +1,5 @@
 from typing import Optional, Any
+from random import randint
 
 from .._DshellTokenizer.dshell_token_type import Token
 
@@ -39,6 +40,16 @@ class StartNode(ASTNode):
     def __repr__(self):
         return f"<Command> - {self.body}"
 
+    def to_dict(self):
+        """
+        Convert the StartNode to a dictionary representation.
+        :return: Dictionary representation of the StartNode.
+        """
+        return {
+            "type": "StartNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
 
 class ElseNode(ASTNode):
     """
@@ -52,6 +63,16 @@ class ElseNode(ASTNode):
 
     def __repr__(self):
         return f"<Else> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the ElseNode to a dictionary representation.
+        :return: Dictionary representation of the ElseNode.
+        """
+        return {
+            "type": "ElseNode",
+            "body": [token.to_dict() for token in self.body]
+        }
 
 
 class ElifNode(ASTNode):
@@ -71,6 +92,18 @@ class ElifNode(ASTNode):
     def __repr__(self):
         return f"<Elif> - {self.condition} - {self.body}"
 
+    def to_dict(self):
+        """
+        Convert the ElifNode to a dictionary representation.
+        :return: Dictionary representation of the ElifNode.
+        """
+        return {
+            "type": "ElifNode",
+            "condition": [token.to_dict() for token in self.condition],
+            "body": [token.to_dict() for token in self.body],
+            "parent": self.parent.id  # Assuming parent is an IfNode, we store its ID
+        }
+
 
 class IfNode(ASTNode):
     """
@@ -88,10 +121,24 @@ class IfNode(ASTNode):
         self.body = body
         self.elif_nodes = elif_nodes
         self.else_body = else_body
+        self.id = randint(0, 1000000)  # Unique identifier for the IfNode instance
 
     def __repr__(self):
         return f"<If> - {self.condition} - {self.body} *- {self.elif_nodes} **- {self.else_body}"
 
+    def to_dict(self):
+        """
+        Convert the IfNode to a dictionary representation.
+        :return: Dictionary representation of the IfNode.
+        """
+        return {
+            "type": "IfNode",
+            "condition": [token.to_dict() for token in self.condition],
+            "body": [token.to_dict() for token in self.body],
+            "elif_nodes": [elif_node.to_dict() for elif_node in self.elif_nodes] if self.elif_nodes else None,
+            "else_body": self.else_body.to_dict() if self.else_body else None,
+            "id": self.id
+        }
 
 class LoopNode(ASTNode):
     """
@@ -108,6 +155,16 @@ class LoopNode(ASTNode):
     def __repr__(self):
         return f"<Loop> - {self.variable.name} -> {self.variable.body} *- {self.body}"
 
+    def to_dict(self):
+        """
+        Convert the LoopNode to a dictionary representation.
+        :return: Dictionary representation of the LoopNode.
+        """
+        return {
+            "type": "LoopNode",
+            "variable": self.variable.to_dict(),
+            "body": [token.to_dict() for token in self.body]
+        }
 
 class ArgsCommandNode(ASTNode):
     """
@@ -121,6 +178,16 @@ class ArgsCommandNode(ASTNode):
 
     def __repr__(self):
         return f"<Args Command> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the ArgsCommandNode to a dictionary representation.
+        :return: Dictionary representation of the ArgsCommandNode.
+        """
+        return {
+            "type": "ArgsCommandNode",
+            "body": [token.to_dict() for token in self.body]
+        }
 
 
 class CommandNode(ASTNode):
@@ -138,6 +205,17 @@ class CommandNode(ASTNode):
     def __repr__(self):
         return f"<{self.name}> - {self.body}"
 
+    def to_dict(self):
+        """
+        Convert the CommandNode to a dictionary representation.
+        :return: Dictionary representation of the CommandNode.
+        """
+        return {
+            "type": "CommandNode",
+            "name": self.name,
+            "body": self.body.to_dict()
+        }
+
 
 class VarNode(ASTNode):
     """
@@ -154,6 +232,17 @@ class VarNode(ASTNode):
     def __repr__(self):
         return f"<VAR> - {self.name} *- {self.body}"
 
+    def to_dict(self):
+        """
+        Convert the VarNode to a dictionary representation.
+        :return: Dictionary representation of the VarNode.
+        """
+        return {
+            "type": "VarNode",
+            "name": self.name.to_dict(),
+            "body": [token.to_dict() for token in self.body]
+        }
+
 
 class EndNode(ASTNode):
     """
@@ -164,6 +253,15 @@ class EndNode(ASTNode):
 
     def __repr__(self):
         return f"<END>"
+
+    def to_dict(self):
+        """
+        Convert the EndNode to a dictionary representation.
+        :return: Dictionary representation of the EndNode.
+        """
+        return {
+            "type": "EndNode"
+        }
 
 
 class FieldEmbedNode(ASTNode):
@@ -178,6 +276,16 @@ class FieldEmbedNode(ASTNode):
 
     def __repr__(self):
         return f"<EMBED_FIELD> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the FieldEmbedNode to a dictionary representation.
+        :return: Dictionary representation of the FieldEmbedNode.
+        """
+        return {
+            "type": "FieldEmbedNode",
+            "body": [token.to_dict() for token in self.body]
+        }
 
 
 class EmbedNode(ASTNode):
@@ -195,6 +303,17 @@ class EmbedNode(ASTNode):
     def __repr__(self):
         return f"<EMBED> - {self.body}"
 
+    def to_dict(self):
+        """
+        Convert the EmbedNode to a dictionary representation.
+        :return: Dictionary representation of the EmbedNode.
+        """
+        return {
+            "type": "EmbedNode",
+            "body": [token.to_dict() for token in self.body],
+            "fields": [field.to_dict() for field in self.fields]
+        }
+
 
 class PermissionNode(ASTNode):
     """
@@ -209,6 +328,16 @@ class PermissionNode(ASTNode):
     def __repr__(self):
         return f"<PERMISSION> - {self.body}"
 
+    def to_dict(self):
+        """
+        Convert the PermissionNode to a dictionary representation.
+        :return: Dictionary representation of the PermissionNode.
+        """
+        return {
+            "type": "PermissionNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
 
 class SleepNode(ASTNode):
     """
@@ -222,6 +351,16 @@ class SleepNode(ASTNode):
 
     def __repr__(self):
         return f"<SLEEP> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the SleepNode to a dictionary representation.
+        :return: Dictionary representation of the SleepNode.
+        """
+        return {
+            "type": "SleepNode",
+            "body": [token.to_dict() for token in self.body]
+        }
 
 
 class IdentOperationNode(ASTNode):
@@ -244,6 +383,17 @@ class IdentOperationNode(ASTNode):
     def __repr__(self):
         return f"<IDENT OPERATION> - {self.ident}.{self.function}({self.args})"
 
+    def to_dict(self):
+        """
+        Convert the IdentOperationNode to a dictionary representation.
+        :return: Dictionary representation of the IdentOperationNode.
+        """
+        return {
+            "type": "IdentOperationNode",
+            "ident": self.ident.to_dict(),
+            "function": self.function.to_dict(),
+            "args": self.args.to_dict()
+        }
 
 class ListNode(ASTNode):
     """
@@ -259,6 +409,16 @@ class ListNode(ASTNode):
         self.iterable: list[Any] = body
         self.len_iterable: int = len(body)
         self.iterateur_count: int = 0
+
+    def to_dict(self):
+        """
+        Convert the ListNode to a dictionary representation.
+        :return: Dictionary representation of the ListNode.
+        """
+        return {
+            "type": "ListNode",
+            "body": [token.to_dict() for token in self.iterable]
+        }
 
     def add(self, value: Any):
         """

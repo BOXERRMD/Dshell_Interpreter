@@ -34,6 +34,7 @@ class DshellInterpreteur:
         self.ctx: context = ctx
         if debug:
             print_ast(self.ast)
+        self.env['__cr__'] = None
 
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """

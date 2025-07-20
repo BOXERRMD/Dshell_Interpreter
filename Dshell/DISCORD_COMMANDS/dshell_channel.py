@@ -8,7 +8,9 @@ __all__ = [
     'dshell_create_text_channel',
     'dshell_delete_channel',
     'dshell_delete_channels',
-    'dshell_create_voice_channel'
+    'dshell_create_voice_channel',
+    'dshell_edit_text_channel',
+    'dshell_edit_voice_channel'
 ]
 
 
@@ -69,7 +71,7 @@ async def dshell_delete_channel(ctx: Message, channel=None, reason=None, timeout
     channel_to_delete = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     if channel_to_delete is None:
-        raise Exception(f"Le channel {channel} n'existe pas !")
+        raise Exception(f"Channel {channel} not found !")
 
     await sleep(timeout)
 
@@ -90,3 +92,54 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
 
         elif regex is not None and search(regex, channel.name):
             await channel.delete(reason=reason)
+
+async def dshell_edit_text_channel(ctx: Message,
+                                      channel=None,
+                                      name=None,
+                                      position=MISSING,
+                                      slowmode=MISSING,
+                                      topic=MISSING, nsfw=MISSING,
+                                      permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                      reason=None):
+    """
+    Edits a text channel on the server
+    """
+
+    channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_edit is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    await channel_to_edit.edit(name=name,
+                               position=position,
+                               slowmode_delay=slowmode,
+                               topic=topic,
+                               nsfw=nsfw,
+                               overwrites=permission,
+                               reason=reason)
+
+    return channel_to_edit.id
+
+async def dshell_edit_voice_channel(ctx: Message,
+                                      channel=None,
+                                      name=None,
+                                      position=MISSING,
+                                      bitrate=MISSING,
+                                      permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                      reason=None):
+    """
+    Edits a voice channel on the server
+    """
+
+    channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_edit is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    await channel_to_edit.edit(name=name,
+                               position=position,
+                               bitrate=bitrate,
+                               overwrites=permission,
+                               reason=reason)
+
+    return channel_to_edit.id
