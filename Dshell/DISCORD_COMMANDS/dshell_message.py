@@ -116,11 +116,11 @@ async def dshell_research_regex_in_content(ctx: Message, regex, content):
 
     return True
 
-async def dshell_add_reactions(ctx: Message, reactions, message_id=None):
+async def dshell_add_reactions(ctx: Message, reactions, message=None):
     """
     Adds reactions to a message
     """
-    message = ctx.channel if message_id is None else ctx.channel.get_partial_message(message_id)  # builds a reference to the message (even if it doesn't exist)
+    message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
 
     if isinstance(reactions, str):
         reactions = [reactions]
@@ -130,11 +130,11 @@ async def dshell_add_reactions(ctx: Message, reactions, message_id=None):
 
     return message.id
 
-async def dshell_remove_reactions(ctx: Message, reactions, message_id=None):
+async def dshell_remove_reactions(ctx: Message, reactions, message=None):
     """
     Removes reactions from a message
     """
-    message = ctx.channel if message_id is None else ctx.channel.get_partial_message(message_id)  # builds a reference to the message (even if it doesn't exist)
+    message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
 
     if isinstance(reactions, str):
         reactions = [reactions]

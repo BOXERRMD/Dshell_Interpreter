@@ -4,7 +4,7 @@ from typing import TypeVar, Union, Any, Optional, Callable
 
 
 from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message
-from discord.abc import GuildChannel, PrivateChannel
+from discord.abc import PrivateChannel
 
 from .._DshellParser.ast_nodes import *
 from .._DshellParser.dshell_parser import parse
