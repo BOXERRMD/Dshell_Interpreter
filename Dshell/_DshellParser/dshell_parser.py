@@ -209,6 +209,16 @@ def ast_to_dict(obj):
     else:
         return obj  # fallback for primitives or tokens
 
+def dict_to_ast(data):
+    """
+    Convertit un dictionnaire en une structure AST.
+    :param data: le dictionnaire à convertir
+    :return: la structure AST correspondante
+    """
+    if isinstance(data, list):
+        return [dict_to_ast(item) for item in data]
+    elif isinstance(data, dict):
+        pass
 
 def parser_inline(tokens: list[Token]) -> tuple[list[list[Token]], bool]:
     """

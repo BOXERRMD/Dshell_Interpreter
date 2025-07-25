@@ -41,8 +41,15 @@ class Token:
         return f"<{self.type.name} '{self.value}'>"
 
     def to_dict(self):
+        def serialize_value(value):
+            if isinstance(value, list):
+                return [serialize_value(v) for v in value]
+            elif isinstance(value, Token):
+                return value.to_dict()
+            return value
+
         return {
             "type": self.type.name,
-            "value": self.value,
+            "value": serialize_value(self.value),
             "position": self.position
         }

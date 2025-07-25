@@ -21,22 +21,30 @@ dshell_discord_keyword: set[str] = {
     'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission'
 }
 dshell_commands: dict[str, Callable] = {
+
     "sm": dshell_send_message,  # send message
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
+    "em": dshell_edit_message,  # edit message
+
     "cc": dshell_create_text_channel,  # create channel
     "cvc": dshell_create_voice_channel,  # create voice channel
     "dc": dshell_delete_channel,  # delete channel
     "dcs": dshell_delete_channels, # delete several channels by name or regex
+
     "bm": dshell_ban_member,  # ban member
     "um": dshell_unban_member,  # unban member
     "km": dshell_kick_member,  # kick member
-    "em": dshell_edit_message,  # edit message
+    "rm": dshell_rename_member,  # rename member
+
     "srm": dshell_research_regex_message,  # research regex in message
     "src": dshell_research_regex_in_content,  # research regex in content
-    "rm": dshell_rename_member,  # rename member
+
     "ec": dshell_edit_text_channel,  # edit text channel
     "evc": dshell_edit_voice_channel,  # edit voice channel
+
+    "arr": dshell_add_reactions,  # add reactions to a message
+    "rrr": dshell_remove_reactions,  # remove reactions from a message
 
 }
 

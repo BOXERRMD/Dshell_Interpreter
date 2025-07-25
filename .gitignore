@@ -182,3 +182,4 @@ cython_debug/
 
 # test files
 test.py
+test.json

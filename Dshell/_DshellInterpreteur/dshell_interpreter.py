@@ -24,17 +24,20 @@ class DshellInterpreteur:
     Make what you want with Dshell code to interact with Discord !
     """
 
-    def __init__(self, code: str, ctx: context, debug: bool = False):
+    def __init__(self, code: str, ctx: context, debug: bool = False, vars: Optional[dict[str, Any]] = None):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
+        :param ctx: The context in which the code is executed. It can be a Discord bot, a message, or a channel.
+        :param debug: If True, prints the AST of the code.
+        :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
         """
         self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
-        self.env: dict[str, Any] = {}
+        self.env: dict[str, Any] = vars or {}
         self.ctx: context = ctx
         if debug:
             print_ast(self.ast)
-        self.env['__cr__'] = None
+        self.env['__ret__'] = None
 
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """
@@ -58,7 +61,7 @@ class DshellInterpreteur:
                 await self.execute(node.body)
 
             if isinstance(node, CommandNode):
-                self.env['__cr__'] = await call_function(dshell_commands[node.name], node.body, self)
+                self.env['__ret__'] = await call_function(dshell_commands[node.name], node.body, self)
 
             elif isinstance(node, IfNode):
                 elif_valid = False

@@ -9,7 +9,9 @@ __all__ = [
     'dshell_purge_message',
     'dshell_edit_message',
     'dshell_research_regex_message',
-    'dshell_research_regex_in_content'
+    'dshell_research_regex_in_content',
+    'dshell_add_reactions',
+    'dshell_remove_reactions'
 ]
 
 
@@ -114,3 +116,30 @@ async def dshell_research_regex_in_content(ctx: Message, regex, content):
 
     return True
 
+async def dshell_add_reactions(ctx: Message, reactions, message_id=None):
+    """
+    Adds reactions to a message
+    """
+    message = ctx.channel if message_id is None else ctx.channel.get_partial_message(message_id)  # builds a reference to the message (even if it doesn't exist)
+
+    if isinstance(reactions, str):
+        reactions = [reactions]
+
+    for reaction in reactions:
+        await message.add_reaction(reaction)
+
+    return message.id
+
+async def dshell_remove_reactions(ctx: Message, reactions, message_id=None):
+    """
+    Removes reactions from a message
+    """
+    message = ctx.channel if message_id is None else ctx.channel.get_partial_message(message_id)  # builds a reference to the message (even if it doesn't exist)
+
+    if isinstance(reactions, str):
+        reactions = [reactions]
+
+    for reaction in reactions:
+        await message.clear_reaction(reaction)
+
+    return message.id

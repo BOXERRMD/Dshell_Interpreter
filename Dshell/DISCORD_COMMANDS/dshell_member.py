@@ -1,11 +1,13 @@
-from discord import MISSING, Message
+from discord import MISSING, Message, Member
 
 
 __all__ = [
     "dshell_ban_member",
     "dshell_unban_member",
     "dshell_kick_member",
-    "dshell_rename_member"
+    "dshell_rename_member",
+    "dshell_add_roles",
+    "dshell_remove_roles",
 ]
 
 async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
@@ -65,3 +67,39 @@ async def dshell_rename_member(ctx: Message, new_name, member=None):
     await renamed_member.edit(nick=new_name)
 
     return renamed_member.id
+
+async def dshell_add_roles(ctx: Message, roles: list[int], member=None, reason: str = None):
+    """
+    Adds roles to a member in the server.
+    """
+    target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
+
+    if not target_member:
+        return 1  # Member not found in the server
+
+    roles_to_add = [ctx.channel.guild.get_role(role_id) for role_id in roles if ctx.channel.guild.get_role(role_id)]
+
+    if not roles_to_add:
+        return 2  # No valid roles found
+
+    await target_member.add_roles(*roles_to_add, reason=reason)
+
+    return target_member.id
+
+async def dshell_remove_roles(ctx: Message, roles: list[int], member=None, reason: str = None):
+    """
+    Removes roles from a member in the server.
+    """
+    target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
+
+    if not target_member:
+        return 1  # Member not found in the server
+
+    roles_to_remove = [ctx.channel.guild.get_role(role_id) for role_id in roles if ctx.channel.guild.get_role(role_id)]
+
+    if not roles_to_remove:
+        return 2  # No valid roles found
+
+    await target_member.remove_roles(*roles_to_remove, reason=reason)
+
+    return target_member.id
