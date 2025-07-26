@@ -23,6 +23,7 @@ from .ast_nodes import (ASTNode,
                         EmbedNode,
                         FieldEmbedNode,
                         PermissionNode,
+                        ParamNode,
                         StartNode)
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
@@ -66,7 +67,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
             elif first_token_line.value == '#if':
                 if not isinstance(last_block, (IfNode, ElseNode, ElifNode)):
-                    raise SyntaxError(f'[#IF] Aucun bloc conditionnel ouvert ligne {first_token_line.position} !')
+                    raise SyntaxError(f'[#IF] No conditional bloc open on line {first_token_line.position} !')
 
                 if isinstance(last_block, (ElifNode, ElseNode)):
 
@@ -78,7 +79,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
             elif first_token_line.value == 'elif':
                 if not isinstance(last_block, (IfNode, ElifNode)):
-                    raise SyntaxError(f'[ELIF] Aucun bloc conditionnel ouvert ligne {first_token_line.position} !')
+                    raise SyntaxError(f'[ELIF] No conditional bloc open on line {first_token_line.position} !')
                 elif_node = ElifNode(condition=tokens_by_line[1:], body=[],
                                      parent=last_block if isinstance(last_block, IfNode) else last_block.parent)
 
@@ -94,10 +95,10 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
             elif first_token_line.value == 'else':
                 if not isinstance(last_block, (IfNode, ElifNode)):
-                    raise SyntaxError(f'[ELSE] Aucun bloc conditionnel ouvert ligne {first_token_line.position} !')
+                    raise SyntaxError(f'[ELSE] No conditional bloc open on line {first_token_line.position} !')
 
                 if isinstance(last_block, ElseNode) and last_block.else_body is not None:
-                    raise SyntaxError(f'[ELSE] Déjà définit et n\'accepte pas les doublons dans un même if !')
+                    raise SyntaxError(f'[ELSE] already define !')
 
                 else_node = ElseNode(body=[])
 
@@ -116,7 +117,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
             elif first_token_line.value == '#loop':  # si rencontré
                 if not isinstance(last_block, LoopNode):
-                    raise SyntaxError(f'[#LOOP] Aucune loop ouverte ligne {first_token_line.position} !')
+                    raise SyntaxError(f'[#LOOP] No loop open on line {first_token_line.position} !')
                 blocks.pop()
                 return blocks, pointeur  # on renvoie les informations parsé à la dernière loop ouverte
 
@@ -135,6 +136,17 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 sleep_node = SleepNode(tokens_by_line[1:])
                 last_block.body.append(sleep_node)
 
+            elif first_token_line.value == 'param':
+                param_node = ParamNode(body=[])
+                last_block.body.append(param_node)
+                _, p = parse(token_lines[pointeur + 1:], param_node)
+                pointeur += p + 1  # on avance le pointeur de la ligne suivante
+
+            elif first_token_line.value == '#param':
+                if not isinstance(last_block, ParamNode):
+                    raise SyntaxError(f'[#PARAM] No parameters open on line {first_token_line.position} !')
+                blocks.pop()  # on supprime le dernier bloc (le paramètre)
+
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
                 end_node = EndNode()
                 last_block.body.append(end_node)
@@ -152,13 +164,13 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
             elif first_token_line.value == '#embed':
                 if not isinstance(last_block, EmbedNode):
-                    raise SyntaxError(f'[#EMBED] Aucun embed ouvert ligne {first_token_line.position} !')
+                    raise SyntaxError(f'[#EMBED] No embed open on line {first_token_line.position} !')
                 blocks.pop()
                 return blocks, pointeur
 
             elif first_token_line.value == 'field':
                 if not isinstance(last_block, EmbedNode):
-                    raise SyntaxError(f'[FIELD] Aucun embed ouvert ligne {first_token_line.position} !')
+                    raise SyntaxError(f'[FIELD] No embed open on line {first_token_line.position} !')
                 last_block.fields.append(FieldEmbedNode(tokens_by_line[1:]))
 
             elif first_token_line.value in ('perm', 'permission'):
@@ -170,7 +182,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
             elif first_token_line.value in ('#perm', '#permission'):
                 if not isinstance(last_block, PermissionNode):
-                    raise SyntaxError(f'[#PERM] Aucun permission ouvert ligne {first_token_line.position} !')
+                    raise SyntaxError(f'[#PERM] No permission open on line {first_token_line.position} !')
                 blocks.pop()
                 return blocks, pointeur
 
@@ -345,3 +357,9 @@ def print_ast(ast: list[ASTNode], decalage: int = 0):
         elif isinstance(i, FieldEmbedNode):
             for field in i.body:
                 print(f"{' ' * decalage}FIELD -> {field.value}")
+
+        elif isinstance(i, PermissionNode):
+            print(f"{' ' * decalage}PERMISSION -> {i.body}")
+
+        elif isinstance(i, ParamNode):
+            print(f"{' ' * decalage}PARAM -> {i.body}")

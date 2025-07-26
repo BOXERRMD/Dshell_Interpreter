@@ -24,7 +24,7 @@ class DshellInterpreteur:
     Make what you want with Dshell code to interact with Discord !
     """
 
-    def __init__(self, code: str, ctx: context, debug: bool = False, vars: Optional[dict[str, Any]] = None):
+    def __init__(self, code: str, ctx: context, debug: bool = False, vars: Optional[str] = None):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
@@ -33,11 +33,12 @@ class DshellInterpreteur:
         :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
         """
         self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
-        self.env: dict[str, Any] = vars or {}
+        self.env: dict[str, Any] = {'__ret__': None}  # environment variables, '__ret__' is used to store the return value of commands
+        self.vars = vars if vars is not None else ''
+        print('ENV : ', self.env)
         self.ctx: context = ctx
         if debug:
             print_ast(self.ast)
-        self.env['__ret__'] = None
 
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """
@@ -62,6 +63,12 @@ class DshellInterpreteur:
 
             if isinstance(node, CommandNode):
                 self.env['__ret__'] = await call_function(dshell_commands[node.name], node.body, self)
+
+            elif isinstance(node, ParamNode):
+                params = get_params(node, self)
+                self.env.update(params)  # update the environment
+
+                print(self.env)
 
             elif isinstance(node, IfNode):
                 elif_valid = False
@@ -153,6 +160,37 @@ class DshellInterpreteur:
             return token.value  # fallback
 
 
+def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, Any]:
+    """
+    Get the parameters from a ParamNode.
+    :param node: The ParamNode to get the parameters from.
+    :param interpreter: The Dshell interpreter instance.
+    :return: A dictionary of parameters.
+    """
+    regrouped_args: dict[str, list] = regroupe_commandes(node.body, interpreter)[
+        0]  # just regroup the commands, no need to do anything else
+    env_give_variables = regroupe_commandes(DshellTokenizer(interpreter.vars).start()[0], interpreter)[0]
+    print(regrouped_args, env_give_variables)
+    obligate = []
+    optional = {}  # regroup the arguments into obligate and optional parameters
+
+    for param in regrouped_args.keys():
+        if param not in interpreter.env:
+            if regrouped_args[param] == '*':
+                obligate.append(param)
+            optional[param] = regrouped_args[param]
+############################################################### NE FONCTIONNE PAS
+    print('Obligate:', obligate)
+    for key, value in env_give_variables.items():
+        if key == '*':
+            optional.update({obligate[i]: value[i] for i in range(len(obligate))})
+            del obligate
+
+        else:
+            optional[key] = value
+
+    return optional
+
 def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
     """
     Eval a conditional expression inline.
@@ -231,7 +269,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
     Non-mandatory parameters will be stored in a list in the form of tokens with the key ‘*’.
     The others, having been specified via a separator, will be in the form of a list of tokens with the IDENT token as key, following the separator for each argument.
     If two parameters have the same name, the last one will overwrite the previous one.
-    To accept duplicates, use the SUB_SEPARATOR (~~) to create a sub-dictionary for parameters with the same name.
+    To accept duplicates, use the SUB_SEPARATOR (~~) to create a sub-dictionary for parameters with the same name (sub-dictionary is added to the list returned).
 
     :param body: The list of tokens to group.
     :param interpreter: The Dshell interpreter instance.

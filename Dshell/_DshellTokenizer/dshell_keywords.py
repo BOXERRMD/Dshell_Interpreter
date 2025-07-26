@@ -14,7 +14,7 @@ from ..DISCORD_COMMANDS.dshell_message import *
 from ..DISCORD_COMMANDS.dshell_member import *
 
 dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep'
+    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
 }
 
 dshell_discord_keyword: set[str] = {

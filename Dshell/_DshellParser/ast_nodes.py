@@ -19,7 +19,8 @@ __all__ = [
     'SleepNode',
     'IdentOperationNode',
     'ListNode',
-    'PermissionNode'
+    'PermissionNode',
+    'ParamNode'
 ]
 
 
@@ -393,6 +394,33 @@ class IdentOperationNode(ASTNode):
             "ident": self.ident.to_dict(),
             "function": self.function.to_dict(),
             "args": self.args.to_dict()
+        }
+
+class ParamNode(ASTNode):
+    """
+    Node representing a parameter in the AST.
+    This is used to define parameters for variables passed to the dshell interpreter.
+    """
+
+    def __init__(self, body: list[Token]):
+        """
+        :param name: Token representing the parameter name
+        :param body: list of tokens representing the body of the parameter
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<PARAM> - {self.name} *- {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the ParamNode to a dictionary representation.
+        :return: Dictionary representation of the ParamNode.
+        """
+        return {
+            "type": "ParamNode",
+            "name": self.name.to_dict(),
+            "body": [token.to_dict() for token in self.body]
         }
 
 class ListNode(ASTNode):
