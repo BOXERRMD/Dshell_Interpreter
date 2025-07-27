@@ -123,7 +123,7 @@ async def dshell_add_reactions(ctx: Message, reactions, message=None):
     message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
 
     if isinstance(reactions, str):
-        reactions = [reactions]
+        reactions = (reactions,)
 
     for reaction in reactions:
         await message.add_reaction(reaction)

@@ -43,8 +43,8 @@ dshell_commands: dict[str, Callable] = {
     "ec": dshell_edit_text_channel,  # edit text channel
     "evc": dshell_edit_voice_channel,  # edit voice channel
 
-    "arr": dshell_add_reactions,  # add reactions to a message
-    "rrr": dshell_remove_reactions,  # remove reactions from a message
+    "amr": dshell_add_reactions,  # add reactions to a message
+    "rmr": dshell_remove_reactions,  # remove reactions from a message
 
 }
 

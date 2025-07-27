@@ -2,7 +2,6 @@ from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
 
-
 from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message
 from discord.abc import PrivateChannel
 
@@ -33,9 +32,9 @@ class DshellInterpreteur:
         :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
         """
         self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
-        self.env: dict[str, Any] = {'__ret__': None}  # environment variables, '__ret__' is used to store the return value of commands
+        self.env: dict[str, Any] = {
+            '__ret__': None}  # environment variables, '__ret__' is used to store the return value of commands
         self.vars = vars if vars is not None else ''
-        print('ENV : ', self.env)
         self.ctx: context = ctx
         if debug:
             print_ast(self.ast)
@@ -67,8 +66,6 @@ class DshellInterpreteur:
             elif isinstance(node, ParamNode):
                 params = get_params(node, self)
                 self.env.update(params)  # update the environment
-
-                print(self.env)
 
             elif isinstance(node, IfNode):
                 elif_valid = False
@@ -169,27 +166,27 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
     """
     regrouped_args: dict[str, list] = regroupe_commandes(node.body, interpreter)[
         0]  # just regroup the commands, no need to do anything else
-    env_give_variables = regroupe_commandes(DshellTokenizer(interpreter.vars).start()[0], interpreter)[0]
-    print(regrouped_args, env_give_variables)
-    obligate = []
-    optional = {}  # regroup the arguments into obligate and optional parameters
+    regrouped_args.pop('*', ())
+    obligate = [i for i in regrouped_args.keys() if regrouped_args[i] == '*']  # get the obligatory parameters
 
-    for param in regrouped_args.keys():
-        if param not in interpreter.env:
-            if regrouped_args[param] == '*':
-                obligate.append(param)
-            optional[param] = regrouped_args[param]
-############################################################### NE FONCTIONNE PAS
-    print('Obligate:', obligate)
+    g: list[list[Token]] = DshellTokenizer(interpreter.vars).start()
+    env_give_variables = regroupe_commandes(g[0], interpreter)[0] if g else {}
+
+    gived_variables = env_give_variables.pop('*', ())  # get the variables given in the environment
+    for key, value in zip(regrouped_args.keys(), gived_variables):
+        regrouped_args[key] = value
+
     for key, value in env_give_variables.items():
-        if key == '*':
-            optional.update({obligate[i]: value[i] for i in range(len(obligate))})
-            del obligate
-
+        if key in regrouped_args:
+            regrouped_args[key] = value  # update the regrouped args with the env variables
         else:
-            optional[key] = value
+            raise Exception(f"'{key}' is not a valid parameter, but was given in the environment.")
 
-    return optional
+    for key in obligate:
+        if regrouped_args[key] == '*':
+            raise Exception(f"'{key}' is an obligatory parameter, but no value was given for it.")
+
+    return regrouped_args
 
 def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
     """
@@ -442,7 +439,8 @@ class DshellPermissions:
 
         if 'members' in target_keys:
             for member_id in (
-            self.target['members'] if isinstance(self.target['members'], ListNode) else [self.target['members']]): # allow a single ID
+                    self.target['members'] if isinstance(self.target['members'], ListNode) else [
+                        self.target['members']]):  # allow a single ID
                 member = self.get_member(guild, member_id)
                 permissions[member] = PermissionOverwrite.from_pair(
                     allow=Permissions(permissions=self.target.get('allow', 0)),
@@ -451,7 +449,8 @@ class DshellPermissions:
 
         elif 'roles' in target_keys:
             for role_id in (
-            self.target['roles'] if isinstance(self.target['roles'], ListNode) else [self.target['roles']]): # allow a single ID
+                    self.target['roles'] if isinstance(self.target['roles'], ListNode) else [
+                        self.target['roles']]):  # allow a single ID
                 role = self.get_role(guild, role_id)
                 permissions[role] = PermissionOverwrite.from_pair(
                     allow=Permissions(permissions=self.target.get('allow', 0)),

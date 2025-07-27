@@ -146,6 +146,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if not isinstance(last_block, ParamNode):
                     raise SyntaxError(f'[#PARAM] No parameters open on line {first_token_line.position} !')
                 blocks.pop()  # on supprime le dernier bloc (le paramètre)
+                return blocks, pointeur  # on renvoie les informations parsé à la dernière paramètre ouverte
 
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
                 end_node = EndNode()
