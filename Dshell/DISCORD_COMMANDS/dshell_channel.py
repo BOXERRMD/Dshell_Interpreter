@@ -98,7 +98,8 @@ async def dshell_edit_text_channel(ctx: Message,
                                       name=None,
                                       position=MISSING,
                                       slowmode=MISSING,
-                                      topic=MISSING, nsfw=MISSING,
+                                      topic=MISSING,
+                                      nsfw=MISSING,
                                       permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
                                       reason=None):
     """
@@ -110,12 +111,12 @@ async def dshell_edit_text_channel(ctx: Message,
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
 
-    await channel_to_edit.edit(name=name,
-                               position=position,
-                               slowmode_delay=slowmode,
-                               topic=topic,
-                               nsfw=nsfw,
-                               overwrites=permission,
+    await channel_to_edit.edit(name=name if name is not None else channel_to_edit.name,
+                               position=position if position is not MISSING else channel_to_edit.position,
+                               slowmode_delay=slowmode if slowmode is not MISSING else channel_to_edit.slowmode_delay,
+                               topic=topic if topic is not MISSING else channel_to_edit.topic,
+                               nsfw=nsfw if nsfw is not MISSING else channel_to_edit.nsfw,
+                               overwrites=permission if permission is not MISSING else channel_to_edit.overwrites,
                                reason=reason)
 
     return channel_to_edit.id
@@ -136,10 +137,10 @@ async def dshell_edit_voice_channel(ctx: Message,
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
 
-    await channel_to_edit.edit(name=name,
-                               position=position,
-                               bitrate=bitrate,
-                               overwrites=permission,
+    await channel_to_edit.edit(name=name if name is not None else channel_to_edit.name,
+                               position=position if position is not MISSING else channel_to_edit.position,
+                               bitrate=bitrate if bitrate is not MISSING else channel_to_edit.bitrate,
+                               overwrites=permission if permission is not MISSING else channel_to_edit.overwrites,
                                reason=reason)
 
     return channel_to_edit.id
