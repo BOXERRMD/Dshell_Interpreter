@@ -28,8 +28,7 @@ from .ast_nodes import (ASTNode,
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
 
-if TYPE_CHECKING:
-    from .._DshellTokenizer import dshell_operators
+from .._DshellTokenizer import dshell_operators
 
 
 def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[ASTNode], int]:
