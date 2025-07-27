@@ -70,16 +70,16 @@ class DshellTokenizer:
                         token = Token(token_type, match.group(1), (line_number, match.start()))  # on enregistre son token
                         tokens_par_ligne.append(token)
 
-                    len_match = len(match.group(0))
-                    ligne = ligne[:match.start()] + (MASK_CHARACTER * len_match) + ligne[
-                                                                                   match.end():]  # remplace la match qui vient d'avoir lieu pour ne pas le rematch une seconde fois
-
                     if token_type in (
                             DTT.LIST,
                             DTT.CALL_ARGS):  # si c'est un regrouppement de donnée, on tokenize ce qu'il contient
                         result = self.tokenizer([token.value])
                         token.value = result[0] if len(
                             result) > 0 else result  # gère si la structure de donnée est vide ou non
+
+                    len_match = len(match.group(0))
+                    ligne = ligne[:match.start()] + (MASK_CHARACTER * len_match) + ligne[
+                                                                                   match.end():]  # remplace la match qui vient d'avoir lieu pour ne pas le rematch une seconde fois
 
             tokens_par_ligne.sort(key=lambda
                 token: token.position[1])  # trie la position par rapport aux positions de match des tokens pour les avoir dans l'ordre du code

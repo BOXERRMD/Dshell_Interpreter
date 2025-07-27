@@ -106,12 +106,12 @@ async def dshell_research_regex_message(ctx: Message, regex, channel=None):
 
     return messages
 
-async def dshell_research_regex_in_content(ctx: Message, regex, content):
+async def dshell_research_regex_in_content(ctx: Message, regex, content=None):
     """
     Searches for a regex in a specific message content
     """
 
-    if not search(regex, content):
+    if not search(regex, content if content is not None else ctx.content):
         return False
 
     return True
