@@ -14,11 +14,11 @@ from .dshell_token_type import Token
 MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
-    DTT.COMMENT: compile(r"::(.*)"),
+    DTT.COMMENT: compile(r"::(.*?)"),
     # DTT.DICT: compile(r"\{(.*?)\}"),
-    DTT.CALL_ARGS: compile(r"\((.*?)\)"),
+    DTT.STR: compile(r'"(.*?)"', flags=DOTALL),
     DTT.LIST: compile(r"\[(.*?)\]"),
-    DTT.STR: compile(r"\"(.*?)\"", flags=DOTALL),
+    DTT.CALL_ARGS: compile(r"\((.*?)\)"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
     DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
     DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
@@ -72,10 +72,21 @@ class DshellTokenizer:
 
                     if token_type in (
                             DTT.LIST,
-                            DTT.CALL_ARGS):  # si c'est un regrouppement de donnée, on tokenize ce qu'il contient
+                            DTT.CALL_ARGS):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
                         result = self.tokenizer([token.value])
                         token.value = result[0] if len(
                             result) > 0 else result  # gère si la structure de donnée est vide ou non
+
+                        for token_in_list in token.value:
+                            token_in_list.position = (line_number, token_in_list.position[1])
+
+                        for token_in_line in range(len(tokens_par_ligne)-1):
+                            if tokens_par_ligne[token_in_line].position[1] > match.start():
+                                str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
+                                tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
+                                token.value.extend(str_tokens_in_list)
+                                token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
+                                break
 
                     len_match = len(match.group(0))
                     ligne = ligne[:match.start()] + (MASK_CHARACTER * len_match) + ligne[
@@ -85,6 +96,8 @@ class DshellTokenizer:
                 token: token.position[1])  # trie la position par rapport aux positions de match des tokens pour les avoir dans l'ordre du code
             if tokens_par_ligne:
                 tokens.append(tokens_par_ligne)
+
+            line_number += 1  # incrémente le numéro de ligne pour la prochaine ligne
 
         return tokens
 
