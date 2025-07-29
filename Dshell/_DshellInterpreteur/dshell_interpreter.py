@@ -184,10 +184,14 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
     if len(gived_variables) > 0:
         for key in englobe_args.keys():
             regrouped_args[key] = ' '.join([str(i) for i in gived_variables])
+            del englobe_args[key]
+            break
 
     for key, englobe_gived_key, englobe_gived_value in zip(englobe_args.keys(), englobe_gived_variables.keys(), englobe_gived_variables.values()):
         if key == englobe_gived_key:
             regrouped_args[key] = englobe_gived_value
+
+    regrouped_args.update(englobe_args)  # add the englobe args to the regrouped args
 
     for key, value in env_give_variables.items():
         if key in regrouped_args:

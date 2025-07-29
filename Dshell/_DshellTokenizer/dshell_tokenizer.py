@@ -15,7 +15,7 @@ MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*?)"),
-    DTT.ENGLOBE_SEPARATOR: compile(rf"--\*\w+\s*(.*)"),
+    DTT.ENGLOBE_SEPARATOR: compile(rf"--\*\w+\s*(.*?)\s*(?=--|$)"),
     DTT.STR: compile(r'"(.*?)"', flags=DOTALL),
     DTT.LIST: compile(r"\[(.*?)\]"),
     DTT.CALL_ARGS: compile(r"\((.*?)\)"),
