@@ -42,12 +42,12 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
     return sended_message.id
 
 
-async def dshell_delete_message(ctx: Message, message, reason=None, delay=0):
+async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0):
     """
     Deletes a message
     """
 
-    delete_message = ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
+    delete_message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
 
     if delay > 3600:
         raise Exception(f'The message deletion delay is too long! ({delay} seconds)')

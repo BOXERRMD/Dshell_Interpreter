@@ -167,14 +167,27 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
     regrouped_args: dict[str, list] = regroupe_commandes(node.body, interpreter)[
         0]  # just regroup the commands, no need to do anything else
     regrouped_args.pop('*', ())
+    englobe_args = regrouped_args.pop('--*', {})  # get the arguments that are not mandatory
     obligate = [i for i in regrouped_args.keys() if regrouped_args[i] == '*']  # get the obligatory parameters
+
 
     g: list[list[Token]] = DshellTokenizer(interpreter.vars).start()
     env_give_variables = regroupe_commandes(g[0], interpreter)[0] if g else {}
 
     gived_variables = env_give_variables.pop('*', ())  # get the variables given in the environment
+    englobe_gived_variables: dict = env_give_variables.pop('--*', {})  # get the variables given in the environment that are not mandatory
+
     for key, value in zip(regrouped_args.keys(), gived_variables):
         regrouped_args[key] = value
+        gived_variables.pop(0)
+
+    if len(gived_variables) > 0:
+        for key in englobe_args.keys():
+            regrouped_args[key] = ' '.join([str(i) for i in gived_variables])
+
+    for key, englobe_gived_key, englobe_gived_value in zip(englobe_args.keys(), englobe_gived_variables.keys(), englobe_gived_variables.values()):
+        if key == englobe_gived_key:
+            regrouped_args[key] = englobe_gived_value
 
     for key, value in env_give_variables.items():
         if key in regrouped_args:
@@ -251,13 +264,13 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
 
     # conversion des args en valeurs Python
     absolute_args = reformatted.pop('*', list())
+    englobe_args = reformatted.pop('--*', list())
 
     reformatted: dict[str, Token]
 
     absolute_args.insert(0, interpreter.ctx)
-    keyword_args = {
-        key: value for key, value in reformatted.items()
-    }
+    keyword_args = reformatted.copy()
+    keyword_args.update(englobe_args)
     return await function(*absolute_args, **keyword_args)
 
 
@@ -273,7 +286,8 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
     :param body: The list of tokens to group.
     :param interpreter: The Dshell interpreter instance.
     """
-    tokens = {'*': []}  # tokens to return
+    tokens = {'*': [],
+              '--*': {}}  # tokens to return
     current_arg = '*'  # the argument keys are the types they belong to. '*' is for all arguments not explicitly specified by a separator and an IDENT
     n = len(body)
     list_tokens: list[dict] = [tokens]
@@ -301,7 +315,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
               body[i + 2].type == DTT.IDENT and
               body[i + 3].type == DTT.ENGLOBE_SEPARATOR):
             current_arg = body[i + 2].value  # change the current argument
-            tokens[current_arg] = body[i + 3].value
+            tokens['--*'][current_arg] = body[i + 3].value
             i += 4
 
         else:
@@ -320,12 +334,14 @@ def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: Ds
     """
     args_main_embed: dict[str, list[Any]] = regroupe_commandes(body, interpreter)[0]
     args_main_embed.pop('*')  # remove unspecified parameters for the embed
+    args_main_embed.pop('--*')
     args_main_embed: dict[str, Token]  # specify what it contains from now on
 
     args_fields: list[dict[str, Token]] = []
     for field in fields:  # do the same for the fields
         a = regroupe_commandes(field.body, interpreter)[0]
         a.pop('*')
+        a.pop('--*')
         a: dict[str, Token]
         args_fields.append(a)
 
