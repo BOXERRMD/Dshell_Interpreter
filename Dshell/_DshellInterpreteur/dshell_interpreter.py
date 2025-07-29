@@ -186,6 +186,8 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
         if regrouped_args[key] == '*':
             raise Exception(f"'{key}' is an obligatory parameter, but no value was given for it.")
 
+    print(regrouped_args)
+
     return regrouped_args
 
 def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
@@ -278,6 +280,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
 
     i = 0
     while i < n:
+
         if body[i].type == DTT.SEPARATOR and body[
             i + 1].type == DTT.IDENT:  # Check if it's a separator and if the next token is an IDENT
             current_arg = body[i + 1].value  # change the current argument. It will be impossible to return to '*'
@@ -291,7 +294,15 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
                     type_=DTT.SEPARATOR, value=body[i].value, position=body[i].position)
                 ] + body[i + 1:], interpreter
             )  # add a sub-dictionary for sub-commands
-            return list_tokens
+            #return list_tokens
+
+        elif (body[i].type == DTT.SEPARATOR and
+              (body[i + 1].type == DTT.MATHS_OPERATOR and body[i + 1].value == '*') and
+              body[i + 2].type == DTT.IDENT and
+              body[i + 3].type == DTT.ENGLOBE_SEPARATOR):
+            current_arg = body[i + 2].value  # change the current argument
+            tokens[current_arg] = body[i + 3].value
+            i += 4
 
         else:
             if current_arg == '*':
@@ -299,6 +310,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
             else:
                 tokens[current_arg] = interpreter.eval_data_token(body[i])  # add the token to the current argument
             i += 1
+
     return list_tokens
 
 

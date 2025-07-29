@@ -15,15 +15,15 @@ MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*?)"),
-    # DTT.DICT: compile(r"\{(.*?)\}"),
+    DTT.ENGLOBE_SEPARATOR: compile(rf"--\*\w+\s*(.*)"),
     DTT.STR: compile(r'"(.*?)"', flags=DOTALL),
     DTT.LIST: compile(r"\[(.*?)\]"),
     DTT.CALL_ARGS: compile(r"\((.*?)\)"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
-    DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
-    DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
     DTT.SEPARATOR: compile(rf"(--)"),
     DTT.SUB_SEPARATOR: compile(rf"(~~)"),
+    DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
+    DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
     DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b"),
     DTT.MATHS_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_mathematical_operators.keys()])})"),
     DTT.LOGIC_OPERATOR: compile(rf"(?<!\w)({'|'.join([escape(i) for i in dshell_logical_operators.keys()])})(?<!\w)"),
@@ -66,8 +66,13 @@ class DshellTokenizer:
             for token_type, pattern in table_regex.items():  # iter la table de régex pour tous les tester sur la ligne
 
                 for match in finditer(pattern, ligne):  # iter les résultat du match pour avoir leur position
+
+                    start_match = match.start()  # position de début du match
+                    if token_type == DTT.ENGLOBE_SEPARATOR:
+                        start_match += len(match.group(0)) - len(match.group(1))  # si c'est un séparateur englobant, on enlève les --* du début
+
                     if token_type != DTT.COMMENT:  # si ce n'est pas un commentaire
-                        token = Token(token_type, match.group(1), (line_number, match.start()))  # on enregistre son token
+                        token = Token(token_type, match.group(1), (line_number, start_match))  # on enregistre son token
                         tokens_par_ligne.append(token)
 
                     if token_type in (
@@ -81,15 +86,15 @@ class DshellTokenizer:
                             token_in_list.position = (line_number, token_in_list.position[1])
 
                         for token_in_line in range(len(tokens_par_ligne)-1):
-                            if tokens_par_ligne[token_in_line].position[1] > match.start():
+                            if tokens_par_ligne[token_in_line].position[1] > start_match:
                                 str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
                                 tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
                                 token.value.extend(str_tokens_in_list)
                                 token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
                                 break
 
-                    len_match = len(match.group(0))
-                    ligne = ligne[:match.start()] + (MASK_CHARACTER * len_match) + ligne[
+                    len_match = len(match.group(0))  # longueur du match trouvé
+                    ligne = ligne[:start_match] + (MASK_CHARACTER * len_match) + ligne[
                                                                                    match.end():]  # remplace la match qui vient d'avoir lieu pour ne pas le rematch une seconde fois
 
             tokens_par_ligne.sort(key=lambda
