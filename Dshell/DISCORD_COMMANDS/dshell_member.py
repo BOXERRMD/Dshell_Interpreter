@@ -1,5 +1,5 @@
-from discord import MISSING, Message, Member
-
+from discord import MISSING, Message, Member, Permissions
+from datetime import timedelta, datetime
 
 __all__ = [
     "dshell_ban_member",
@@ -8,6 +8,9 @@ __all__ = [
     "dshell_rename_member",
     "dshell_add_roles",
     "dshell_remove_roles",
+    "dshell_check_permissions",
+    "dshell_timeout_member",
+    "dshell_move_member"
 ]
 
 async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
@@ -17,7 +20,7 @@ async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     banned_member = ctx.channel.guild.get_member(member)
 
     if not banned_member:
-        return 1 # Member not found in the server
+        raise Exception(f'Member {member} not found in the server !')
 
     await ctx.channel.guild.ban(banned_member, reason=reason)
 
@@ -36,7 +39,7 @@ async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
             break
 
     if not user_to_unban:
-        return 1  # User not found in the banned list
+        raise Exception(f'User {user} not found in the banned list')
 
     await ctx.channel.guild.unban(user_to_unban, reason=reason)
 
@@ -49,11 +52,30 @@ async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     kicked_member = ctx.channel.guild.get_member(member)
 
     if not kicked_member:
-        return 1  # Member not found in the server
+        raise Exception(f'Member {member} not found in the server !')
 
     await ctx.channel.guild.kick(kicked_member, reason=reason)
 
     return kicked_member.id
+
+async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason: str = MISSING):
+    """
+    Timeouts a member in the server for a specified duration.
+    """
+    target_member = ctx.author if member is None else ctx.channel.guild.get_member(member)
+
+    if not target_member:
+        raise Exception(f'Member {member} not found in the server !')
+
+    if not isinstance(duration, int):
+        raise TypeError("Duration must be an integer representing seconds.")
+
+    if duration < 0:
+        raise ValueError("Duration must be a non-negative integer.")
+
+    await target_member.timeout(until=datetime.now() + timedelta(seconds=duration), reason=reason)
+
+    return target_member.id
 
 async def dshell_rename_member(ctx: Message, new_name, member=None):
     """
@@ -62,44 +84,93 @@ async def dshell_rename_member(ctx: Message, new_name, member=None):
     renamed_member = ctx.channel.guild.get_member(member)
 
     if not renamed_member:
-        return 1  # Member not found in the server
+        raise Exception(f'Member {member} not found in the server !')
 
     await renamed_member.edit(nick=new_name)
 
     return renamed_member.id
 
-async def dshell_add_roles(ctx: Message, roles: list[int], member=None, reason: str = None):
+async def dshell_add_roles(ctx: Message, roles: list[int] | int, member=None, reason: str = None):
     """
     Adds roles to a member in the server.
     """
     target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
     if not target_member:
-        return 1  # Member not found in the server
+        raise Exception(f'Member {member} not found in the server !')
+
+    if isinstance(roles, int):
+        roles = [roles]
 
     roles_to_add = [ctx.channel.guild.get_role(role_id) for role_id in roles if ctx.channel.guild.get_role(role_id)]
 
     if not roles_to_add:
-        return 2  # No valid roles found
+        raise Exception(f'No role found !')
 
     await target_member.add_roles(*roles_to_add, reason=reason)
 
     return target_member.id
 
-async def dshell_remove_roles(ctx: Message, roles: list[int], member=None, reason: str = None):
+async def dshell_remove_roles(ctx: Message, roles: list[int] | int, member=None, reason: str = None):
     """
     Removes roles from a member in the server.
     """
     target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
     if not target_member:
-        return 1  # Member not found in the server
+        raise Exception(f'Member {member} not found in the server !')
+
+    if isinstance(roles, int):
+        roles = [roles]
 
     roles_to_remove = [ctx.channel.guild.get_role(role_id) for role_id in roles if ctx.channel.guild.get_role(role_id)]
 
     if not roles_to_remove:
-        return 2  # No valid roles found
+        raise Exception(f'No role found !')
 
     await target_member.remove_roles(*roles_to_remove, reason=reason)
+
+    return target_member.id
+
+async def dshell_check_permissions(ctx: Message, permissions, member=None):
+    """
+    Checks if a member has specific permissions in the server.
+    """
+    target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
+
+    if not target_member:
+        raise Exception(f'Member {member} not found in the server !')
+
+    if not isinstance(permissions, int):
+        raise TypeError("Permissions must be an integer representing permissions flags.")
+
+    permissions_to_check = Permissions(permissions)
+    member_permissions = target_member.guild_permissions
+
+    if (permissions_to_check.value & member_permissions.value) != 0:
+        return True
+    return False
+
+async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect: bool = False, reason=None):
+    """
+    Moves a member to another channel.
+    If channel is None, disconnect the member from their current voice channel.
+    """
+    target_member = ctx.author if member is None else ctx.channel.guild.get_member(member)
+    target_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if not target_member:
+        raise Exception(f'Member {member} not found in the server !')
+
+    if target_member.voice.channel is None:
+        raise Exception(f'Member {target_member.name} is not in a voice channel !')
+
+    if not target_channel:
+        raise Exception(f'Channel {channel} not found in the server !')
+
+    if disconnect:
+        await target_member.move_to(None, reason=reason)
+    else:
+        await target_member.move_to(target_channel, reason=reason)
 
     return target_member.id

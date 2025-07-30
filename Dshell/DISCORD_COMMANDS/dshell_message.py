@@ -8,17 +8,20 @@ __all__ = [
     'dshell_delete_message',
     'dshell_purge_message',
     'dshell_edit_message',
-    'dshell_research_regex_message',
+    'dshell_get_hystory_messages',
     'dshell_research_regex_in_content',
     'dshell_add_reactions',
     'dshell_remove_reactions'
 ]
 
 
-async def dshell_send_message(ctx: Message, message=None, delete=None, channel=None, embeds=None, embed=None):
+async def dshell_send_message(ctx: Message, message=None, delete=None, channel=None, embeds=None):
     """
     Sends a message on Discord
     """
+    if delete is not None and not isinstance(delete, (int, float)):
+        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     if channel_to_send is None:
@@ -32,8 +35,8 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    if embed is not None and isinstance(embed, Embed):
-        embeds.add(embed)
+    else:
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,
@@ -49,6 +52,9 @@ async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0
 
     delete_message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
 
+    if not isinstance(delay, int):
+        raise Exception(f'Delete delay must be an integer, not {type(delay)} !')
+
     if delay > 3600:
         raise Exception(f'The message deletion delay is too long! ({delay} seconds)')
 
@@ -59,6 +65,9 @@ async def dshell_purge_message(ctx: Message, message_number, channel=None, reaso
     """
     Purges messages from a channel
     """
+
+    if not isinstance(message_number, int):
+        raise Exception(f'Message number must be an integer, not {type(message_number)} !')
 
     purge_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -84,10 +93,13 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
 
     return edit_message.id
 
-async def dshell_research_regex_message(ctx: Message, regex, channel=None):
+async def dshell_get_hystory_messages(ctx: Message, channel=None, limit=None):
     """
     Searches for messages matching a regex in a channel
     """
+
+    if limit is not None and not isinstance(limit, int):
+        raise Exception(f"Limit must be an integer or None, not {type(limit)}!")
 
     search_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -97,12 +109,11 @@ async def dshell_research_regex_message(ctx: Message, regex, channel=None):
     from .._DshellParser.ast_nodes import ListNode
 
     messages = ListNode([])
-    async for message in search_channel.history(limit=100):
-        if search(regex, message.content):
-            messages.add(message)
+    async for message in search_channel.history(limit=limit):
+        messages.add(message)
 
     if not messages:
-        raise commands.CommandError(f"No messages found matching the regex '{regex}'.")
+        raise commands.CommandError(f"No messages in {search_channel.mention}.")
 
     return messages
 
@@ -111,7 +122,10 @@ async def dshell_research_regex_in_content(ctx: Message, regex, content=None):
     Searches for a regex in a specific message content
     """
 
-    if not search(regex, content if content is not None else ctx.content):
+    if not isinstance(regex, str):
+        raise Exception(f"Regex must be a string, not {type(regex)}!")
+
+    if not search(regex, str(content) if content is not None else ctx.content):
         return False
 
     return True

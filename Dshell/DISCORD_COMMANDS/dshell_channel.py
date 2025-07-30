@@ -3,6 +3,7 @@ from re import search
 from typing import Union
 
 from discord import MISSING, PermissionOverwrite, Member, Role, Message
+from discord.utils import _MissingSentinel
 
 __all__ = [
     'dshell_create_text_channel',
@@ -19,16 +20,29 @@ async def dshell_create_text_channel(ctx: Message,
                                      category=None,
                                      position=MISSING,
                                      slowmode=MISSING,
-                                     topic=MISSING, nsfw=MISSING,
+                                     topic=MISSING,
+                                     nsfw=MISSING,
                                      permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
                                      reason=None):
     """
     Creates a text channel on the server
     """
 
-    channel_category = ctx.channel.guild.get_channel(category)
+    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+        raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    created_channel = await ctx.guild.create_text_channel(name,
+    if not isinstance(slowmode, _MissingSentinel) and not isinstance(slowmode, int):
+        raise Exception(f"Slowmode must be an integer, not {type(slowmode)} !")
+
+    if not isinstance(topic, _MissingSentinel) and not isinstance(topic, str):
+        raise Exception(f"Topic must be a string, not {type(topic)} !")
+
+    if not isinstance(nsfw, _MissingSentinel) and not isinstance(nsfw, bool):
+        raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
+
+    channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
+
+    created_channel = await ctx.guild.create_text_channel(str(name),
                                                           category=channel_category,
                                                           position=position,
                                                           slowmode_delay=slowmode,
@@ -49,10 +63,15 @@ async def dshell_create_voice_channel(ctx: Message,
     """
     Creates a voice channel on the server
     """
+    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+        raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    channel_category = ctx.channel.guild.get_channel(category)
+    if not isinstance(bitrate, _MissingSentinel) and not isinstance(bitrate, int):
+        raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
 
-    created_channel = await ctx.guild.create_voice_channel(name,
+    channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
+
+    created_channel = await ctx.guild.create_voice_channel(str(name),
                                                            category=channel_category,
                                                            position=position,
                                                            bitrate=bitrate,
@@ -67,6 +86,8 @@ async def dshell_delete_channel(ctx: Message, channel=None, reason=None, timeout
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
     """
+    if not isinstance(timeout, int):
+        raise Exception(f'Timeout must be an integer, not {type(timeout)} !')
 
     channel_to_delete = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -85,6 +106,12 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
     Deletes all channels with the same name and/or matching the same regex.
     If neither is set, it will delete all channels with the same name as the one where the command was executed.
     """
+    if name is not None and not isinstance(name, str):
+        raise Exception(f"Name must be a string, not {type(name)} !")
+
+    if regex is not None and not isinstance(regex, str):
+        raise Exception(f"Regex must be a string, not {type(regex)} !")
+
     for channel in ctx.channel.guild.channels:
 
         if name is not None and channel.name == str(name):
@@ -92,6 +119,7 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
 
         elif regex is not None and search(regex, channel.name):
             await channel.delete(reason=reason)
+
 
 async def dshell_edit_text_channel(ctx: Message,
                                       channel=None,
@@ -105,6 +133,18 @@ async def dshell_edit_text_channel(ctx: Message,
     """
     Edits a text channel on the server
     """
+
+    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+        raise Exception(f"Position must be an integer, not {type(position)} !")
+
+    if not isinstance(slowmode, _MissingSentinel) and not isinstance(slowmode, int):
+        raise Exception(f"Slowmode must be an integer, not {type(slowmode)} !")
+
+    if not isinstance(topic, _MissingSentinel) and not isinstance(topic, str):
+        raise Exception(f"Topic must be a string, not {type(topic)} !")
+
+    if not isinstance(nsfw, _MissingSentinel) and not isinstance(nsfw, bool):
+        raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -131,6 +171,11 @@ async def dshell_edit_voice_channel(ctx: Message,
     """
     Edits a voice channel on the server
     """
+    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+        raise Exception(f"Position must be an integer, not {type(position)} !")
+
+    if not isinstance(bitrate, _MissingSentinel) and not isinstance(bitrate, int):
+        raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 

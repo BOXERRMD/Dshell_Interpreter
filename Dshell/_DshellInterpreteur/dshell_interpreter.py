@@ -33,7 +33,24 @@ class DshellInterpreteur:
         """
         self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
         self.env: dict[str, Any] = {
-            '__ret__': None}  # environment variables, '__ret__' is used to store the return value of commands
+            '__ret__': None, # environment variables, '__ret__' is used to store the return value of commands
+            '__guild__': ctx.channel.guild.name,
+            '__channel__':ctx.channel.name,
+            '__author__': ctx.author.name,
+            '__author_display_name__': ctx.author.display_name,
+            '__author_avatar__': ctx.author.display_avatar.url if ctx.author.display_avatar else None,
+            '__author_discriminator__': ctx.author.discriminator,
+            '__author_bot__': ctx.author.bot,
+            '__author_nick__': ctx.author.nick if hasattr(ctx.author, 'nick') else None,
+            '__author_avatar_url__': ctx.author.avatar.url if ctx.author.avatar else None,
+            '__author_id__': ctx.author.id,
+            '__message__': ctx.content,
+            '__message_id__': ctx.id,
+            '__channel_name__': ctx.channel.name,
+            '__channel_type__': ctx.channel.type.name if hasattr(ctx.channel, 'type') else None,
+            '__channel_id__': ctx.channel.id,
+            '__private_channel__': isinstance(ctx.channel, PrivateChannel),
+        }
         self.vars = vars if vars is not None else ''
         self.ctx: context = ctx
         if debug:
@@ -202,8 +219,6 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
     for key in obligate:
         if regrouped_args[key] == '*':
             raise Exception(f"'{key}' is an obligatory parameter, but no value was given for it.")
-
-    print(regrouped_args)
 
     return regrouped_args
 

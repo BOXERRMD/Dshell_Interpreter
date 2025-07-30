@@ -35,9 +35,12 @@ dshell_commands: dict[str, Callable] = {
     "bm": dshell_ban_member,  # ban member
     "um": dshell_unban_member,  # unban member
     "km": dshell_kick_member,  # kick member
+    "tm": dshell_timeout_member,  # timeout member
+    "mm": dshell_move_member,  # move member to another channel
     "rm": dshell_rename_member,  # rename member
+    "cp": dshell_check_permissions,  # check permissions
 
-    "srm": dshell_research_regex_message,  # research regex in message
+    "ghm": dshell_get_hystory_messages,  # research regex in message
     "src": dshell_research_regex_in_content,  # research regex in content
 
     "ec": dshell_edit_text_channel,  # edit text channel
