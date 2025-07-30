@@ -71,7 +71,7 @@ class DshellInterpreteur:
                 elif_valid = False
                 if eval_expression(node.condition, self):
                     await self.execute(node.body)
-                    return
+                    continue
                 elif node.elif_nodes:
 
                     for i in node.elif_nodes:
