@@ -1,5 +1,5 @@
-from typing import Optional, Any
 from random import randint
+from typing import Optional, Any
 
 from .._DshellTokenizer.dshell_token_type import Token
 
@@ -35,6 +35,7 @@ class StartNode(ASTNode):
     """
     Node representing the start of the AST.
     """
+
     def __init__(self, body: list):
         self.body = body
 
@@ -56,6 +57,7 @@ class ElseNode(ASTNode):
     """
     Node representing the 'else' part of an if statement.
     """
+
     def __init__(self, body: list[Token]):
         """
         :param body: list of tokens representing the body of the else statement
@@ -80,6 +82,7 @@ class ElifNode(ASTNode):
     """
     Node representing an 'elif' part of an if statement.
     """
+
     def __init__(self, condition: list[Token], body: list[Token], parent: "IfNode"):
         """
         :param condition: list of tokens representing the condition for the elif
@@ -110,6 +113,7 @@ class IfNode(ASTNode):
     """
     Node representing an 'if' statement, which can contain 'elif' and 'else' parts.
     """
+
     def __init__(self, condition: list[Token], body: list[Token], elif_nodes: Optional[list[ElifNode]] = None,
                  else_body: Optional[ElseNode] = None):
         """
@@ -141,10 +145,12 @@ class IfNode(ASTNode):
             "id": self.id
         }
 
+
 class LoopNode(ASTNode):
     """
     Node representing a loop structure in the AST.
     """
+
     def __init__(self, variable: "VarNode", body: list):
         """
         :param variable: VarNode representing the loop variable. This variable will be used to iterate over the body. Can contain a ListNode, string or integer.
@@ -167,10 +173,12 @@ class LoopNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+
 class ArgsCommandNode(ASTNode):
     """
     Node representing the arguments of a command in the AST.
     """
+
     def __init__(self, body: list[Token]):
         """
         :param body: list of tokens representing the arguments of the command
@@ -195,6 +203,7 @@ class CommandNode(ASTNode):
     """
     Node representing a command in the AST.
     """
+
     def __init__(self, name: str, body: ArgsCommandNode):
         """
         :param name: The command name (e.g., "sm", "cc")
@@ -222,6 +231,7 @@ class VarNode(ASTNode):
     """
     Node representing a variable declaration in the AST.
     """
+
     def __init__(self, name: Token, body: list[Token]):
         """
         :param name: Token representing the variable name
@@ -249,6 +259,7 @@ class EndNode(ASTNode):
     """
     Node representing the end of the AST.
     """
+
     def __init__(self):
         pass
 
@@ -269,6 +280,7 @@ class FieldEmbedNode(ASTNode):
     """
     Node representing a field in an embed structure.
     """
+
     def __init__(self, body: list[Token]):
         """
         :param body: list of tokens representing the field content
@@ -293,6 +305,7 @@ class EmbedNode(ASTNode):
     """
     Node representing an embed structure in the AST.
     """
+
     def __init__(self, body: list[Token], fields: list[FieldEmbedNode]):
         """
         :param body: list of tokens representing the embed content
@@ -320,6 +333,7 @@ class PermissionNode(ASTNode):
     """
     Node representing a permission structure in the AST.
     """
+
     def __init__(self, body: list[Token]):
         """
         :param body: list of tokens representing the permission content
@@ -344,6 +358,7 @@ class SleepNode(ASTNode):
     """
     Node representing a sleep command in the AST.
     """
+
     def __init__(self, body: list[Token]):
         """
         :param body: list of tokens representing the sleep duration
@@ -396,6 +411,7 @@ class IdentOperationNode(ASTNode):
             "args": self.args.to_dict()
         }
 
+
 class ParamNode(ASTNode):
     """
     Node representing a parameter in the AST.
@@ -422,6 +438,7 @@ class ParamNode(ASTNode):
             "name": self.name.to_dict(),
             "body": [token.to_dict() for token in self.body]
         }
+
 
 class ListNode(ASTNode):
     """

@@ -7,7 +7,7 @@ __all__ = [
     "ast_to_dict",
 ]
 
-from typing import Union, TYPE_CHECKING
+from typing import Union
 
 from .ast_nodes import (ASTNode,
                         CommandNode,
@@ -25,10 +25,9 @@ from .ast_nodes import (ASTNode,
                         PermissionNode,
                         ParamNode,
                         StartNode)
+from .._DshellTokenizer import dshell_operators
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
-
-from .._DshellTokenizer import dshell_operators
 
 
 def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[ASTNode], int]:
@@ -213,6 +212,7 @@ elif first_token_line.type == DTT.LIST: # si le token est une liste (qui comport
     last_block.body.append(list_node)
     """
 
+
 def ast_to_dict(obj):
     if isinstance(obj, list):
         return [ast_to_dict(item) for item in obj]
@@ -220,6 +220,7 @@ def ast_to_dict(obj):
         return obj.to_dict()
     else:
         return obj  # fallback for primitives or tokens
+
 
 def dict_to_ast(data):
     """
@@ -231,6 +232,7 @@ def dict_to_ast(data):
         return [dict_to_ast(item) for item in data]
     elif isinstance(data, dict):
         pass
+
 
 def parser_inline(tokens: list[Token]) -> tuple[list[list[Token]], bool]:
     """

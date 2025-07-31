@@ -53,6 +53,7 @@ async def dshell_create_text_channel(ctx: Message,
 
     return created_channel.id
 
+
 async def dshell_create_voice_channel(ctx: Message,
                                       name,
                                       category=None,
@@ -122,14 +123,14 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
 
 
 async def dshell_edit_text_channel(ctx: Message,
-                                      channel=None,
-                                      name=None,
-                                      position=MISSING,
-                                      slowmode=MISSING,
-                                      topic=MISSING,
-                                      nsfw=MISSING,
-                                      permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
-                                      reason=None):
+                                   channel=None,
+                                   name=None,
+                                   position=MISSING,
+                                   slowmode=MISSING,
+                                   topic=MISSING,
+                                   nsfw=MISSING,
+                                   permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                   reason=None):
     """
     Edits a text channel on the server
     """
@@ -161,13 +162,14 @@ async def dshell_edit_text_channel(ctx: Message,
 
     return channel_to_edit.id
 
+
 async def dshell_edit_voice_channel(ctx: Message,
-                                      channel=None,
-                                      name=None,
-                                      position=MISSING,
-                                      bitrate=MISSING,
-                                      permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
-                                      reason=None):
+                                    channel=None,
+                                    name=None,
+                                    position=MISSING,
+                                    bitrate=MISSING,
+                                    permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                    reason=None):
     """
     Edits a voice channel on the server
     """

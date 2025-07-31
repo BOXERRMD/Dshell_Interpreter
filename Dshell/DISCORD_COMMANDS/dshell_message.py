@@ -1,7 +1,7 @@
-from discord import Embed, Message
-from discord.ext import commands
 from re import search
 
+from discord import Embed, Message
+from discord.ext import commands
 
 __all__ = [
     'dshell_send_message',
@@ -50,7 +50,8 @@ async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0
     Deletes a message
     """
 
-    delete_message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
+    delete_message = ctx if message is None else ctx.channel.get_partial_message(
+        message)  # builds a reference to the message (even if it doesn't exist)
 
     if not isinstance(delay, int):
         raise Exception(f'Delete delay must be an integer, not {type(delay)} !')
@@ -81,7 +82,8 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     """
     Edits a message
     """
-    edit_message = ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
+    edit_message = ctx.channel.get_partial_message(
+        message)  # builds a reference to the message (even if it doesn't exist)
 
     if embeds is None:
         embeds = []
@@ -92,6 +94,7 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     await edit_message.edit(content=new_content, embeds=embeds)
 
     return edit_message.id
+
 
 async def dshell_get_hystory_messages(ctx: Message, channel=None, limit=None):
     """
@@ -117,6 +120,7 @@ async def dshell_get_hystory_messages(ctx: Message, channel=None, limit=None):
 
     return messages
 
+
 async def dshell_research_regex_in_content(ctx: Message, regex, content=None):
     """
     Searches for a regex in a specific message content
@@ -130,11 +134,13 @@ async def dshell_research_regex_in_content(ctx: Message, regex, content=None):
 
     return True
 
+
 async def dshell_add_reactions(ctx: Message, reactions, message=None):
     """
     Adds reactions to a message
     """
-    message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
+    message = ctx if message is None else ctx.channel.get_partial_message(
+        message)  # builds a reference to the message (even if it doesn't exist)
 
     if isinstance(reactions, str):
         reactions = (reactions,)
@@ -144,11 +150,13 @@ async def dshell_add_reactions(ctx: Message, reactions, message=None):
 
     return message.id
 
+
 async def dshell_remove_reactions(ctx: Message, reactions, message=None):
     """
     Removes reactions from a message
     """
-    message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
+    message = ctx if message is None else ctx.channel.get_partial_message(
+        message)  # builds a reference to the message (even if it doesn't exist)
 
     if isinstance(reactions, str):
         reactions = [reactions]

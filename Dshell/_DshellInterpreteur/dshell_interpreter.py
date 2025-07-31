@@ -33,9 +33,9 @@ class DshellInterpreteur:
         """
         self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
         self.env: dict[str, Any] = {
-            '__ret__': None, # environment variables, '__ret__' is used to store the return value of commands
+            '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
             '__guild__': ctx.channel.guild.name,
-            '__channel__':ctx.channel.name,
+            '__channel__': ctx.channel.name,
             '__author__': ctx.author.name,
             '__author_display_name__': ctx.author.display_name,
             '__author_avatar__': ctx.author.display_avatar.url if ctx.author.display_avatar else None,
@@ -187,12 +187,12 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
     englobe_args = regrouped_args.pop('--*', {})  # get the arguments that are not mandatory
     obligate = [i for i in regrouped_args.keys() if regrouped_args[i] == '*']  # get the obligatory parameters
 
-
     g: list[list[Token]] = DshellTokenizer(interpreter.vars).start()
     env_give_variables = regroupe_commandes(g[0], interpreter)[0] if g else {}
 
     gived_variables = env_give_variables.pop('*', ())  # get the variables given in the environment
-    englobe_gived_variables: dict = env_give_variables.pop('--*', {})  # get the variables given in the environment that are not mandatory
+    englobe_gived_variables: dict = env_give_variables.pop('--*',
+                                                           {})  # get the variables given in the environment that are not mandatory
 
     for key, value in zip(regrouped_args.keys(), gived_variables):
         regrouped_args[key] = value
@@ -204,7 +204,8 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
             del englobe_args[key]
             break
 
-    for key, englobe_gived_key, englobe_gived_value in zip(englobe_args.keys(), englobe_gived_variables.keys(), englobe_gived_variables.values()):
+    for key, englobe_gived_key, englobe_gived_value in zip(englobe_args.keys(), englobe_gived_variables.keys(),
+                                                           englobe_gived_variables.values()):
         if key == englobe_gived_key:
             regrouped_args[key] = englobe_gived_value
 
@@ -221,6 +222,7 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
             raise Exception(f"'{key}' is an obligatory parameter, but no value was given for it.")
 
     return regrouped_args
+
 
 def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
     """
@@ -327,7 +329,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
                     type_=DTT.SEPARATOR, value=body[i].value, position=body[i].position)
                 ] + body[i + 1:], interpreter
             )  # add a sub-dictionary for sub-commands
-            #return list_tokens
+            # return list_tokens
 
         elif (body[i].type == DTT.SEPARATOR and
               (body[i + 1].type == DTT.MATHS_OPERATOR and body[i + 1].value == '*') and

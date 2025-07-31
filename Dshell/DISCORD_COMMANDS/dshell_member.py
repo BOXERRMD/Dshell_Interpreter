@@ -1,5 +1,6 @@
-from discord import MISSING, Message, Member, Permissions
 from datetime import timedelta, datetime
+
+from discord import MISSING, Message, Member, Permissions
 
 __all__ = [
     "dshell_ban_member",
@@ -13,6 +14,7 @@ __all__ = [
     "dshell_move_member"
 ]
 
+
 async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     """
     Bans a member from the server.
@@ -25,6 +27,7 @@ async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     await ctx.channel.guild.ban(banned_member, reason=reason)
 
     return banned_member.id
+
 
 async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
     """
@@ -45,6 +48,7 @@ async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
 
     return user_to_unban.id
 
+
 async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     """
     Kicks a member from the server.
@@ -57,6 +61,7 @@ async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     await ctx.channel.guild.kick(kicked_member, reason=reason)
 
     return kicked_member.id
+
 
 async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason: str = MISSING):
     """
@@ -77,6 +82,7 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
 
     return target_member.id
 
+
 async def dshell_rename_member(ctx: Message, new_name, member=None):
     """
     Renames a member in the server.
@@ -89,6 +95,7 @@ async def dshell_rename_member(ctx: Message, new_name, member=None):
     await renamed_member.edit(nick=new_name)
 
     return renamed_member.id
+
 
 async def dshell_add_roles(ctx: Message, roles: list[int] | int, member=None, reason: str = None):
     """
@@ -111,6 +118,7 @@ async def dshell_add_roles(ctx: Message, roles: list[int] | int, member=None, re
 
     return target_member.id
 
+
 async def dshell_remove_roles(ctx: Message, roles: list[int] | int, member=None, reason: str = None):
     """
     Removes roles from a member in the server.
@@ -132,6 +140,7 @@ async def dshell_remove_roles(ctx: Message, roles: list[int] | int, member=None,
 
     return target_member.id
 
+
 async def dshell_check_permissions(ctx: Message, permissions, member=None):
     """
     Checks if a member has specific permissions in the server.
@@ -150,6 +159,7 @@ async def dshell_check_permissions(ctx: Message, permissions, member=None):
     if (permissions_to_check.value & member_permissions.value) != 0:
         return True
     return False
+
 
 async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect: bool = False, reason=None):
     """

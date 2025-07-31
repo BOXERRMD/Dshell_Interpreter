@@ -10,8 +10,9 @@ __all__ = [
 from typing import Callable
 
 from ..DISCORD_COMMANDS.dshell_channel import *
-from ..DISCORD_COMMANDS.dshell_message import *
 from ..DISCORD_COMMANDS.dshell_member import *
+from ..DISCORD_COMMANDS.dshell_message import *
+from ..DISCORD_COMMANDS.dshell_pastbin import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
@@ -22,6 +23,8 @@ dshell_discord_keyword: set[str] = {
 }
 dshell_commands: dict[str, Callable] = {
 
+    "gp": dshell_get_pastbin,  # get pastbin
+
     "sm": dshell_send_message,  # send message
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
@@ -30,7 +33,7 @@ dshell_commands: dict[str, Callable] = {
     "cc": dshell_create_text_channel,  # create channel
     "cvc": dshell_create_voice_channel,  # create voice channel
     "dc": dshell_delete_channel,  # delete channel
-    "dcs": dshell_delete_channels, # delete several channels by name or regex
+    "dcs": dshell_delete_channels,  # delete several channels by name or regex
 
     "bm": dshell_ban_member,  # ban member
     "um": dshell_unban_member,  # unban member
