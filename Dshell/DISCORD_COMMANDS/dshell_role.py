@@ -1,6 +1,6 @@
-from discord import MISSING, Message, Role, Permissions, PermissionOverwrite
+from discord import MISSING, Message, PermissionOverwrite
 from discord.utils import _MissingSentinel
-from .._DshellInterpreteur.dshell_interpreter import build_colour, ListNode
+from .._utils import NoneType
 
 __all__ = [
     'dshell_create_role',
@@ -25,7 +25,10 @@ async def dshell_create_role(ctx: Message,
     if not isinstance(permissions, (dict, _MissingSentinel)):
         raise Exception(f"Permissions must be a PermissionNode, not {type(permissions)} !")
 
-    colour = build_colour(color)
+    from .._DshellInterpreteur.dshell_interpreter import build_colour
+
+    if not isinstance(color, _MissingSentinel):
+        color = build_colour(color)
 
     if not isinstance(hoist, (bool, _MissingSentinel)):
         raise Exception(f"Hoist must be a boolean, not {type(permissions)} !")
@@ -40,7 +43,7 @@ async def dshell_create_role(ctx: Message,
 
     created_role = await ctx.guild.create_role(name=name,
                                                permissions=permissions,
-                                               colour=colour,
+                                               colour=color,
                                                hoist=hoist,
                                                mentionable=mentionable,
                                                reason=str(reason))
@@ -52,6 +55,7 @@ async def dshell_delete_roles(ctx: Message, roles, reason=None):
     """
     Delete the role on the server
     """
+    from .._DshellInterpreteur.dshell_interpreter import ListNode
     roles: int | ListNode
     if not isinstance(roles, (int, ListNode)):
         raise Exception(f"Role must be a int, role mention or NodeList of both, not {type(roles)} !")
@@ -66,6 +70,8 @@ async def dshell_delete_roles(ctx: Message, roles, reason=None):
             raise Exception(f'Role {i} not found in the server !')
 
         await role_to_delete.delete(reason=str(reason))
+
+    return role_to_delete.id
 
 
 async def dshell_edit_role(ctx: Message,
@@ -85,10 +91,10 @@ async def dshell_edit_role(ctx: Message,
 
     role_to_edit = ctx.guild.get_role(role)
 
-    if not isinstance(name, (str, None)):
+    if not isinstance(name, (str, NoneType)):
         raise Exception(f"Name must be a string, not {type(name)} !")
 
-    if not isinstance(permissions, (dict, None)):
+    if not isinstance(permissions, (dict, NoneType)):
         raise Exception(f"Permissions must be a PermissionNode, not {type(permissions)} !")
 
     if isinstance(permissions, dict):
@@ -96,21 +102,26 @@ async def dshell_edit_role(ctx: Message,
             allow, deny = permissions[None].pair()
             permissions = allow
 
-    colour = build_colour(color)
+    from .._DshellInterpreteur.dshell_interpreter import build_colour
 
-    if not isinstance(hoist, (bool, None)):
+    if color is not None:
+        color = build_colour(color)
+
+    if not isinstance(hoist, (bool, NoneType)):
         raise Exception(f"Hoist must be a boolean, not {type(permissions)} !")
 
-    if not isinstance(mentionable, (bool, None)):
+    if not isinstance(mentionable, (bool, NoneType)):
         raise Exception(f"Mentionable must be a boolean, not {type(permissions)} !")
 
-    if not isinstance(position, (int, None)):
+    if not isinstance(position, (int, NoneType)):
         raise Exception(f"Position must be an integer, not {type(permissions)} !")
 
     await role_to_edit.edit(name=name if name is not None else role_to_edit.name,
                             permissions=permissions if permissions is not None else role_to_edit.permissions,
-                            colour=colour if color is not None else role_to_edit.colour,
+                            colour=color if color is not None else role_to_edit.colour,
                             hoist=hoist if hoist is not None else role_to_edit.hoist,
                             mentionable=mentionable if mentionable is not None else role_to_edit.mentionable,
                             position=position if position is not None else role_to_edit.position,
                             reason=str(reason))
+
+    return role_to_edit.id

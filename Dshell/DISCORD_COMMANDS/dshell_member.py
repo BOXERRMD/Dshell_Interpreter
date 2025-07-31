@@ -1,6 +1,6 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, UTC
 
-from discord import MISSING, Message, Member, Permissions
+from discord import MISSING, Message, Member, Permissions, Role
 
 __all__ = [
     "dshell_ban_member",
@@ -11,7 +11,9 @@ __all__ = [
     "dshell_remove_roles",
     "dshell_check_permissions",
     "dshell_timeout_member",
-    "dshell_move_member"
+    "dshell_move_member",
+    "dshell_give_member_roles",
+    "dshell_remove_member_roles"
 ]
 
 
@@ -78,7 +80,7 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
     if duration < 0:
         raise ValueError("Duration must be a non-negative integer.")
 
-    await target_member.timeout(until=datetime.now() + timedelta(seconds=duration), reason=reason)
+    await target_member.timeout(until=datetime.now(UTC) + timedelta(seconds=duration), reason=reason)
 
     return target_member.id
 
@@ -182,5 +184,61 @@ async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect
         await target_member.move_to(None, reason=reason)
     else:
         await target_member.move_to(target_channel, reason=reason)
+
+    return target_member.id
+
+
+async def dshell_give_member_roles(ctx: Message, roles, member=None, reason=None):
+    """
+    Give roles to the target member
+    """
+    target_member = ctx.author if member is None else ctx.guild.get_member(member)
+
+    if target_member is None:
+        raise Exception(f'Member {member} not found in the server !')
+
+    if isinstance(roles, int):
+        roles = (roles, )
+
+    list_roles: list[Role] = []
+    for i in roles:
+        role_to_give = ctx.guild.get_role(i)
+
+        if role_to_give is None:
+            raise Exception(f'Role {i} not found in the server !')
+
+        list_roles.append(role_to_give)
+
+    list_roles.extend(target_member.roles)
+
+    await target_member.edit(roles=list_roles, reason=str(reason))
+
+    return target_member.id
+
+
+async def dshell_remove_member_roles(ctx: Message, roles, member=None, reason=None):
+    """
+    Remove roles to the target member
+    """
+    target_member = ctx.author if member is None else ctx.guild.get_member(member)
+
+    if target_member is None:
+        raise Exception(f'Member {member} not found in the server !')
+
+    if isinstance(roles, int):
+        roles = (roles,)
+
+    list_roles: set[Role] = set()
+    for i in roles:
+        role_to_give = target_member.get_role(i)
+
+        if role_to_give is None:
+            raise Exception(f"{target_member.name} member doesn't have {i} role !")
+
+        list_roles.add(role_to_give)
+
+    new_set_role = list(set(target_member.roles) - list_roles)
+
+    await target_member.edit(roles=new_set_role, reason=str(reason))
 
     return target_member.id

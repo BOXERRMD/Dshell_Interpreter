@@ -43,6 +43,8 @@ dshell_commands: dict[str, Callable] = {
     "mm": dshell_move_member,  # move member to another channel
     "rm": dshell_rename_member,  # rename member
     "cp": dshell_check_permissions,  # check permissions
+    "gmr": dshell_give_member_roles, # give roles
+    "rmr": dshell_remove_member_roles, # remove roles
 
     "ghm": dshell_get_hystory_messages,  # research regex in message
     "src": dshell_research_regex_in_content,  # research regex in content
@@ -50,12 +52,12 @@ dshell_commands: dict[str, Callable] = {
     "ec": dshell_edit_text_channel,  # edit text channel
     "evc": dshell_edit_voice_channel,  # edit voice channel
 
-    "cr": dshell_create_role,
-    "dr": dshell_delete_roles,
-    "er": dshell_edit_role,
+    "cr": dshell_create_role, # create role
+    "dr": dshell_delete_roles, # delete role
+    "er": dshell_edit_role, # edit role
 
-    "amr": dshell_add_reactions,  # add reactions to a message
-    "rmr": dshell_remove_reactions,  # remove reactions from a message
+    "ar": dshell_add_reactions,  # add reactions to a message
+    "rr": dshell_remove_reactions,  # remove reactions from a message
 
 }
 
