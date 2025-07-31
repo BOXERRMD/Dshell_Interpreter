@@ -58,6 +58,8 @@ dshell_commands: dict[str, Callable] = {
 
     "ar": dshell_add_reactions,  # add reactions to a message
     "rr": dshell_remove_reactions,  # remove reactions from a message
+    "cmr": dshell_clear_message_reactions,
+    "cor": dshell_clear_one_reactions
 
 }
 

@@ -1,6 +1,6 @@
 from re import search
 
-from discord import Embed, Message
+from discord import Embed, Message, NotFound
 from discord.ext import commands
 
 __all__ = [
@@ -11,7 +11,9 @@ __all__ = [
     'dshell_get_hystory_messages',
     'dshell_research_regex_in_content',
     'dshell_add_reactions',
-    'dshell_remove_reactions'
+    'dshell_remove_reactions',
+    'dshell_clear_message_reactions',
+    'dshell_clear_one_reactions'
 ]
 
 
@@ -165,3 +167,34 @@ async def dshell_remove_reactions(ctx: Message, reactions, message=None):
         await message.clear_reaction(reaction)
 
     return message.id
+
+async def dshell_clear_message_reactions(ctx: Message, message):
+    """
+    Clear all reaction on the target message
+    """
+    if not isinstance(message, int):
+        raise Exception(f'Message must be integer, not {type(message)}')
+
+    target_message = await ctx.channel.fetch_message(message)
+
+    if target_message is None:
+        raise Exception(f'Message not found !')
+
+    await target_message.clear_reactions()
+
+async def dshell_clear_one_reactions(ctx: Message, message, emoji):
+    """
+    Clear one emoji on the target message
+    """
+    if not isinstance(message, int):
+        raise Exception(f'Message must be integer, not {type(message)}')
+
+    if not isinstance(emoji, str):
+        raise Exception(f'Emoji must be string, not {type(emoji)}')
+
+    try:
+        target_message = await ctx.channel.fetch_message(message)
+    except NotFound:
+        raise Exception(f'Message not found !')
+
+    await target_message.clear_reaction(emoji)
