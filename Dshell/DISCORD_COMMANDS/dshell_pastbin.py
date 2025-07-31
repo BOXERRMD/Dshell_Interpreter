@@ -22,7 +22,7 @@ async def dshell_get_pastbin(ctx: Message, code: str):
 
         for line in response.iter_lines(decode_unicode=True, chunk_size=512):
             len_content = len(content)
-            if line and len_content < 4000 and len_content + len(line) <= 4000:
+            if len_content < 4000 and len_content + len(line) <= 4000:
                 content += line + '\n'
             else:
                 break

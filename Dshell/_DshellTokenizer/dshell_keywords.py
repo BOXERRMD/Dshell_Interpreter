@@ -13,6 +13,7 @@ from ..DISCORD_COMMANDS.dshell_channel import *
 from ..DISCORD_COMMANDS.dshell_member import *
 from ..DISCORD_COMMANDS.dshell_message import *
 from ..DISCORD_COMMANDS.dshell_pastbin import *
+from ..DISCORD_COMMANDS.dshell_role import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
@@ -48,6 +49,10 @@ dshell_commands: dict[str, Callable] = {
 
     "ec": dshell_edit_text_channel,  # edit text channel
     "evc": dshell_edit_voice_channel,  # edit voice channel
+
+    "cr": dshell_create_role,
+    "dr": dshell_delete_roles,
+    "er": dshell_edit_role,
 
     "amr": dshell_add_reactions,  # add reactions to a message
     "rmr": dshell_remove_reactions,  # remove reactions from a message

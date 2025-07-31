@@ -366,15 +366,29 @@ def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: Ds
         a: dict[str, Token]
         args_fields.append(a)
 
-    if 'color' in args_main_embed and isinstance(args_main_embed['color'],
-                                                 ListNode):  # if color is a ListNode, convert it to Colour
-        args_main_embed['color'] = Colour.from_rgb(*args_main_embed['color'])
+    if 'color' in args_main_embed:
+        args_main_embed['color'] = build_colour(args_main_embed['color'])  # convert color to Colour object or int
 
     embed = Embed(**args_main_embed)  # build the main embed
     for field in args_fields:
         embed.add_field(**field)  # add all fields
 
     return embed
+
+def build_colour(color: Union[int, ListNode]) -> Union[Colour, int]:
+    """
+    Builds a Colour object from an integer or a ListNode.
+    :param color: The color to build.
+    :return: A Colour object.
+    """
+    if isinstance(color, int):
+        return color
+    elif isinstance(color, (ListNode, list)):
+        if not len(color) == 3:
+            raise ValueError(f"Color must be a list of 3 integers, not {len(color)} elements !")
+        return Colour.from_rgb(*color)
+    else:
+        raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")
 
 
 def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
@@ -446,8 +460,11 @@ class DshellPermissions:
         if member is not None:
             return member
 
-        if role is not None:
+        elif role is not None:
             return role
+
+        else:
+            raise ValueError(f"No member or role found with ID {target_id} in guild {guild.name}.")
 
     @staticmethod
     def get_member(guild: Guild, target_id: int) -> Member:
@@ -480,10 +497,11 @@ class DshellPermissions:
     def get_permission_overwrite(self, guild: Guild) -> dict[Union[Member, Role], PermissionOverwrite]:
         """
         Returns a PermissionOverwrite object with member and role permissions.
+        If no members or roles are specified, it returns a PermissionOverwrite with None key.
         :param guild: The Discord server
         :return: A dictionary of PermissionOverwrite objects with members and roles as keys
         """
-        permissions: dict[Union[Member, Role], PermissionOverwrite] = {}
+        permissions: dict[Union[Member, Role, None], PermissionOverwrite] = {}
         target_keys = self.target.keys()
 
         if 'members' in target_keys:
@@ -506,6 +524,9 @@ class DshellPermissions:
                     deny=Permissions(permissions=self.target.get('deny', 0))
                 )
         else:
-            raise ValueError("No members or roles specified in the permissions target.")
+            permissions[None] = PermissionOverwrite.from_pair(
+                allow=Permissions(permissions=self.target.get('allow', 0)),
+                deny=Permissions(permissions=self.target.get('deny', 0))
+            )
 
         return permissions
