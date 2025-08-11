@@ -268,7 +268,7 @@ def to_postfix(expression):
     operators: list[Token] = []
 
     for token in expression:
-        if token.type in (DTT.IDENT, DTT.CALL_ARGS, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR):  # Si c'est un ident
+        if token.type in (DTT.IDENT, DTT.CALL_ARGS, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL):  # Si c'est un ident
             output.append(token)
         elif token.value in dshell_operators:
             while (operators and operators[-1].value in dshell_operators and
@@ -289,7 +289,7 @@ def parse_postfix_expression(postfix_tokens: list[Token]) -> list[IdentOperation
 
     for tok in postfix_tokens:
 
-        if tok.type in (DTT.IDENT, DTT.CALL_ARGS, DTT.INT, DTT.STR, DTT.LIST):
+        if tok.type in (DTT.IDENT, DTT.CALL_ARGS, DTT.INT, DTT.STR, DTT.LIST, DTT.FLOAT, DTT.BOOL):
             stack.append(tok)
 
         elif tok.type == DTT.MATHS_OPERATOR:

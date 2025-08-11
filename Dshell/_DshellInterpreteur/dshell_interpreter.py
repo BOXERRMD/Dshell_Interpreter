@@ -42,7 +42,6 @@ class DshellInterpreteur:
             '__author_discriminator__': ctx.author.discriminator,
             '__author_bot__': ctx.author.bot,
             '__author_nick__': ctx.author.nick if hasattr(ctx.author, 'nick') else None,
-            '__author_avatar_url__': ctx.author.avatar.url if ctx.author.avatar else None,
             '__author_id__': ctx.author.id,
             '__message__': ctx.content,
             '__message_id__': ctx.id,
@@ -259,7 +258,14 @@ def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any
 
             else:
                 b = stack.pop()
-                a = stack.pop()
+                try:
+                    a = stack.pop()
+                except IndexError:
+                    if op == "-":
+                        a = 0
+                    else:
+                        raise SyntaxError(f"Invalid expression: {op} operator requires two operands, but only one was found.")
+
                 result = dshell_operators[op][0](a, b)
 
             stack.append(result)

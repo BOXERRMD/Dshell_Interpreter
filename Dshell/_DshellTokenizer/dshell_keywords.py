@@ -64,15 +64,6 @@ dshell_commands: dict[str, Callable] = {
 }
 
 dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
-    r"<": (lambda a, b: a < b, 4),
-    r"<=": (lambda a, b: a <= b, 4),
-    r"=<": (lambda a, b: a <= b, 4),
-    r"=": (lambda a, b: a == b, 4),
-    r"!=": (lambda a, b: a != b, 4),
-    r"=!": (lambda a, b: a != b, 4),
-    r">": (lambda a, b: a > b, 4),
-    r">=": (lambda a, b: a >= b, 4),
-    r"=>": (lambda a, b: a >= b, 4),
 
     r".": (lambda a, b: a.b, 9),
     r"->": (lambda a: a.at, 10),  # equivalent to calling .at(key)
@@ -89,6 +80,15 @@ dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
 
 dshell_logical_operators: dict[str, tuple[Callable, int]] = {
 
+    r"<": (lambda a, b: a < b, 4),
+    r"<=": (lambda a, b: a <= b, 4),
+    r"=<": (lambda a, b: a <= b, 4),
+    r"=": (lambda a, b: a == b, 4),
+    r"!=": (lambda a, b: a != b, 4),
+    r"=!": (lambda a, b: a != b, 4),
+    r">": (lambda a, b: a > b, 4),
+    r">=": (lambda a, b: a >= b, 4),
+    r"=>": (lambda a, b: a >= b, 4),
     r"and": (lambda a, b: bool(a and b), 2),
     r"&": (lambda a, b: a & b, 2),
     r"or": (lambda a, b: bool(a or b), 1),
