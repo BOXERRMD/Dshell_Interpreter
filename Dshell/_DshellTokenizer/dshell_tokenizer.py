@@ -27,7 +27,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b"),
     DTT.MATHS_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_mathematical_operators.keys()])})"),
     DTT.LOGIC_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_logical_operators.keys()])})"),
-    DTT.LOGIC_WORD_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_logical_word_operators.keys()])})"),
+    DTT.LOGIC_WORD_OPERATOR: compile(rf"(?<!\w)({'|'.join([escape(i) for i in dshell_logical_word_operators.keys()])})(?<!\w)"),
     DTT.FLOAT: compile(r"(\d+\.\d+)"),
     DTT.INT: compile(r"(\d+)"),
     DTT.BOOL: compile(r"(True|False)", flags=IGNORECASE),
