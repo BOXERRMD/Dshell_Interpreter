@@ -49,7 +49,7 @@ class DshellInterpreteur:
             '__channel_type__': ctx.channel.type.name if hasattr(ctx.channel, 'type') else None,
             '__channel_id__': ctx.channel.id,
             '__private_channel__': isinstance(ctx.channel, PrivateChannel),
-        }
+        } if ctx is not None else {}
         self.vars = vars if vars is not None else ''
         self.ctx: context = ctx
         if debug:
@@ -249,7 +249,7 @@ def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any
         if token.type in {DTT.INT, DTT.FLOAT, DTT.BOOL, DTT.STR, DTT.LIST, DTT.IDENT}:
             stack.append(interpreter.eval_data_token(token))
 
-        elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR):
+        elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR, DTT.LOGIC_WORD_OPERATOR):
             op = token.value
 
             if op == "not":
@@ -407,6 +407,7 @@ def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict
 
     for i in args_permissions:
         i.pop('*')
+        i.pop('--*')
         permissions.update(DshellPermissions(i).get_permission_overwrite(interpreter.ctx.channel.guild))
 
     return permissions

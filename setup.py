@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="dshellInterpreter",
-    version="0.2.7",
+    version="0.2.8",
     author="Chronos",
     author_email="vagabonwalybi@gmail.com",
     description="A Discord bot interpreter for creating custom commands and automations.",

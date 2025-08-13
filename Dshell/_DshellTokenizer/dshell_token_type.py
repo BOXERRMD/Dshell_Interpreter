@@ -29,6 +29,7 @@ class DshellTokenType(Enum):
     SUB_SEPARATOR = auto(),  # ~~
     MATHS_OPERATOR = auto()  # ==, +, -, *, etc.
     LOGIC_OPERATOR = auto(),
+    LOGIC_WORD_OPERATOR = auto()  # and, or, not
     COMMENT = auto()  # lignes commençant par ##
 
 

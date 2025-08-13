@@ -4,7 +4,8 @@ __all__ = [
     "dshell_commands",
     "dshell_mathematical_operators",
     "dshell_logical_operators",
-    "dshell_operators"
+    "dshell_operators",
+    "dshell_logical_word_operators"
 ]
 
 from typing import Callable
@@ -78,6 +79,13 @@ dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
     r"/": (lambda a, b: a / b, 7),
 }
 
+dshell_logical_word_operators: dict[str, tuple[Callable, int]] = {
+    r"and": (lambda a, b: bool(a and b), 2),
+    r"or": (lambda a, b: bool(a or b), 1),
+    r"not": (lambda a: not a, 3),
+    r"in": (lambda a, b: a in b, 4),
+}
+
 dshell_logical_operators: dict[str, tuple[Callable, int]] = {
 
     r"<": (lambda a, b: a < b, 4),
@@ -89,16 +97,13 @@ dshell_logical_operators: dict[str, tuple[Callable, int]] = {
     r">": (lambda a, b: a > b, 4),
     r">=": (lambda a, b: a >= b, 4),
     r"=>": (lambda a, b: a >= b, 4),
-    r"and": (lambda a, b: bool(a and b), 2),
     r"&": (lambda a, b: a & b, 2),
-    r"or": (lambda a, b: bool(a or b), 1),
     r"|": (lambda a, b: a | b, 1),
-    r"in": (lambda a, b: a in b, 4),
-    r"not": (lambda a: not a, 3),
 
 }
 
 dshell_operators: dict[str, tuple[Callable, int]] = dshell_logical_operators.copy()
+dshell_operators.update(dshell_logical_word_operators)
 dshell_operators.update(dshell_mathematical_operators)
 
 '''
