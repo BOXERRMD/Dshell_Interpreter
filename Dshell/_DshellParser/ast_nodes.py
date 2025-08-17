@@ -426,7 +426,7 @@ class ParamNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<PARAM> - {self.name} *- {self.body}"
+        return f"<PARAM> - {self.body}"
 
     def to_dict(self):
         """
