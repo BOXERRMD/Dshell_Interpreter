@@ -37,6 +37,15 @@ dshell_commands: dict[str, Callable] = {
     "dc": dshell_delete_channel,  # delete channel
     "dcs": dshell_delete_channels,  # delete several channels by name or regex
 
+    "gc": dshell_get_channel,  # get channel
+    "gcs": dshell_get_channels,  # get channels by name or regex
+    "gccs": dshell_get_channels_in_category,  # get channels in category
+
+    "ct": dshell_create_thread_message,  # create thread
+    "dt": dshell_delete_thread,  # delete thread
+    "gt": dshell_get_thread,  # get thread
+    "et": dshell_edit_thread,  # edit thread
+
     "bm": dshell_ban_member,  # ban member
     "um": dshell_unban_member,  # unban member
     "km": dshell_kick_member,  # kick member
@@ -59,8 +68,8 @@ dshell_commands: dict[str, Callable] = {
 
     "ar": dshell_add_reactions,  # add reactions to a message
     "rr": dshell_remove_reactions,  # remove reactions from a message
-    "cmr": dshell_clear_message_reactions,
-    "cor": dshell_clear_one_reactions
+    "cmr": dshell_clear_message_reactions, # clear reactions from a message
+    "cor": dshell_clear_one_reactions , # clear one reaction from a message
 
 }
 

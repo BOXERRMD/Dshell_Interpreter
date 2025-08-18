@@ -435,7 +435,6 @@ class ParamNode(ASTNode):
         """
         return {
             "type": "ParamNode",
-            "name": self.name.to_dict(),
             "body": [token.to_dict() for token in self.body]
         }
 
