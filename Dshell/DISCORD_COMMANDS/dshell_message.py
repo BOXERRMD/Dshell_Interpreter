@@ -1,7 +1,8 @@
 from re import search
 
-from discord import Embed, Message, NotFound
+from discord import Embed, Message
 from discord.ext import commands
+from discord.abc import Messageable
 
 from .utils.utils_message import utils_get_message
 
@@ -71,8 +72,9 @@ async def dshell_respond_message(ctx: Message, message=None, content: str = None
     else:
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
-    sended_message = await ctx.reply(reference=respond_message,
-                                     content=content,
+    sended_message = respond_message.reply(
+                                     content=str(content),
+                                     reference=respond_message,
                                      mention_author=mention_author,
                                      delete_after=delete,
                                      embeds=embeds)
