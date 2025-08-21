@@ -5,15 +5,19 @@ with open("README.md", "r") as fh:
 
 setup(
     name="dshellInterpreter",
-    version="0.2.9.2",
+    version="0.2.10",
     author="Chronos",
     author_email="vagabonwalybi@gmail.com",
     description="A Discord bot interpreter for creating custom commands and automations.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/BOXERRMD/Dshell_Interpreter",
-    packages=["Dshell", "Dshell._DshellInterpreteur", "Dshell._DshellTokenizer", "Dshell._DshellParser",
-              "Dshell.DISCORD_COMMANDS"],
+    packages=["Dshell",
+              "Dshell._DshellInterpreteur",
+              "Dshell._DshellTokenizer",
+              "Dshell._DshellParser",
+              "Dshell.DISCORD_COMMANDS",
+              "Dshell.DISCORD_COMMANDS.utils"],
     install_requires=["py-cord==2.6.1", "requests"],
     classifiers=[
         "Programming Language :: Python :: 3",
