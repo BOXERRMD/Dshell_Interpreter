@@ -72,7 +72,7 @@ async def dshell_respond_message(ctx: Message, message=None, content: str = None
     else:
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
-    sended_message = respond_message.reply(
+    sended_message = await respond_message.reply(
                                      content=str(content),
                                      reference=respond_message,
                                      mention_author=mention_author,
