@@ -28,6 +28,8 @@ dshell_commands: dict[str, Callable] = {
     "gp": dshell_get_pastbin,  # get pastbin
 
     "sm": dshell_send_message,  # send message
+    "spm": dshell_send_private_message,  # send private message
+    "srm": dshell_respond_message,  # respond to a message
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
     "em": dshell_edit_message,  # edit message

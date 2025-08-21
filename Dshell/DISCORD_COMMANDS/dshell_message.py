@@ -5,6 +5,7 @@ from discord.ext import commands
 
 __all__ = [
     'dshell_send_message',
+    'dshell_respond_message',
     'dshell_delete_message',
     'dshell_purge_message',
     'dshell_edit_message',
@@ -46,6 +47,32 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
 
     return sended_message.id
 
+
+async def dshell_respond_message(ctx: Message, message=None, delete=None, embeds=None):
+    """
+    Responds to a message on Discord
+    """
+    if delete is not None and not isinstance(delete, (int, float)):
+        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+
+    respond_message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
+
+    from .._DshellParser.ast_nodes import ListNode
+
+    if embeds is None:
+        embeds = ListNode([])
+
+    elif isinstance(embeds, Embed):
+        embeds = ListNode([embeds])
+
+    else:
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+
+    sended_message = await ctx.reply(respond_message,
+                                     delete_after=delete,
+                                     embeds=embeds)
+
+    return sended_message.id
 
 async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0):
     """

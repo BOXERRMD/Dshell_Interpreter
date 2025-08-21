@@ -1,8 +1,9 @@
 from datetime import timedelta, datetime, UTC
 
-from discord import MISSING, Message, Member, Permissions, Role
+from discord import MISSING, Message, Member, Permissions, Role, Embed
 
 __all__ = [
+    "dshell_send_private_message",
     "dshell_ban_member",
     "dshell_unban_member",
     "dshell_kick_member",
@@ -15,6 +16,35 @@ __all__ = [
     "dshell_give_member_roles",
     "dshell_remove_member_roles"
 ]
+
+async def dshell_send_private_message(ctx: Message, member: int = None, message: str = None, delete: int = None, embeds = None, ):
+    """
+    Sends a private message to a member.
+    If member is None, sends the message to the author of the command.
+    If delete is specified, deletes the message after the specified time in seconds.
+    """
+    if delete is not None and not isinstance(delete, (int, float)):
+        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+
+    member_to_send = ctx.author if member is None else ctx.channel.guild.get_member(member)
+
+    if member_to_send is None:
+        raise Exception(f'Member {member} not found!')
+
+    from .._DshellParser.ast_nodes import ListNode
+
+    if embeds is None:
+        embeds = ListNode([])
+
+    elif isinstance(embeds, Embed):
+        embeds = ListNode([embeds])
+
+    else:
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+
+    sended_message = await member_to_send.send(message, delete_after=delete, embeds=embeds)
+
+    return sended_message.id
 
 
 async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
