@@ -74,7 +74,6 @@ async def dshell_respond_message(ctx: Message, message=None, content: str = None
 
     sended_message = await respond_message.reply(
                                      content=str(content),
-                                     reference=respond_message,
                                      mention_author=mention_author,
                                      delete_after=delete,
                                      embeds=embeds)
