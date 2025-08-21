@@ -3,6 +3,8 @@ from re import search
 from discord import Embed, Message, NotFound
 from discord.ext import commands
 
+from .utils.utils_message import utils_get_message
+
 __all__ = [
     'dshell_send_message',
     'dshell_respond_message',
@@ -48,14 +50,15 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
     return sended_message.id
 
 
-async def dshell_respond_message(ctx: Message, message=None, delete=None, embeds=None):
+async def dshell_respond_message(ctx: Message, message=None, content: str = None, delete=None, mention: bool = None, embeds=None):
     """
     Responds to a message on Discord
     """
     if delete is not None and not isinstance(delete, (int, float)):
         raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
 
-    respond_message = ctx if message is None else ctx.channel.get_partial_message(message)  # builds a reference to the message (even if it doesn't exist)
+    respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
+    mention_author = mention if mention is not None else False
 
     from .._DshellParser.ast_nodes import ListNode
 
@@ -68,7 +71,9 @@ async def dshell_respond_message(ctx: Message, message=None, delete=None, embeds
     else:
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
-    sended_message = await ctx.reply(respond_message,
+    sended_message = await ctx.reply(reference=respond_message,
+                                     content=content,
+                                     mention_author=mention_author,
                                      delete_after=delete,
                                      embeds=embeds)
 
@@ -79,8 +84,7 @@ async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0
     Deletes a message
     """
 
-    delete_message = ctx if message is None else ctx.channel.get_partial_message(
-        message)  # builds a reference to the message (even if it doesn't exist)
+    delete_message = ctx if message is None else utils_get_message(ctx, message)
 
     if not isinstance(delay, int):
         raise Exception(f'Delete delay must be an integer, not {type(delay)} !')
@@ -91,7 +95,7 @@ async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0
     await delete_message.delete(delay=delay, reason=reason)
 
 
-async def dshell_purge_message(ctx: Message, message_number, channel=None, reason=None):
+async def dshell_purge_message(ctx: Message, message_number: int, channel=None, reason=None):
     """
     Purges messages from a channel
     """
@@ -111,8 +115,7 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     """
     Edits a message
     """
-    edit_message = ctx.channel.get_partial_message(
-        message)  # builds a reference to the message (even if it doesn't exist)
+    edit_message = utils_get_message(ctx, message)
 
     if embeds is None:
         embeds = []
@@ -168,8 +171,7 @@ async def dshell_add_reactions(ctx: Message, reactions, message=None):
     """
     Adds reactions to a message
     """
-    message = ctx if message is None else ctx.channel.get_partial_message(
-        message)  # builds a reference to the message (even if it doesn't exist)
+    message = ctx if message is None else utils_get_message(ctx, message)
 
     if isinstance(reactions, str):
         reactions = (reactions,)
@@ -184,8 +186,7 @@ async def dshell_remove_reactions(ctx: Message, reactions, message=None):
     """
     Removes reactions from a message
     """
-    message = ctx if message is None else ctx.channel.get_partial_message(
-        message)  # builds a reference to the message (even if it doesn't exist)
+    message = ctx if message is None else utils_get_message(ctx, message)
 
     if isinstance(reactions, str):
         reactions = [reactions]
@@ -199,29 +200,21 @@ async def dshell_clear_message_reactions(ctx: Message, message):
     """
     Clear all reaction on the target message
     """
-    if not isinstance(message, int):
-        raise Exception(f'Message must be integer, not {type(message)}')
+    message = ctx if message is None else utils_get_message(ctx, message)
 
-    target_message = await ctx.channel.fetch_message(message)
-
-    if target_message is None:
+    if message is None:
         raise Exception(f'Message not found !')
 
-    await target_message.clear_reactions()
+    await message.clear_reactions()
 
 async def dshell_clear_one_reactions(ctx: Message, message, emoji):
     """
     Clear one emoji on the target message
     """
-    if not isinstance(message, int):
-        raise Exception(f'Message must be integer, not {type(message)}')
 
     if not isinstance(emoji, str):
         raise Exception(f'Emoji must be string, not {type(emoji)}')
 
-    try:
-        target_message = await ctx.channel.fetch_message(message)
-    except NotFound:
-        raise Exception(f'Message not found !')
+    target_message = ctx if message is None else utils_get_message(ctx, message)
 
     await target_message.clear_reaction(emoji)

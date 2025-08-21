@@ -1,5 +1,6 @@
 from discord import MISSING, Message, PermissionOverwrite
 from discord.utils import _MissingSentinel
+from typing import Union
 from .._utils import NoneType
 
 __all__ = [
@@ -56,7 +57,7 @@ async def dshell_delete_roles(ctx: Message, roles, reason=None):
     Delete the role on the server
     """
     from .._DshellInterpreteur.dshell_interpreter import ListNode
-    roles: int | ListNode
+    roles: Union[int, ListNode]
     if not isinstance(roles, (int, ListNode)):
         raise Exception(f"Role must be a int, role mention or NodeList of both, not {type(roles)} !")
 

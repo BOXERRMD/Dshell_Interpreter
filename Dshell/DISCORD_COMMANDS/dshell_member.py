@@ -17,7 +17,7 @@ __all__ = [
     "dshell_remove_member_roles"
 ]
 
-async def dshell_send_private_message(ctx: Message, member: int = None, message: str = None, delete: int = None, embeds = None, ):
+async def dshell_send_private_message(ctx: Message, message: str = None, member: int = None, delete: int = None, embeds = None, ):
     """
     Sends a private message to a member.
     If member is None, sends the message to the author of the command.

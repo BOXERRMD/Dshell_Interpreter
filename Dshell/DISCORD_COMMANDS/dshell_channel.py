@@ -2,9 +2,11 @@ from asyncio import sleep
 from re import search
 from typing import Union
 
-from discord import MISSING, PermissionOverwrite, Member, Role, Message, Thread
+from discord import MISSING, PermissionOverwrite, Member, Role, Message
 from discord.utils import _MissingSentinel
-from discord import NotFound
+
+from .utils.utils_message import utils_get_message
+from .utils.utils_thread import utils_get_thread
 
 __all__ = [
     'dshell_get_channel',
@@ -21,60 +23,6 @@ __all__ = [
     'dshell_edit_voice_channel',
     'dshell_edit_thread'
 ]
-
-async def utils_get_message(ctx: Message, message: Union[int, str]) -> Message:
-    """
-    Returns the message object of the specified message ID or link.
-    Message is only available in the same server as the command and in the same channel.
-    If the message is a link, it must be in the format: https://discord.com/channels/{guild_id}/{channel_id}/{message_id}
-    """
-
-    if isinstance(message, int):
-        return await ctx.channel.fetch_message(message)
-
-    elif isinstance(message, str):
-        match = search(r'https://discord\.com/channels/(\d+)/(\d+)/(\d+)', message)
-        if not match:
-            raise Exception("Invalid message link format. Use a valid Discord message link.")
-        guild_id = int(match.group(1))
-        channel_id = int(match.group(2))
-        message_id = int(match.group(3))
-
-        if guild_id != ctx.guild.id:
-            raise Exception("The message must be from the same server as the command !")
-
-        return await ctx.guild.get_channel(channel_id).fetch_message(message_id)
-
-    raise Exception(f"Message must be an integer or a string, not {type(message)} !")
-
-async def utils_get_thread(ctx: Message, thread: Union[int, str]) -> Thread:
-    """
-    Returns the thread object of the specified thread ID or link.
-    Thread is only available in the same server as the command and in the same channel.
-    If the thread is a link, it must be in the format: https://discord.com/channels/{guild_id}/{channel_id}/{message_id}
-    """
-
-    if isinstance(thread, int):
-        return ctx.channel.get_thread(thread)
-
-    elif isinstance(thread, str):
-        match = search(r'https://discord\.com/channels/(\d+)/(\d+)(/\d+)?', thread)
-        if not match:
-            raise Exception("Invalid thread link format. Use a valid Discord thread link.")
-        guild_id = int(match.group(1))
-        message_id = int(match.group(2))
-        channel_id = ctx.channel.id if len(match.groups()) == 3 else ctx.channel.id
-
-        if guild_id != ctx.guild.id:
-            raise Exception("The thread must be from the same server as the command !")
-
-        try:
-            c = await ctx.guild.get_channel(channel_id).fetch_message(message_id)
-            return c.thread
-        except NotFound:
-            raise Exception(f"Thread with ID {message_id} not found in channel {channel_id} !")
-
-    raise Exception(f"Thread must be an integer or a string, not {type(thread)} !")
 
 
 async def dshell_get_channel(ctx: Message, name):
@@ -338,7 +286,7 @@ async def dshell_create_thread_message(ctx: Message,
     if message is None:
         message = ctx.id
 
-    message = await utils_get_message(ctx, message)
+    message = utils_get_message(ctx, message)
 
 
     if not isinstance(name, str):
