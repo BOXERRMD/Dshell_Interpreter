@@ -25,7 +25,7 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
     """
     Sends a message on Discord
     """
-    return -1
+
     if delete is not None and not isinstance(delete, (int, float)):
         raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
 
