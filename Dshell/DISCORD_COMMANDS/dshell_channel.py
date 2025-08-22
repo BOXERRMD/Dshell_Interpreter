@@ -103,7 +103,7 @@ async def dshell_create_text_channel(ctx: Message,
                                      slowmode=MISSING,
                                      topic=MISSING,
                                      nsfw=MISSING,
-                                     permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                     permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
                                      reason=None):
     """
     Creates a text channel on the server
@@ -129,7 +129,7 @@ async def dshell_create_text_channel(ctx: Message,
                                                           slowmode_delay=slowmode,
                                                           topic=topic,
                                                           nsfw=nsfw,
-                                                          overwrites=permission,
+                                                          overwrites=permissions,
                                                           reason=reason)
 
     return created_channel.id
@@ -140,7 +140,7 @@ async def dshell_create_voice_channel(ctx: Message,
                                       category=None,
                                       position=MISSING,
                                       bitrate=MISSING,
-                                      permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                      permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
                                       reason=None):
     """
     Creates a voice channel on the server
@@ -157,7 +157,7 @@ async def dshell_create_voice_channel(ctx: Message,
                                                            category=channel_category,
                                                            position=position,
                                                            bitrate=bitrate,
-                                                           overwrites=permission,
+                                                           overwrites=permissions,
                                                            reason=reason)
 
     return created_channel.id
@@ -210,7 +210,7 @@ async def dshell_edit_text_channel(ctx: Message,
                                    slowmode=MISSING,
                                    topic=MISSING,
                                    nsfw=MISSING,
-                                   permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                   permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
                                    reason=None):
     """
     Edits a text channel on the server
@@ -238,7 +238,7 @@ async def dshell_edit_text_channel(ctx: Message,
                                slowmode_delay=slowmode if slowmode is not MISSING else channel_to_edit.slowmode_delay,
                                topic=topic if topic is not MISSING else channel_to_edit.topic,
                                nsfw=nsfw if nsfw is not MISSING else channel_to_edit.nsfw,
-                               overwrites=permission if permission is not MISSING else channel_to_edit.overwrites,
+                               overwrites=permissions if permissions is not MISSING else channel_to_edit.overwrites,
                                reason=reason)
 
     return channel_to_edit.id
@@ -249,7 +249,7 @@ async def dshell_edit_voice_channel(ctx: Message,
                                     name=None,
                                     position=MISSING,
                                     bitrate=MISSING,
-                                    permission: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                    permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
                                     reason=None):
     """
     Edits a voice channel on the server
@@ -268,7 +268,7 @@ async def dshell_edit_voice_channel(ctx: Message,
     await channel_to_edit.edit(name=name if name is not None else channel_to_edit.name,
                                position=position if position is not MISSING else channel_to_edit.position,
                                bitrate=bitrate if bitrate is not MISSING else channel_to_edit.bitrate,
-                               overwrites=permission if permission is not MISSING else channel_to_edit.overwrites,
+                               overwrites=permissions if permissions is not MISSING else channel_to_edit.overwrites,
                                reason=reason)
 
     return channel_to_edit.id
