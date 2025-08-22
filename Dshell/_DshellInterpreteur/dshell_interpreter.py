@@ -338,6 +338,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
                     type_=DTT.SEPARATOR, value=body[i].value, position=body[i].position)
                 ] + body[i + 1:], interpreter
             )  # add a sub-dictionary for sub-commands
+            i += len(body[i:])
             # return list_tokens
 
         elif (body[i].type == DTT.SEPARATOR and

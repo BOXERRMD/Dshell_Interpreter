@@ -109,16 +109,16 @@ async def dshell_create_text_channel(ctx: Message,
     Creates a text channel on the server
     """
 
-    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+    if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    if not isinstance(slowmode, _MissingSentinel) and not isinstance(slowmode, int):
+    if not isinstance(slowmode, (_MissingSentinel, int)):
         raise Exception(f"Slowmode must be an integer, not {type(slowmode)} !")
 
-    if not isinstance(topic, _MissingSentinel) and not isinstance(topic, str):
+    if not isinstance(topic, (_MissingSentinel, str)):
         raise Exception(f"Topic must be a string, not {type(topic)} !")
 
-    if not isinstance(nsfw, _MissingSentinel) and not isinstance(nsfw, bool):
+    if not isinstance(nsfw, (_MissingSentinel, bool)):
         raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
@@ -145,10 +145,10 @@ async def dshell_create_voice_channel(ctx: Message,
     """
     Creates a voice channel on the server
     """
-    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+    if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    if not isinstance(bitrate, _MissingSentinel) and not isinstance(bitrate, int):
+    if not isinstance(bitrate, (_MissingSentinel, int)):
         raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
@@ -216,16 +216,16 @@ async def dshell_edit_text_channel(ctx: Message,
     Edits a text channel on the server
     """
 
-    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+    if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    if not isinstance(slowmode, _MissingSentinel) and not isinstance(slowmode, int):
+    if not isinstance(slowmode, (_MissingSentinel, int)):
         raise Exception(f"Slowmode must be an integer, not {type(slowmode)} !")
 
-    if not isinstance(topic, _MissingSentinel) and not isinstance(topic, str):
+    if not isinstance(topic, (_MissingSentinel, str)):
         raise Exception(f"Topic must be a string, not {type(topic)} !")
 
-    if not isinstance(nsfw, _MissingSentinel) and not isinstance(nsfw, bool):
+    if not isinstance(nsfw, (_MissingSentinel, bool)):
         raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -254,10 +254,10 @@ async def dshell_edit_voice_channel(ctx: Message,
     """
     Edits a voice channel on the server
     """
-    if not isinstance(position, _MissingSentinel) and not isinstance(position, int):
+    if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    if not isinstance(bitrate, _MissingSentinel) and not isinstance(bitrate, int):
+    if not isinstance(bitrate, (_MissingSentinel, int)):
         raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -292,19 +292,19 @@ async def dshell_create_thread_message(ctx: Message,
     if not isinstance(name, str):
         raise Exception(f"Name must be a string, not {type(name)} !")
 
-    if not isinstance(archive, _MissingSentinel) and not isinstance(archive, int):
+    if not isinstance(archive, (_MissingSentinel, int)):
         raise Exception(f"Auto archive duration must be an integer, not {type(archive)} !")
 
     if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    if not isinstance(slowmode, _MissingSentinel) and not isinstance(slowmode, int):
+    if not isinstance(slowmode, (_MissingSentinel, int)):
         raise Exception(f"Slowmode delay must be an integer, not {type(slowmode)} !")
 
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
-    thread = await message.create_thread(name=name,
+    thread = await message.fetch().create_thread(name=name,
                                          auto_archive_duration=archive,
                                          slowmode_delay=slowmode)
 
@@ -326,16 +326,16 @@ async def dshell_edit_thread(ctx: Message,
 
     thread = await utils_get_thread(ctx, thread)
 
-    if not isinstance(name, _MissingSentinel) and not isinstance(name, str):
+    if not isinstance(name, (_MissingSentinel, str)):
         raise Exception(f"Name must be a string, not {type(name)} !")
 
-    if not isinstance(archive, _MissingSentinel) and not isinstance(archive, int):
+    if not isinstance(archive, (_MissingSentinel, int)):
         raise Exception(f"Auto archive duration must be an integer, not {type(archive)} !")
 
     if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    if not isinstance(slowmode, _MissingSentinel) and not isinstance(slowmode, int):
+    if not isinstance(slowmode, (_MissingSentinel, int)):
         raise Exception(f"Slowmode delay must be an integer, not {type(slowmode)} !")
 
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
@@ -355,7 +355,7 @@ async def dshell_get_thread(ctx: Message, message: Union[int, str] = None):
     if message is None:
         message = ctx.id
 
-    message = await utils_get_message(ctx, message)
+    message = await utils_get_message(ctx, message).fetch()
 
     if not hasattr(message, 'thread'):
         return None
@@ -376,7 +376,7 @@ async def dshell_delete_thread(ctx: Message, thread: Union[int, str] = None, rea
     if thread is None:
         thread = ctx.id
 
-    thread = await utils_get_message(ctx, thread)
+    thread = await utils_get_message(ctx, thread).fetch()
 
     if not hasattr(thread, 'thread'):
         raise Exception("The specified message does not have a thread !")
