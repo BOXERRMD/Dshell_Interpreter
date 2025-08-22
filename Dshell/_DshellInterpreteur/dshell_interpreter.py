@@ -1,6 +1,7 @@
 from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
+from copy import deepcopy
 
 from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message
 from discord.abc import PrivateChannel
@@ -103,7 +104,9 @@ class DshellInterpreteur:
                 self.env[node.variable.name.value] = 0
                 for i in DshellIterator(eval_expression(node.variable.body, self)):
                     self.env[node.variable.name.value] = i
-                    await self.execute(node.body)
+                    c = deepcopy(node.body)
+                    await self.execute(c)
+                    del c
 
             elif isinstance(node, VarNode):
 
