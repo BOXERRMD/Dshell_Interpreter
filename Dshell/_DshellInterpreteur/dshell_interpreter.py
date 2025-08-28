@@ -1,9 +1,13 @@
 from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
+from random import choice
+from string import ascii_letters, digits
 from copy import deepcopy
+from pycordViews import SelectMenu, EasyModifiedViews
 
-from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message
+from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message, Interaction, ButtonStyle
+from discord.ui import Button
 from discord.abc import PrivateChannel
 
 from .._DshellParser.ast_nodes import *
@@ -16,7 +20,7 @@ from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode, IdentOperationNode)
 context = TypeVar('context', AutoShardedBot, Message, PrivateChannel)
-
+ButtonStyleValues: tuple = tuple(i.name for i in ButtonStyle)
 
 class DshellInterpreteur:
     """
@@ -119,6 +123,9 @@ class DshellInterpreteur:
 
                 elif isinstance(first_node, PermissionNode):
                     self.env[node.name.value] = build_permission(first_node.body, self)
+
+                elif isinstance(first_node, UiNode):
+                    self.env[node.name.value] = build_ui(first_node, self)
 
                 else:
                     self.env[node.name.value] = eval_expression(node.body, self)
@@ -304,7 +311,7 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
     return await function(*absolute_args, **keyword_args)
 
 
-def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> list[dict[str, list[Any]]]:
+def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, normalise: bool = False) -> list[dict[str, list[Any]]]:
     """
     Groups the command arguments in the form of a python dictionary.
     Note that you can specify the parameter you wish to pass via -- followed by the parameter name. But this is not mandatory!
@@ -315,6 +322,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
 
     :param body: The list of tokens to group.
     :param interpreter: The Dshell interpreter instance.
+    :param normalise: If True, normalises the arguments (make value lowercase).
     """
     tokens = {'*': [],
               '--*': {}}  # tokens to return
@@ -324,6 +332,9 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur) -> li
 
     i = 0
     while i < n:
+
+        if normalise and body[i].type == DTT.STR:
+            body[i].value = body[i].value.lower()
 
         if body[i].type == DTT.SEPARATOR and body[
             i + 1].type == DTT.IDENT:  # Check if it's a separator and if the next token is an IDENT
@@ -400,6 +411,73 @@ def build_colour(color: Union[int, ListNode]) -> Union[Colour, int]:
     else:
         raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")
 
+
+def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedViews:
+    """
+    Builds a UI component from the UiNode.
+    Can accept buttons and select menus.
+    :param ui_node:
+    :param interpreter:
+    :return:
+    """
+    view = EasyModifiedViews()
+
+    for component in ui_node.buttons:
+        args_button: dict[str, list[Any]] = regroupe_commandes(component.body, interpreter, normalise=True)[0]
+        args_button.pop('--*', ())
+
+        code = args_button.pop('code', None)
+        style = args_button.pop('style', 'primary').lower()
+        if style not in ButtonStyleValues:
+            raise ValueError(f"Button style must be one of {', '.join(ButtonStyleValues)}, not '{style}' !")
+        args_button['style'] = ButtonStyle[style]
+        args = args_button.pop('*', ())
+        b = Button(*args, **args_button)
+
+        custom_id = ''.join(choice(ascii_letters + digits) for _ in range(20))
+        b.custom_id = custom_id
+
+        view.add_items(b)
+        view.set_callable(custom_id, _callable=ui_button_callback, data={'code': code})
+
+    return view
+
+async def ui_button_callback(button: Button, interaction: Interaction, data: dict[str, Any]):
+    """
+    Callback for UI buttons.
+    Executes the code associated with the button.
+    :param button:
+    :param interaction:
+    :param data:
+    :return:
+    """
+    print(data)
+    code = data.pop('code', None)
+    if code is not None:
+        local_env = {
+            '__ret__': None,
+            '__guild__': interaction.guild.name if interaction.guild else None,
+            '__channel__': interaction.channel.name if interaction.channel else None,
+            '__author__': interaction.user.name,
+            '__author_display_name__': interaction.user.display_name,
+            '__author_avatar__': interaction.user.display_avatar.url if interaction.user.display_avatar else None,
+            '__author_discriminator__': interaction.user.discriminator,
+            '__author_bot__': interaction.user.bot,
+            '__author_nick__': interaction.user.nick if hasattr(interaction.user, 'nick') else None,
+            '__author_id__': interaction.user.id,
+            '__message__': interaction.message.content if hasattr(interaction.message, 'content') else None,
+            '__message_id__': interaction.message.id if hasattr(interaction.message, 'id') else None,
+            '__channel_name__': interaction.channel.name if interaction.channel else None,
+            '__channel_type__': interaction.channel.type.name if hasattr(interaction.channel, 'type') else None,
+            '__channel_id__': interaction.channel.id if interaction.channel else None,
+            '__private_channel__': isinstance(interaction.channel, PrivateChannel),
+        }
+        local_env.update(data)
+        x = DshellInterpreteur(code, interaction.message, debug=False)
+        x.env.update(local_env)
+        await x.execute()
+    else:
+        await interaction.response.defer(invisible=True)
 
 def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
     Union[Member, Role], PermissionOverwrite]:

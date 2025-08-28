@@ -24,6 +24,9 @@ from .ast_nodes import (ASTNode,
                         FieldEmbedNode,
                         PermissionNode,
                         ParamNode,
+                        UiNode,
+                        UiButtonNode,
+                        UiSelectNode,
                         StartNode)
 from .._DshellTokenizer import dshell_operators
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
@@ -184,6 +187,31 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise SyntaxError(f'[#PERM] No permission open on line {first_token_line.position} !')
                 blocks.pop()
                 return blocks, pointeur
+
+            elif first_token_line.value == 'ui':
+                ui_node = UiNode([])
+                var_node = VarNode(tokens_by_line[1], body=[ui_node])
+                last_block.body.append(var_node)
+                _, p = parse(token_lines[pointeur + 1:], ui_node)
+                pointeur += p + 1
+
+            elif first_token_line.value == '#ui':
+                if not isinstance(last_block, UiNode):
+                    raise SyntaxError(f'[#UI] No UI open on line {first_token_line.position} !')
+                blocks.pop()
+                return blocks, pointeur
+
+            elif first_token_line.value == 'button':
+                if not isinstance(last_block, UiNode):
+                    raise SyntaxError(f'[BUTTON] No UI open on line {first_token_line.position} !')
+                button_node = UiButtonNode(tokens_by_line[1:])
+                last_block.buttons.append(button_node)
+
+            elif first_token_line.value == 'select':
+                if not isinstance(last_block, UiNode):
+                    raise SyntaxError(f'[SELECT] No UI open on line {first_token_line.position} !')
+                select_node = UiSelectNode(tokens_by_line[1:])
+                last_block.selects.append(select_node)
 
         ############################## AUTRE ##############################
 

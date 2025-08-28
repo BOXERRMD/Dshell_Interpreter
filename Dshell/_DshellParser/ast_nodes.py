@@ -20,7 +20,10 @@ __all__ = [
     'IdentOperationNode',
     'ListNode',
     'PermissionNode',
-    'ParamNode'
+    'ParamNode',
+    'UiNode',
+    'UiButtonNode',
+    'UiSelectNode'
 ]
 
 
@@ -438,6 +441,84 @@ class ParamNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+
+class UiButtonNode(ASTNode):
+    """
+    Node representing a UI button component in the AST.
+    This is used to define button elements for commands in Dshell.
+    """
+
+    def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the button component
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<UI BUTTON> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the UiButtonNode to a dictionary representation.
+        :return: Dictionary representation of the UiButtonNode.
+        """
+        return {
+            "type": "UiButtonNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
+class UiSelectNode(ASTNode):
+    """
+    Node representing a UI select component in the AST.
+    This is used to define select elements for commands in Dshell.
+    """
+
+    def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the select component
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<UI SELECT> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the UiSelectNode to a dictionary representation.
+        :return: Dictionary representation of the UiSelectNode.
+        """
+        return {
+            "type": "UiSelectNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
+class UiNode(ASTNode):
+    """
+    Node representing a UI component in the AST.
+    This is used to define UI elements for commands in Dshell.
+    """
+
+    def __init__(self, buttons: Optional[list[UiButtonNode]] = None,
+                 selects: Optional[list[UiSelectNode]] = None):
+        """
+        :param body: list of tokens representing the UI component
+        """
+        self.buttons = buttons or []
+        self.selects = selects or []
+
+    def __repr__(self):
+        return f"<UI> - {self.buttons}\n\n - {self.selects}"
+
+    def to_dict(self):
+        """
+        Convert the UiNode to a dictionary representation.
+        :return: Dictionary representation of the UiNode.
+        """
+        return {
+            "type": "UiNode",
+            "buttons": [token.to_dict() for token in self.buttons],
+            "selects": [token.to_dict() for token in self.selects],
+        }
 
 class ListNode(ASTNode):
     """

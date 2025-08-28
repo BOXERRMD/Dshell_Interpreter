@@ -4,7 +4,10 @@ from discord import Embed, Message
 from discord.ext import commands
 from discord.abc import Messageable
 
+from pycordViews import EasyModifiedViews
+
 from .utils.utils_message import utils_get_message
+from .._utils import NoneType
 
 __all__ = [
     'dshell_send_message',
@@ -21,7 +24,7 @@ __all__ = [
 ]
 
 
-async def dshell_send_message(ctx: Message, message=None, delete=None, channel=None, embeds=None):
+async def dshell_send_message(ctx: Message, message=None, delete=None, channel=None, embeds=None, view=None) -> int:
     """
     Sends a message on Discord
     """
@@ -36,18 +39,19 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
 
     from .._DshellParser.ast_nodes import ListNode
 
-    if embeds is None:
-        embeds = ListNode([])
+    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
-    elif isinstance(embeds, Embed):
+    if isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    else:
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+    if not isinstance(view, (EasyModifiedViews, NoneType)):
+        raise Exception(f'Channel must be an UI or None, not {type(channel_to_send)} !')
 
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,
-                                                embeds=embeds)
+                                                embeds=embeds,
+                                                view=view)
 
     return sended_message.id
 

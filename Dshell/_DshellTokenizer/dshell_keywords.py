@@ -21,7 +21,7 @@ dshell_keyword: set[str] = {
 }
 
 dshell_discord_keyword: set[str] = {
-    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission'
+    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui', 'button', 'select'
 }
 dshell_commands: dict[str, Callable] = {
 
