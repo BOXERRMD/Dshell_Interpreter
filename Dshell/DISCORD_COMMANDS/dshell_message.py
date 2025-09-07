@@ -1,8 +1,7 @@
 from re import search
 
-from discord import Embed, Message
+from discord import Embed, Message, Interaction
 from discord.ext import commands
-from discord.abc import Messageable
 
 from pycordViews import EasyModifiedViews
 
@@ -12,6 +11,7 @@ from .._utils import NoneType
 __all__ = [
     'dshell_send_message',
     'dshell_respond_message',
+    'dshell_respond_interaction',
     'dshell_delete_message',
     'dshell_purge_message',
     'dshell_edit_message',
@@ -42,7 +42,10 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
     if not isinstance(embeds, (ListNode, Embed, NoneType)):
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
-    if isinstance(embeds, Embed):
+    if embeds is None:
+        embeds = ListNode([])
+
+    elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
     if not isinstance(view, (EasyModifiedViews, NoneType)):
@@ -68,20 +71,53 @@ async def dshell_respond_message(ctx: Message, message=None, content: str = None
 
     from .._DshellParser.ast_nodes import ListNode
 
+    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+
     if embeds is None:
         embeds = ListNode([])
 
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    else:
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
-
     sended_message = await respond_message.reply(
                                      content=str(content),
                                      mention_author=mention_author,
                                      delete_after=delete,
                                      embeds=embeds)
+
+    return sended_message.id
+
+async def dshell_respond_interaction(ctx: Interaction, content: str = None, delete=None, mention: bool = None, embeds=None, view=None):
+    """
+    Responds to a message interaction on Discord
+    """
+
+    if delete is not None and not isinstance(delete, (int, float)):
+        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+
+    mention_author = mention if mention is not None else False
+
+    from .._DshellParser.ast_nodes import ListNode
+
+    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+
+    if embeds is None:
+        embeds = ListNode([])
+
+    elif isinstance(embeds, Embed):
+        embeds = ListNode([embeds])
+
+    if not isinstance(view, (EasyModifiedViews, NoneType)):
+        raise Exception(f'Channel must be an UI or None, not {type(view)} !')
+
+    sended_message = await ctx.response.send_message(
+                                     content=str(content),
+                                     ephemeral=not mention_author,
+                                     delete_after=delete,
+                                     embeds=embeds,
+                                     view=view)
 
     return sended_message.id
 
@@ -123,11 +159,16 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     """
     edit_message = utils_get_message(ctx, message)
 
+    from .._DshellParser.ast_nodes import ListNode
+
+    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+
     if embeds is None:
-        embeds = []
+        embeds = ListNode([])
 
     elif isinstance(embeds, Embed):
-        embeds = [embeds]
+        embeds = ListNode([embeds])
 
     await edit_message.edit(content=new_content, embeds=embeds)
 

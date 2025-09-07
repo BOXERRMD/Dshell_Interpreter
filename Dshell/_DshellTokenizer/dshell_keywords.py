@@ -30,6 +30,7 @@ dshell_commands: dict[str, Callable] = {
     "sm": dshell_send_message,  # send message
     "spm": dshell_send_private_message,  # send private message
     "srm": dshell_respond_message,  # respond to a message
+    "sri": dshell_respond_interaction,  # respond to an interaction
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
     "em": dshell_edit_message,  # edit message

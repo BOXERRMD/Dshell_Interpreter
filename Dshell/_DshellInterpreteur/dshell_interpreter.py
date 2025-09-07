@@ -19,7 +19,7 @@ from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode, IdentOperationNode)
-context = TypeVar('context', AutoShardedBot, Message, PrivateChannel)
+context = TypeVar('context', AutoShardedBot, Message, PrivateChannel, Interaction)
 ButtonStyleValues: tuple = tuple(i.name for i in ButtonStyle)
 
 class DshellInterpreteur:
@@ -37,24 +37,25 @@ class DshellInterpreteur:
         :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
         """
         self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
+        message = ctx.message if isinstance(ctx, Interaction) else ctx
         self.env: dict[str, Any] = {
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
-            '__guild__': ctx.channel.guild.name,
-            '__channel__': ctx.channel.name,
-            '__author__': ctx.author.name,
-            '__author_display_name__': ctx.author.display_name,
-            '__author_avatar__': ctx.author.display_avatar.url if ctx.author.display_avatar else None,
-            '__author_discriminator__': ctx.author.discriminator,
-            '__author_bot__': ctx.author.bot,
-            '__author_nick__': ctx.author.nick if hasattr(ctx.author, 'nick') else None,
-            '__author_id__': ctx.author.id,
-            '__message__': ctx.content,
-            '__message_id__': ctx.id,
-            '__channel_name__': ctx.channel.name,
-            '__channel_type__': ctx.channel.type.name if hasattr(ctx.channel, 'type') else None,
-            '__channel_id__': ctx.channel.id,
-            '__private_channel__': isinstance(ctx.channel, PrivateChannel),
-        } if ctx is not None else {}
+            '__guild__': message.channel.guild.name,
+            '__channel__': message.channel.name,
+            '__author__': message.author.name,
+            '__author_display_name__': message.author.display_name,
+            '__author_avatar__': message.author.display_avatar.url if message.author.display_avatar else None,
+            '__author_discriminator__': message.author.discriminator,
+            '__author_bot__': message.author.bot,
+            '__author_nick__': message.author.nick if hasattr(message.author, 'nick') else None,
+            '__author_id__': message.author.id,
+            '__message__': message.content,
+            '__message_id__': message.id,
+            '__channel_name__': message.channel.name,
+            '__channel_type__': message.channel.type.name if hasattr(message.channel, 'type') else None,
+            '__channel_id__': message.channel.id,
+            '__private_channel__': isinstance(message.channel, PrivateChannel),
+        } if message is not None else {}
         self.vars = vars if vars is not None else ''
         self.ctx: context = ctx
         if debug:
@@ -473,11 +474,13 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
             '__private_channel__': isinstance(interaction.channel, PrivateChannel),
         }
         local_env.update(data)
-        x = DshellInterpreteur(code, interaction.message, debug=False)
+        x = DshellInterpreteur(code, interaction, debug=False)
         x.env.update(local_env)
         await x.execute()
     else:
         await interaction.response.defer(invisible=True)
+
+    data.update({'code': code})
 
 def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
     Union[Member, Role], PermissionOverwrite]:
