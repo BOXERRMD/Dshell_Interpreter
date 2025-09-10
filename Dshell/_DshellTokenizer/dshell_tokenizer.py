@@ -14,9 +14,9 @@ from .dshell_token_type import Token
 MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
-    DTT.COMMENT: compile(r"::(.*?)"),
     DTT.ENGLOBE_SEPARATOR: compile(rf"--\*\w+\s*(.*?)\s*(?=--|$)"),
-    DTT.STR: compile(r'"(.*?)"', flags=DOTALL),
+    DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
+    DTT.COMMENT: compile(r"::(.*?)$"),
     DTT.LIST: compile(r"\[(.*?)\]"),
     DTT.CALL_ARGS: compile(r"\((.*?)\)"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
@@ -76,23 +76,26 @@ class DshellTokenizer:
                         token = Token(token_type, match.group(1), (line_number, start_match))  # on enregistre son token
                         tokens_par_ligne.append(token)
 
-                    if token_type in (
-                            DTT.LIST,
-                            DTT.CALL_ARGS):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
-                        result = self.tokenizer([token.value])
-                        token.value = result[0] if len(
-                            result) > 0 else result  # gère si la structure de donnée est vide ou non
+                        if token_type == DTT.STR:
+                            token.value = token.value.replace(r'\"', '"')
 
-                        for token_in_list in token.value:
-                            token_in_list.position = (line_number, token_in_list.position[1])
+                        if token_type in (
+                                DTT.LIST,
+                                DTT.CALL_ARGS):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
+                            result = self.tokenizer([token.value])
+                            token.value = result[0] if len(
+                                result) > 0 else result  # gère si la structure de donnée est vide ou non
 
-                        for token_in_line in range(len(tokens_par_ligne)-1):
-                            if tokens_par_ligne[token_in_line].position[1] > start_match:
-                                str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
-                                tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
-                                token.value.extend(str_tokens_in_list)
-                                token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
-                                break
+                            for token_in_list in token.value:
+                                token_in_list.position = (line_number, token_in_list.position[1])
+
+                            for token_in_line in range(len(tokens_par_ligne)-1):
+                                if tokens_par_ligne[token_in_line].position[1] > start_match:
+                                    str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
+                                    tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
+                                    token.value.extend(str_tokens_in_list)
+                                    token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
+                                    break
 
                     len_match = len(match.group(0))  # longueur du match trouvé
                     ligne = ligne[:start_match] + (MASK_CHARACTER * len_match) + ligne[
@@ -112,6 +115,7 @@ class DshellTokenizer:
         str]:
         """
         Sépare les commandes en une liste en respectant les chaînes entre guillemets.
+        Echapper les caractères regroupants avec un antislash (\) pour les inclure dans la chaîne.
         :param commande: La chaîne de caractères à découper.
         :param global_split: Le séparateur utilisé (par défaut '\n').
         :param garder_carractere_regroupant: Si False, enlève les guillemets autour des chaînes.
@@ -121,14 +125,13 @@ class DshellTokenizer:
 
         commandes: str = commande.strip()
         remplacement_temporaire = '[REMPLACER]'
-        entre_caractere_regroupant = findall(fr'({carractere_regroupant}.*?{carractere_regroupant})', commandes,
-                                             flags=DOTALL)  # repère les parties entre guillemets et les save
+        pattern_find_regrouped_part = compile(fr'({carractere_regroupant}(?:[^\\{carractere_regroupant}]|\\.)*{carractere_regroupant})', flags=DOTALL)
+        entre_caractere_regroupant = findall(pattern_find_regrouped_part, commandes)  # repère les parties entre guillemets et les save
 
-        # current_command_text = [i[1: -1] for i in
-        # entre_carractere_regroupant.copy()]  # enregistre les parties entre guillemets pour cette commande
-
-        res = sub(fr'({carractere_regroupant}.*?{carractere_regroupant})', remplacement_temporaire, commandes,
-                  flags=DOTALL)  # remplace les parties entre guillemets
+        res = sub(pattern_find_regrouped_part,
+                  remplacement_temporaire,
+                  commandes,
+                  )  # remplace les parties entre guillemets
 
         res = res.split(global_split)  # split les commandes sans les guillemets
 
