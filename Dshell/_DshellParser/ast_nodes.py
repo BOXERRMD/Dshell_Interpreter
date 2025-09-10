@@ -5,6 +5,7 @@ from .._DshellTokenizer.dshell_token_type import Token
 
 __all__ = [
     'ASTNode',
+    'LengthNode',
     'StartNode',
     'ElseNode',
     'ElifNode',
@@ -257,6 +258,29 @@ class VarNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class LengthNode(ASTNode):
+    """
+    Node representing the length operation in the AST.
+    """
+
+    def __init__(self, body: Token):
+        """
+        :param body: list of tokens representing the body of the length operation
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<LENGTH> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the LengthNode to a dictionary representation.
+        :return: Dictionary representation of the LengthNode.
+        """
+        return {
+            "type": "LengthNode",
+            "body": self.body.to_dict()
+        }
 
 class EndNode(ASTNode):
     """

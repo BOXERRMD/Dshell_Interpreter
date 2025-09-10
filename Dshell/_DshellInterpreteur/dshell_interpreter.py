@@ -148,6 +148,9 @@ class DshellInterpreteur:
                 elif isinstance(first_node, UiNode):
                     self.env[node.name.value] = build_ui(first_node, self)
 
+                elif isinstance(first_node, LengthNode):
+                    self.env[node.name.value] = length(first_node)
+
                 else:
                     self.env[node.name.value] = eval_expression(node.body, self)
 
@@ -390,6 +393,19 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, norma
 
     return list_tokens
 
+def length(variable : LengthNode) -> int:
+    """
+    Count characters or items in string/list
+    :param variable:
+    :return:
+    """
+    if not isinstance(variable.body, ListNode) and variable.body.type not in (DTT.STR, DTT.IDENT):
+        raise Exception(f'Length take string, ident or list, not {type(variable.body)} !')
+
+    if isinstance(variable.body, ListNode):
+        return len(variable.body)
+    else:
+        return len(variable.body.value)
 
 def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
     """

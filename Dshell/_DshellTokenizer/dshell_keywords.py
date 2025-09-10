@@ -18,7 +18,7 @@ from ..DISCORD_COMMANDS.dshell_role import *
 from ..DISCORD_COMMANDS.dshell_interaction import *
 
 dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
+    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'length', 'len'
 }
 
 dshell_discord_keyword: set[str] = {
@@ -36,7 +36,7 @@ dshell_commands: dict[str, Callable] = {
     "em": dshell_edit_message,  # edit message
 
     "sri": dshell_respond_interaction,  # respond to an interaction
-    "di": dshell_defer_interaction,  # defer an interaction
+    "sdi": dshell_defer_interaction,  # defer an interaction
 
     "cc": dshell_create_text_channel,  # create channel
     "cvc": dshell_create_voice_channel,  # create voice channel
