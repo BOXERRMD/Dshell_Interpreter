@@ -393,3 +393,23 @@ def print_ast(ast: list[ASTNode], decalage: int = 0):
 
         elif isinstance(i, ParamNode):
             print(f"{' ' * decalage}PARAM -> {i.body}")
+
+        elif isinstance(i, UiNode):
+            print(f"{' ' * decalage}UI ->")
+            print_ast(i.buttons, decalage + 5)
+            print_ast(i.selects, decalage + 5)
+
+        elif isinstance(i, UiButtonNode):
+            print(f"{' ' * decalage}BUTTON -> {i.body}")
+
+        elif isinstance(i, UiSelectNode):
+            print(f"{' ' * decalage}SELECT -> {i.body}")
+
+        elif isinstance(i, SleepNode):
+            print(f"{' ' * decalage}SLEEP -> {i.body}")
+
+        elif isinstance(i, EndNode):
+            print(f"{' ' * decalage}END -> ...")
+
+        else:
+            print(f"{' ' * decalage}UNKNOWN NODE {i}")

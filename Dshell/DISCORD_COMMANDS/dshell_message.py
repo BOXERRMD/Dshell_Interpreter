@@ -1,17 +1,16 @@
 from re import search
 
-from discord import Embed, Message, Interaction
+from discord import Embed, Message
 from discord.ext import commands
 
 from pycordViews import EasyModifiedViews
 
-from .utils.utils_message import utils_get_message
+from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .._utils import NoneType
 
 __all__ = [
     'dshell_send_message',
     'dshell_respond_message',
-    'dshell_respond_interaction',
     'dshell_delete_message',
     'dshell_purge_message',
     'dshell_edit_message',
@@ -24,7 +23,17 @@ __all__ = [
 ]
 
 
-async def dshell_send_message(ctx: Message, message=None, delete=None, channel=None, embeds=None, view=None) -> int:
+async def dshell_send_message(ctx: Message,
+                              message=None,
+                              delete=None,
+                              channel=None,
+                              global_mentions: bool = None,
+                              everyone_mention: bool = True,
+                              roles_mentions: bool = True,
+                              users_mentions: bool = True,
+                              reply_mention: bool = False,
+                              embeds=None,
+                              view=None) -> int:
     """
     Sends a message on Discord
     """
@@ -33,6 +42,7 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
         raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
 
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+    allowed_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
 
     if channel_to_send is None:
         raise Exception(f'Channel {channel} not found!')
@@ -54,12 +64,22 @@ async def dshell_send_message(ctx: Message, message=None, delete=None, channel=N
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,
                                                 embeds=embeds,
+                                                allowed_mentions=allowed_mentions,
                                                 view=view)
 
     return sended_message.id
 
 
-async def dshell_respond_message(ctx: Message, message=None, content: str = None, delete=None, mention: bool = None, embeds=None):
+async def dshell_respond_message(ctx: Message,
+                                 message=None,
+                                 content: str = None,
+                                 global_mentions: bool = None,
+                                 everyone_mention: bool = True,
+                                 roles_mentions: bool = True,
+                                 users_mentions: bool = True,
+                                 reply_mention: bool = False,
+                                 delete=None,
+                                 embeds=None):
     """
     Responds to a message on Discord
     """
@@ -67,7 +87,8 @@ async def dshell_respond_message(ctx: Message, message=None, content: str = None
         raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
 
     respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
-    mention_author = mention if mention is not None else False
+    autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
+    mention_author = True if reply_mention else False
 
     from .._DshellParser.ast_nodes import ListNode
 
@@ -83,41 +104,9 @@ async def dshell_respond_message(ctx: Message, message=None, content: str = None
     sended_message = await respond_message.reply(
                                      content=str(content),
                                      mention_author=mention_author,
+                                     allowed_mentions=autorised_mentions,
                                      delete_after=delete,
                                      embeds=embeds)
-
-    return sended_message.id
-
-async def dshell_respond_interaction(ctx: Interaction, content: str = None, delete=None, mention: bool = None, embeds=None, view=None):
-    """
-    Responds to a message interaction on Discord
-    """
-
-    if delete is not None and not isinstance(delete, (int, float)):
-        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
-
-    mention_author = mention if mention is not None else False
-
-    from .._DshellParser.ast_nodes import ListNode
-
-    if not isinstance(embeds, (ListNode, Embed, NoneType)):
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
-
-    if embeds is None:
-        embeds = ListNode([])
-
-    elif isinstance(embeds, Embed):
-        embeds = ListNode([embeds])
-
-    if not isinstance(view, (EasyModifiedViews, NoneType)):
-        raise Exception(f'Channel must be an UI or None, not {type(view)} !')
-
-    sended_message = await ctx.response.send_message(
-                                     content=str(content),
-                                     ephemeral=not mention_author,
-                                     delete_after=delete,
-                                     embeds=embeds,
-                                     view=view)
 
     return sended_message.id
 
@@ -153,7 +142,7 @@ async def dshell_purge_message(ctx: Message, message_number: int, channel=None, 
     await purge_channel.purge(limit=message_number, reason=reason)
 
 
-async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=None):
+async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=None, view=None) -> int:
     """
     Edits a message
     """
@@ -164,18 +153,21 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     if not isinstance(embeds, (ListNode, Embed, NoneType)):
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
+    if not isinstance(view, (EasyModifiedViews, NoneType)):
+        raise Exception(f'View must be an UI bloc or None, not {type(view)} !')
+
     if embeds is None:
         embeds = ListNode([])
 
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    await edit_message.edit(content=new_content, embeds=embeds)
+    await edit_message.edit(content=new_content, embeds=embeds, view=view)
 
     return edit_message.id
 
 
-async def dshell_get_hystory_messages(ctx: Message, channel=None, limit=None):
+async def dshell_get_hystory_messages(ctx: Message, channel=None, limit=None) -> "ListNode":
     """
     Searches for messages matching a regex in a channel
     """

@@ -15,6 +15,7 @@ from ..DISCORD_COMMANDS.dshell_member import *
 from ..DISCORD_COMMANDS.dshell_message import *
 from ..DISCORD_COMMANDS.dshell_pastbin import *
 from ..DISCORD_COMMANDS.dshell_role import *
+from ..DISCORD_COMMANDS.dshell_interaction import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
@@ -30,10 +31,12 @@ dshell_commands: dict[str, Callable] = {
     "sm": dshell_send_message,  # send message
     "spm": dshell_send_private_message,  # send private message
     "srm": dshell_respond_message,  # respond to a message
-    "sri": dshell_respond_interaction,  # respond to an interaction
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
     "em": dshell_edit_message,  # edit message
+
+    "sri": dshell_respond_interaction,  # respond to an interaction
+    "di": dshell_defer_interaction,  # defer an interaction
 
     "cc": dshell_create_text_channel,  # create channel
     "cvc": dshell_create_voice_channel,  # create voice channel

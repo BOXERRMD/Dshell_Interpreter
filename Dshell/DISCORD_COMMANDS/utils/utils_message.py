@@ -1,4 +1,4 @@
-from discord import Message, PartialMessage
+from discord import Message, PartialMessage, AllowedMentions
 from typing import Union
 from re import search
 
@@ -26,3 +26,43 @@ def utils_get_message(ctx: Message, message: Union[int, str]) -> PartialMessage:
         return ctx.guild.get_channel(channel_id).get_partial_message(message_id)
 
     raise Exception(f"Message must be an integer or a string, not {type(message)} !")
+
+
+def utils_autorised_mentions(global_mentions: bool = None,
+                            everyone_mention: bool = True,
+                            roles_mentions: bool = True,
+                            users_mentions: bool = True,
+                            reply_mention: bool = False) -> Union[bool, 'AllowedMentions']:
+    """
+    Returns the AllowedMentions object based on the provided parameters.
+    If global_mentions is set to True or False, it overrides all other parameters.
+    """
+
+    from discord import AllowedMentions
+
+    if not isinstance(global_mentions, (type(None), bool)):
+        raise Exception(f'Mention parameter must be a boolean or None, not {type(global_mentions)} !')
+
+    if not isinstance(everyone_mention, bool):
+        raise Exception(f'Everyone mention parameter must be a boolean, not {type(everyone_mention)} !')
+
+    if not isinstance(roles_mentions, bool):
+        raise Exception(f'Roles mention parameter must be a boolean, not {type(roles_mentions)} !')
+
+    if not isinstance(users_mentions, bool):
+        raise Exception(f'Users mention parameter must be a boolean, not {type(users_mentions)} !')
+
+    if not isinstance(reply_mention, bool):
+        raise Exception(f'Reply mention parameter must be a boolean, not {type(reply_mention)} !')
+
+    if global_mentions is True:
+        return AllowedMentions.all()
+
+    elif global_mentions is False:
+        return AllowedMentions.none()
+
+    else:
+        return AllowedMentions(everyone=everyone_mention,
+                               roles=roles_mentions,
+                               users=users_mentions,
+                               replied_user=reply_mention)

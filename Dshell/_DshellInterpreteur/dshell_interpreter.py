@@ -4,7 +4,7 @@ from typing import TypeVar, Union, Any, Optional, Callable
 from random import choice
 from string import ascii_letters, digits
 from copy import deepcopy
-from pycordViews import SelectMenu, EasyModifiedViews
+from pycordViews import EasyModifiedViews
 
 from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message, Interaction, ButtonStyle
 from discord.ui import Button
@@ -40,22 +40,42 @@ class DshellInterpreteur:
         message = ctx.message if isinstance(ctx, Interaction) else ctx
         self.env: dict[str, Any] = {
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
-            '__guild__': message.channel.guild.name,
-            '__channel__': message.channel.name,
-            '__author__': message.author.name,
+
+            '__author__': message.author.id,
             '__author_display_name__': message.author.display_name,
             '__author_avatar__': message.author.display_avatar.url if message.author.display_avatar else None,
             '__author_discriminator__': message.author.discriminator,
             '__author_bot__': message.author.bot,
             '__author_nick__': message.author.nick if hasattr(message.author, 'nick') else None,
             '__author_id__': message.author.id,
+
             '__message__': message.content,
+            '__message_content__': message.content,
             '__message_id__': message.id,
+            '__message_url__': message.jump_url if hasattr(message, 'jump_url') else None,
+
+            '__channel__': message.channel.id,
             '__channel_name__': message.channel.name,
             '__channel_type__': message.channel.type.name if hasattr(message.channel, 'type') else None,
             '__channel_id__': message.channel.id,
             '__private_channel__': isinstance(message.channel, PrivateChannel),
-        } if message is not None else {}
+
+            '__guild__': message.channel.guild.id,
+            '__guild_name__': message.channel.guild.name,
+            '__guild_id__': message.channel.guild.id,
+            '__guild_members__': ListNode([member.id for member in message.channel.guild.members]),
+            '__guild_member_count__': message.channel.guild.member_count,
+            '__guild_icon__': message.channel.guild.icon.url if message.channel.guild.icon else None,
+            '__guild_owner_id__': message.channel.guild.owner_id,
+            '__guild_description__': message.channel.guild.description,
+            '__guild_roles__': ListNode([role.id for role in message.channel.guild.roles]),
+            '__guild_roles_count__': len(message.channel.guild.roles),
+            '__guild_emojis__': ListNode([emoji.id for emoji in message.channel.guild.emojis]),
+            '__guild_emojis_count__': len(message.channel.guild.emojis),
+            '__guild_channels__': ListNode([channel.id for channel in message.channel.guild.channels]),
+            '__guild_channels_count__': len(message.channel.guild.channels),
+
+        } if message is not None or not debug else {} # {} is used in debug mode, when ctx is None
         self.vars = vars if vars is not None else ''
         self.ctx: context = ctx
         if debug:
