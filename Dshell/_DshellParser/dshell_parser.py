@@ -51,8 +51,6 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
         last_block = blocks[-1]
 
         if first_token_line.type == DTT.COMMAND:  # si le token est une comande
-            if len(tokens_by_line) <= 1:
-                raise Exception(f'[{first_token_line.value.upper()}] take one or more arguments on line {first_token_line.position} !')
             body = tokens_by_line[1:]  # on récupère ses arguments
             last_block.body.append(CommandNode(first_token_line.value,
                                                ArgsCommandNode(body)))  # on ajoute la commande au body du dernier bloc

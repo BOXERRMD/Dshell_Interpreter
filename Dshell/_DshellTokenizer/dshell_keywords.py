@@ -37,6 +37,7 @@ dshell_commands: dict[str, Callable] = {
 
     "sri": dshell_respond_interaction,  # respond to an interaction
     "sdi": dshell_defer_interaction,  # defer an interaction
+    "dom": dshell_delete_original_message,  # delete original interaction message
 
     "cc": dshell_create_text_channel,  # create channel
     "cvc": dshell_create_voice_channel,  # create voice channel

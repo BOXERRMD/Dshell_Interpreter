@@ -304,9 +304,10 @@ async def dshell_create_thread_message(ctx: Message,
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
-    thread = await message.fetch().create_thread(name=name,
-                                         auto_archive_duration=archive,
-                                         slowmode_delay=slowmode)
+    m = await message.fetch()
+    thread = await m.create_thread(name=name,
+                    auto_archive_duration=archive,
+                    slowmode_delay=slowmode)
 
     return thread.id
 

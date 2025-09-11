@@ -1,10 +1,9 @@
 from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
-from random import choice
-from string import ascii_letters, digits
 from copy import deepcopy
 from pycordViews import EasyModifiedViews
+from pycordViews.views.errors import CustomIDNotFound
 
 from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message, Interaction, ButtonStyle
 from discord.ui import Button
@@ -140,13 +139,25 @@ class DshellInterpreteur:
                     self.env[node.name.value] = eval_expression_inline(first_node, self)
 
                 elif isinstance(first_node, EmbedNode):
-                    self.env[node.name.value] = build_embed(first_node.body, first_node.fields, self)
+                    # rebuild the embed if it already exists
+                    if node.name.value in self.env and isinstance(self.env[node.name.value], Embed):
+                        self.env[node.name.value] = rebuild_embed(self.env[node.name.value], first_node.body, first_node.fields, self)
+                    else:
+                        self.env[node.name.value] = build_embed(first_node.body, first_node.fields, self)
 
                 elif isinstance(first_node, PermissionNode):
-                    self.env[node.name.value] = build_permission(first_node.body, self)
+                    # rebuild the permissions if it already exists
+                    if node.name.value in self.env and isinstance(self.env[node.name.value], dict):
+                        self.env[node.name.value].update(build_permission(first_node.body, self))
+                    else:
+                        self.env[node.name.value] = build_permission(first_node.body, self)
 
                 elif isinstance(first_node, UiNode):
-                    self.env[node.name.value] = build_ui(first_node, self)
+                    # rebuild the UI if it already exists
+                    if node.name.value in self.env and isinstance(self.env[node.name.value], EasyModifiedViews):
+                        self.env[node.name.value] = rebuild_ui(first_node, self.env[node.name.value], self)
+                    else:
+                        self.env[node.name.value] = build_ui(first_node, self)
 
                 elif isinstance(first_node, LengthNode):
                     self.env[node.name.value] = length(first_node)
@@ -407,9 +418,9 @@ def length(variable : LengthNode) -> int:
     else:
         return len(variable.body.value)
 
-def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
+def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> tuple[dict, list[dict]]:
     """
-    Builds an embed from the command information.
+    Builds the arguments for an embed from the command information.
     """
     args_main_embed: dict[str, list[Any]] = regroupe_commandes(body, interpreter)[0]
     args_main_embed.pop('*')  # remove unspecified parameters for the embed
@@ -427,9 +438,36 @@ def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: Ds
     if 'color' in args_main_embed:
         args_main_embed['color'] = build_colour(args_main_embed['color'])  # convert color to Colour object or int
 
+    return args_main_embed, args_fields
+
+def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
+    """
+    Builds an embed from the command information.
+    """
+
+    args_main_embed, args_fields = build_embed_args(body, fields, interpreter)
     embed = Embed(**args_main_embed)  # build the main embed
     for field in args_fields:
         embed.add_field(**field)  # add all fields
+
+    return embed
+
+def rebuild_embed(embed: Embed, body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
+    """
+    Rebuilds an embed from an existing embed and the command information.
+    """
+    args_main_embed, args_fields = build_embed_args(body, fields, interpreter)
+
+    for key, value in args_main_embed.items():
+        if key == 'color':
+            embed.colour = value
+        else:
+            setattr(embed, key, value)
+
+    if args_fields:
+        embed.clear_fields()
+        for field in args_fields:
+            embed.add_field(**field)
 
     return embed
 
@@ -448,6 +486,33 @@ def build_colour(color: Union[int, ListNode]) -> Union[Colour, int]:
     else:
         raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")
 
+def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
+    """
+    Builds the parameters for a UI component from the UiNode.
+    Can accept buttons and select menus.
+    :param ui_node:
+    :param interpreter:
+    :return:
+    """
+    for ident_component in range(len(ui_node.buttons)):
+        args_button: dict[str, list[Any]] = \
+        regroupe_commandes(ui_node.buttons[ident_component].body, interpreter, normalise=True)[0]
+        args_button.pop('--*', ())
+
+        code = args_button.pop('code', None)
+        style = args_button.pop('style', 'primary').lower()
+        custom_id = args_button.pop('custom_id', str(ident_component))
+
+        if not isinstance(custom_id, str):
+            raise TypeError(f"Button custom_id must be a string, not {type(custom_id)} !")
+
+        if style not in ButtonStyleValues:
+            raise ValueError(f"Button style must be one of {', '.join(ButtonStyleValues)}, not '{style}' !")
+
+        args_button['custom_id'] = custom_id
+        args_button['style'] = ButtonStyle[style]
+        args = args_button.pop('*', ())
+        yield args, args_button, code
 
 def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedViews:
     """
@@ -459,25 +524,38 @@ def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedVi
     """
     view = EasyModifiedViews()
 
-    for component in ui_node.buttons:
-        args_button: dict[str, list[Any]] = regroupe_commandes(component.body, interpreter, normalise=True)[0]
-        args_button.pop('--*', ())
-
-        code = args_button.pop('code', None)
-        style = args_button.pop('style', 'primary').lower()
-        if style not in ButtonStyleValues:
-            raise ValueError(f"Button style must be one of {', '.join(ButtonStyleValues)}, not '{style}' !")
-        args_button['style'] = ButtonStyle[style]
-        args = args_button.pop('*', ())
-        b = Button(*args, **args_button)
-
-        custom_id = ''.join(choice(ascii_letters + digits) for _ in range(20))
-        b.custom_id = custom_id
+    for args, args_button, code in build_ui_parameters(ui_node, interpreter):
+        b = Button(**args_button)
 
         view.add_items(b)
-        view.set_callable(custom_id, _callable=ui_button_callback, data={'code': code})
+        view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code})
 
     return view
+
+def rebuild_ui(ui_node : UiNode, view: EasyModifiedViews, interpreter: DshellInterpreteur) -> EasyModifiedViews:
+    """
+    Rebuilds a UI component from an existing EasyModifiedViews.
+    :param view:
+    :param interpreter:
+    :return:
+    """
+    for args, args_button, code in build_ui_parameters(ui_node, interpreter):
+        try:
+            ui = view.get_ui(args_button['custom_id'])
+        except CustomIDNotFound:
+            raise ValueError(f"Button with custom_id '{args_button['custom_id']}' not found in the view !")
+
+        ui.label = args_button.get('label', ui.label)
+        ui.style = args_button.get('style', ui.style)
+        ui.emoji = args_button.get('emoji', ui.emoji)
+        ui.disabled = args_button.get('disabled', ui.disabled)
+        ui.url = args_button.get('url', ui.url)
+        ui.row = args_button.get('row', ui.row)
+        new_code = code if code is not None else view.get_callable_data(args_button['custom_id'])['code']
+        view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': args_button.get('code', code)})
+
+    return view
+
 
 async def ui_button_callback(button: Button, interaction: Interaction, data: dict[str, Any]):
     """
@@ -488,7 +566,6 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
     :param data:
     :return:
     """
-    print(data)
     code = data.pop('code', None)
     if code is not None:
         local_env = {

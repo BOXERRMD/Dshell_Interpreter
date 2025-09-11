@@ -1,6 +1,7 @@
 __all__ = [
     'dshell_respond_interaction',
-    'dshell_defer_interaction'
+    'dshell_defer_interaction',
+    'dshell_delete_original_message'
 ]
 
 from types import NoneType
@@ -63,7 +64,7 @@ async def dshell_respond_interaction(ctx: Interaction,
 
     return sended_message.id
 
-async def dshell_defer_interaction(ctx: Interaction, hide: bool = False) -> bool:
+async def dshell_defer_interaction(ctx: Interaction) -> bool:
     """
     Defer a message interaction on Discord
     """
@@ -71,9 +72,18 @@ async def dshell_defer_interaction(ctx: Interaction, hide: bool = False) -> bool
     if not isinstance(ctx, Interaction):
         raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
 
-    if not isinstance(hide, bool):
-        raise Exception(f'Hide parameter must be a boolean, not {type(hide)} !')
-
-    await ctx.response.defer(ephemeral=hide)
+    await ctx.response.defer()
 
     return True
+
+async def dshell_delete_original_message(ctx: Interaction) -> int:
+    """
+    Delete the original message of an interaction on Discord
+    """
+
+    if not isinstance(ctx, Interaction):
+        raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
+
+    await ctx.delete_original_message()
+
+    return ctx.message.id
