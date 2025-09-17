@@ -10,21 +10,34 @@ __all__ = [
 
 from typing import Callable
 
+from ..DISCORD_COMMANDS import utils_len, utils_list_add
 from ..DISCORD_COMMANDS.dshell_channel import *
 from ..DISCORD_COMMANDS.dshell_member import *
 from ..DISCORD_COMMANDS.dshell_message import *
 from ..DISCORD_COMMANDS.dshell_pastbin import *
 from ..DISCORD_COMMANDS.dshell_role import *
 from ..DISCORD_COMMANDS.dshell_interaction import *
+from ..DISCORD_COMMANDS.utils.utils_global import *
+from ..DISCORD_COMMANDS.utils.utils_list import *
 
 dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'length', 'len'
+    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
 }
 
 dshell_discord_keyword: set[str] = {
     'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui', 'button', 'select'
 }
 dshell_commands: dict[str, Callable] = {
+
+    'length': utils_len,
+    'len': utils_len,
+    'add': utils_list_add,
+    'remove': utils_list_remove,
+    'clear': utils_list_clear,
+    'pop': utils_list_pop,
+    'sort': utils_list_sort,
+    'reverse': utils_list_reverse,
+    'get': utils_list_get_value,
 
     "gp": dshell_get_pastbin,  # get pastbin
 

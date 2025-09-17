@@ -18,7 +18,6 @@ __all__ = [
     'FieldEmbedNode',
     'EmbedNode',
     'SleepNode',
-    'IdentOperationNode',
     'ListNode',
     'PermissionNode',
     'ParamNode',
@@ -406,39 +405,6 @@ class SleepNode(ASTNode):
         }
 
 
-class IdentOperationNode(ASTNode):
-    """
-    Node representing an operation on an identifier in the AST.
-    Manages operations on idendifiers (function calls)
-    Ensure that the function call returns the associated class to allow nesting. Not mandatory in itself if it returns something
-    """
-
-    def __init__(self, ident: Token, function: Token, args: Token):
-        """
-        :param ident: Token representing the identifier (e.g., a class or object)
-        :param function: Token representing the function to be called on the identifier
-        :param args: Token representing the arguments passed to the function
-        """
-        self.ident = ident
-        self.function = function
-        self.args = args
-
-    def __repr__(self):
-        return f"<IDENT OPERATION> - {self.ident}.{self.function}({self.args})"
-
-    def to_dict(self):
-        """
-        Convert the IdentOperationNode to a dictionary representation.
-        :return: Dictionary representation of the IdentOperationNode.
-        """
-        return {
-            "type": "IdentOperationNode",
-            "ident": self.ident.to_dict(),
-            "function": self.function.to_dict(),
-            "args": self.args.to_dict()
-        }
-
-
 class ParamNode(ASTNode):
     """
     Node representing a parameter in the AST.
@@ -595,16 +561,18 @@ class ListNode(ASTNode):
                 continue
             count += 1
 
-    def pop(self):
+    def pop(self, index: int = -1):
         """
         Remove and return the last element of the list.
         :return: The last element of the list.
         """
         if self.len_iterable == 0:
             raise IndexError("pop from empty list")
+        if 0 > index >= self.len_iterable or -self.len_iterable > index < 0:
+            raise IndexError("pop index out of range")
 
         self.len_iterable -= 1
-        return self.iterable.pop()
+        return self.iterable.pop(index)
 
     def count(self):
         """
@@ -633,6 +601,14 @@ class ListNode(ASTNode):
         Reverse the list.
         """
         self.iterable.reverse()
+
+    def extend(self, values: "ListNode"):
+        """
+        Extend the list with another list.
+        :param values: List of values to extend the list with.
+        """
+        for v in values:
+            self.add(v)
 
     def __add__(self, other: "ListNode"):
         """

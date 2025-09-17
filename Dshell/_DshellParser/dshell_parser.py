@@ -2,33 +2,13 @@ __all__ = [
     "parse",
     "parser_inline",
     "to_postfix",
-    "parse_postfix_expression",
     "print_ast",
     "ast_to_dict",
 ]
 
 from typing import Union
 
-from .ast_nodes import (ASTNode,
-                        LengthNode,
-                        CommandNode,
-                        IfNode,
-                        LoopNode,
-                        ElseNode,
-                        ArgsCommandNode,
-                        ElifNode,
-                        VarNode,
-                        EndNode,
-                        SleepNode,
-                        IdentOperationNode,
-                        EmbedNode,
-                        FieldEmbedNode,
-                        PermissionNode,
-                        ParamNode,
-                        UiNode,
-                        UiButtonNode,
-                        UiSelectNode,
-                        StartNode)
+from .ast_nodes import *
 from .._DshellTokenizer import dshell_operators
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
@@ -181,15 +161,6 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 end_node = EndNode()
                 last_block.body.append(end_node)
 
-            elif first_token_line.value in ('length', 'len'):
-                if len(tokens_by_line) != 3:
-                    raise SyntaxError(f"[LENGTH] Take 2 arguments on line {first_token_line.position} !")
-                if tokens_by_line[1].type not in (DTT.IDENT, DTT.STR, DTT.LIST):
-                    raise SyntaxError(f"[LENGTH] Take an ident, str or list on line {tokens_by_line[1].position}, not {first_token_line.type} !")
-
-                var_node = VarNode(tokens_by_line[1], body=[LengthNode(tokens_by_line[2])])
-                last_block.body.append(var_node)
-
         ############################## DISCORD KEYWORDS ##############################
 
         elif first_token_line.type == DTT.DISCORD_KEYWORD:
@@ -282,9 +253,6 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
             if len(tokens_by_line) == 1:
                 last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([first_token_line])))
 
-            else:
-                last_block.body += parse_postfix_expression(to_postfix(tokens_by_line))
-
         elif first_token_line.type == DTT.STR:
             last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([first_token_line])))
 
@@ -295,13 +263,6 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
         pointeur += 1
 
     return blocks, pointeur
-
-
-"""
-elif first_token_line.type == DTT.LIST: # si le token est une liste (qui comporte une liste python avec des Tokens)
-    list_node = ListNode(first_token_line.value) # le .value est une liste python
-    last_block.body.append(list_node)
-    """
 
 
 def ast_to_dict(obj):
@@ -375,42 +336,6 @@ def to_postfix(expression):
     return output
 
 
-def parse_postfix_expression(postfix_tokens: list[Token]) -> list[IdentOperationNode]:
-    stack = []
-
-    for tok in postfix_tokens:
-
-        if tok.type in (DTT.IDENT, DTT.CALL_ARGS, DTT.INT, DTT.STR, DTT.LIST, DTT.FLOAT, DTT.BOOL):
-            stack.append(tok)
-
-        elif tok.type == DTT.MATHS_OPERATOR:
-            if tok.value == '.':
-                args = stack.pop()
-                func = stack.pop()
-                base = stack.pop()
-                node = IdentOperationNode(ident=base, function=func, args=args)
-                stack.append(node)
-
-            elif tok.value == '->':
-                value = stack.pop()
-                base = stack.pop()
-                fake_func = Token(DTT.IDENT, 'at', tok.position)
-                fake_args = Token(DTT.CALL_ARGS, value.value, value.position)
-                node = IdentOperationNode(ident=base, function=fake_func, args=fake_args)
-                stack.append(node)
-
-            else:
-                raise SyntaxError(f"Opérateur non supporté dans les appels : {tok.value}")
-
-        else:
-            raise SyntaxError(f"Token inattendu : {tok}")
-
-    if len(stack) != 1:
-        raise SyntaxError("Expression mal formée ou incomplète")
-
-    return stack
-
-
 def print_ast(ast: list[ASTNode], decalage: int = 0):
     for i in ast:
 
@@ -433,9 +358,6 @@ def print_ast(ast: list[ASTNode], decalage: int = 0):
             if i.else_body is not None:
                 print(f"{' ' * decalage}ELSE -> ...")
                 print_ast(i.else_body, decalage + 5)
-
-        elif isinstance(i, IdentOperationNode):
-            print(f"{' ' * decalage}IDENT_OPERATION -> {i.ident}.{i.function}({i.args})")
 
         elif isinstance(i, CommandNode):
             print(f"{' ' * decalage}COMMAND -> {i.name} : {i.body}")

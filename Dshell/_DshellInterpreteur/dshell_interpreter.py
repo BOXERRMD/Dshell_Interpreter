@@ -17,7 +17,7 @@ from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 
-All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode, IdentOperationNode)
+All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode)
 context = TypeVar('context', AutoShardedBot, Message, PrivateChannel, Interaction)
 ButtonStyleValues: tuple = tuple(i.name for i in ButtonStyle)
 
@@ -165,9 +165,6 @@ class DshellInterpreteur:
                 else:
                     self.env[node.name.value] = eval_expression(node.body, self)
 
-            elif isinstance(node, IdentOperationNode):
-                return self.eval_ident_operation(node)
-
             elif isinstance(node, SleepNode):
                 sleep_time = eval_expression(node.body, self)
                 if sleep_time > 3600:
@@ -214,12 +211,6 @@ class DshellInterpreteur:
         else:
             return token.value  # fallback
 
-    def eval_ident_operation(self, node: IdentOperationNode) -> Optional[Any]:
-        function = self.eval_data_token(node.function)
-        listNode = self.eval_data_token(node.ident)
-        if hasattr(listNode, function):
-            return getattr(listNode, function)(self.eval_data_token(node.args))
-        return None
 
 def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, Any]:
     """

@@ -18,7 +18,6 @@ table_regex: dict[DTT, Pattern] = {
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
     DTT.COMMENT: compile(r"::(.*?)$"),
     DTT.LIST: compile(r"\[(.*?)\]"),
-    DTT.CALL_ARGS: compile(r"\((.*?)\)"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
     DTT.SEPARATOR: compile(rf"(--)"),
     DTT.SUB_SEPARATOR: compile(rf"(~~)"),
