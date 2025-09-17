@@ -586,6 +586,54 @@ class ListNode(ASTNode):
         if number < 1:
             raise Exception(f"The number of elements to remove must be at least 1, not {number} !")
 
+        count = 0
+        while number > 0 and count < self.len_iterable:
+            if self.iterable[count] == value:
+                self.iterable.pop(count)
+                self.len_iterable -= 1
+                number -= 1
+                continue
+            count += 1
+
+    def pop(self):
+        """
+        Remove and return the last element of the list.
+        :return: The last element of the list.
+        """
+        if self.len_iterable == 0:
+            raise IndexError("pop from empty list")
+
+        self.len_iterable -= 1
+        return self.iterable.pop()
+
+    def count(self):
+        """
+        Return the number of elements in the list.
+        :return: The number of elements in the list.
+        """
+        return self.len_iterable
+
+    def clear(self):
+        """
+        Clear the list.
+        """
+        self.iterable = []
+        self.len_iterable = 0
+        self.iterateur_count = 0
+
+    def sort(self, reverse: bool = False):
+        """
+        Sort the list.
+        :param reverse: Whether to sort the list in reverse order.
+        """
+        self.iterable.sort(reverse=reverse)
+
+    def reverse(self):
+        """
+        Reverse the list.
+        """
+        self.iterable.reverse()
+
     def __add__(self, other: "ListNode"):
         """
         Add another ListNode to this one.

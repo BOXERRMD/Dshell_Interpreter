@@ -74,7 +74,7 @@ class DshellInterpreteur:
             '__guild_channels__': ListNode([channel.id for channel in message.channel.guild.channels]),
             '__guild_channels_count__': len(message.channel.guild.channels),
 
-        } if message is not None or not debug else {} # {} is used in debug mode, when ctx is None
+        } if message is not None and not debug else {} # {} is used in debug mode, when ctx is None
         self.vars = vars if vars is not None else ''
         self.ctx: context = ctx
         if debug:
@@ -166,10 +166,7 @@ class DshellInterpreteur:
                     self.env[node.name.value] = eval_expression(node.body, self)
 
             elif isinstance(node, IdentOperationNode):
-                function = self.eval_data_token(node.function)
-                listNode = self.eval_data_token(node.ident)
-                if hasattr(listNode, function):
-                    getattr(listNode, function)(self.eval_data_token(node.args))
+                return self.eval_ident_operation(node)
 
             elif isinstance(node, SleepNode):
                 sleep_time = eval_expression(node.body, self)
@@ -217,6 +214,12 @@ class DshellInterpreteur:
         else:
             return token.value  # fallback
 
+    def eval_ident_operation(self, node: IdentOperationNode) -> Optional[Any]:
+        function = self.eval_data_token(node.function)
+        listNode = self.eval_data_token(node.ident)
+        if hasattr(listNode, function):
+            return getattr(listNode, function)(self.eval_data_token(node.args))
+        return None
 
 def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, Any]:
     """
