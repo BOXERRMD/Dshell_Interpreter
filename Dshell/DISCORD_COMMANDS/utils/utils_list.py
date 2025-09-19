@@ -94,7 +94,7 @@ async def utils_list_reverse(ctx, value: "ListNode"):
     value.reverse()
     return value
 
-async def utils_list_get_value(ctx, value: "ListNode", index: int):
+async def utils_list_get_value(ctx, value: "ListNode", index: int = 0):
     """
     Get a value from a list
     :param value:

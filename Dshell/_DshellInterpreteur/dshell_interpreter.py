@@ -10,6 +10,7 @@ from discord.ui import Button
 from discord.abc import PrivateChannel
 
 from .._DshellParser.ast_nodes import *
+from ..DISCORD_COMMANDS.utils.utils_permissions import DshellPermissions
 from .._DshellParser.dshell_parser import parse
 from .._DshellParser.dshell_parser import to_postfix, print_ast
 from .._DshellTokenizer.dshell_keywords import *
@@ -72,6 +73,11 @@ class DshellInterpreteur:
             '__guild_emojis__': ListNode([emoji.id for emoji in message.channel.guild.emojis]),
             '__guild_emojis_count__': len(message.channel.guild.emojis),
             '__guild_channels__': ListNode([channel.id for channel in message.channel.guild.channels]),
+            '__guild_text_channels__': ListNode([channel.id for channel in message.channel.guild.text_channels]),
+            '__guild_voice_channels__': ListNode([channel.id for channel in message.channel.guild.voice_channels]),
+            '__guild_categories__': ListNode([channel.id for channel in message.channel.guild.categories]),
+            '__guild_stage_channels__': ListNode([channel.id for channel in message.channel.guild.stage_channels]),
+            '__guild_forum_channels__': ListNode([channel.id for channel in message.channel.guild.forum_channels]),
             '__guild_channels_count__': len(message.channel.guild.channels),
 
         } if message is not None and not debug else {} # {} is used in debug mode, when ctx is None
@@ -102,7 +108,9 @@ class DshellInterpreteur:
                 await self.execute(node.body)
 
             if isinstance(node, CommandNode):
-                self.env['__ret__'] = await call_function(dshell_commands[node.name], node.body, self)
+                result = await call_function(dshell_commands[node.name], node.body, self)
+                self.env[f'__{node.name}__'] = result # return value of the command
+                self.env['__ret__'] = result  # global return variable for all commands
 
             elif isinstance(node, ParamNode):
                 params = get_params(node, self)
@@ -627,105 +635,3 @@ class DshellIterator:
         return value
 
 
-class DshellPermissions:
-
-    def __init__(self, target: dict[str, list[int]]):
-        """
-        Creates a Dshell permissions object.
-        :param target: A dictionary containing parameters and their values.
-        Expected parameters: “allow”, “deny”, ‘members’, “roles”.
-        For “members” and “roles”, values must be ID ListNodes.
-        """
-        self.target: dict[str, Union[ListNode, int]] = target
-
-    @staticmethod
-    def get_instance(guild: Guild, target_id: int) -> Union[Member, Role]:
-        """
-        Returns the instance corresponding to the given id. Only a Member or Role.
-        :param guild: The Discord server in which to search
-        :param target_id: The ID of the member or role
-        :return: An instance of Member or Role
-        """
-        try:
-            member = DshellPermissions.get_member(guild, target_id)
-        except ValueError:
-            member = None
-
-        try:
-            role = DshellPermissions.get_role(guild, target_id)
-        except ValueError:
-            role = None
-
-        if member is not None:
-            return member
-
-        elif role is not None:
-            return role
-
-        else:
-            raise ValueError(f"No member or role found with ID {target_id} in guild {guild.name}.")
-
-    @staticmethod
-    def get_member(guild: Guild, target_id: int) -> Member:
-        """
-        Returns the Member instance corresponding to the given id.
-        :param guild: The Discord server to search
-        :param target_id: The member ID
-        :return: A Member instance
-        """
-        member = guild.get_member(target_id)
-        if member is not None:
-            return member
-
-        raise ValueError(f"No member found with ID {target_id} in guild {guild.name}.")
-
-    @staticmethod
-    def get_role(guild: Guild, target_id: int) -> Role:
-        """
-        Returns the Role instance corresponding to the given id.
-        :param guild: The Discord server to search
-        :param target_id: The role ID
-        :return: A Role instance
-        """
-        role = guild.get_role(target_id)
-        if role is not None:
-            return role
-
-        raise ValueError(f"No role found with ID {target_id} in guild {guild.name}.")
-
-    def get_permission_overwrite(self, guild: Guild) -> dict[Union[Member, Role], PermissionOverwrite]:
-        """
-        Returns a PermissionOverwrite object with member and role permissions.
-        If no members or roles are specified, it returns a PermissionOverwrite with None key.
-        :param guild: The Discord server
-        :return: A dictionary of PermissionOverwrite objects with members and roles as keys
-        """
-        permissions: dict[Union[Member, Role, None], PermissionOverwrite] = {}
-        target_keys = self.target.keys()
-
-        if 'members' in target_keys:
-            for member_id in (
-                    self.target['members'] if isinstance(self.target['members'], ListNode) else [
-                        self.target['members']]):  # allow a single ID
-                member = self.get_member(guild, member_id)
-                permissions[member] = PermissionOverwrite.from_pair(
-                    allow=Permissions(permissions=self.target.get('allow', 0)),
-                    deny=Permissions(permissions=self.target.get('deny', 0))
-                )
-
-        elif 'roles' in target_keys:
-            for role_id in (
-                    self.target['roles'] if isinstance(self.target['roles'], ListNode) else [
-                        self.target['roles']]):  # allow a single ID
-                role = self.get_role(guild, role_id)
-                permissions[role] = PermissionOverwrite.from_pair(
-                    allow=Permissions(permissions=self.target.get('allow', 0)),
-                    deny=Permissions(permissions=self.target.get('deny', 0))
-                )
-        else:
-            permissions[None] = PermissionOverwrite.from_pair(
-                allow=Permissions(permissions=self.target.get('allow', 0)),
-                deny=Permissions(permissions=self.target.get('deny', 0))
-            )
-
-        return permissions

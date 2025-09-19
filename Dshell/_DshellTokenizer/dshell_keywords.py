@@ -10,7 +10,6 @@ __all__ = [
 
 from typing import Callable
 
-from ..DISCORD_COMMANDS import utils_len, utils_list_add
 from ..DISCORD_COMMANDS.dshell_channel import *
 from ..DISCORD_COMMANDS.dshell_member import *
 from ..DISCORD_COMMANDS.dshell_message import *
@@ -19,6 +18,7 @@ from ..DISCORD_COMMANDS.dshell_role import *
 from ..DISCORD_COMMANDS.dshell_interaction import *
 from ..DISCORD_COMMANDS.utils.utils_global import *
 from ..DISCORD_COMMANDS.utils.utils_list import *
+from ..DISCORD_COMMANDS.utils.utils_member import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
@@ -29,6 +29,7 @@ dshell_discord_keyword: set[str] = {
 }
 dshell_commands: dict[str, Callable] = {
 
+    ## List utils
     'length': utils_len,
     'len': utils_len,
     'add': utils_list_add,
@@ -39,8 +40,18 @@ dshell_commands: dict[str, Callable] = {
     'reverse': utils_list_reverse,
     'get': utils_list_get_value,
 
+    ## Discord utils
+    'name': utils_get_name, # get the name from id (channel, role, member)
+    'id': utils_get_id, # get the id from name (channel, role, member)
+    'roles': utils_get_roles, # get all roles of a member
+
+    ## Member utils
+    'has_perms': utils_has_permissions, # check if a member has the specified permissions
+
+    ## Pastbin command
     "gp": dshell_get_pastbin,  # get pastbin
 
+    ## Discord commands
     "sm": dshell_send_message,  # send message
     "spm": dshell_send_private_message,  # send private message
     "srm": dshell_respond_message,  # respond to a message
