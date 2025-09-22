@@ -28,13 +28,19 @@ class DshellInterpreteur:
     Make what you want with Dshell code to interact with Discord !
     """
 
-    def __init__(self, code: str, ctx: context, debug: bool = False, vars: Optional[str] = None):
+    def __init__(self, code: str, ctx: context,
+                 debug: bool = False,
+                 vars: Optional[str] = None,
+                 vars_env: Optional[dict[str, Any]] = None):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
         :param ctx: The context in which the code is executed. It can be a Discord bot, a message, or a channel.
-        :param debug: If True, prints the AST of the code.
+        :param debug: If True, prints the AST of the code and put the ctx to None.
         :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
+        :param vars_env: Optional dictionary of additional environment variables to add to the interpreter's environment.
+
+        Note: __message_before__ (message content before edit) can be overwritten by vars_env parameter.
         """
         self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
         message = ctx.message if isinstance(ctx, Interaction) else ctx
@@ -50,6 +56,8 @@ class DshellInterpreteur:
             '__author_id__': message.author.id,
 
             '__message__': message.content,
+            '__message_author__': message.author.id,
+            '__message_before__': message.content,  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
             '__message_content__': message.content,
             '__message_id__': message.id,
             '__message_url__': message.jump_url if hasattr(message, 'jump_url') else None,
@@ -81,6 +89,8 @@ class DshellInterpreteur:
             '__guild_channels_count__': len(message.channel.guild.channels),
 
         } if message is not None and not debug else {} # {} is used in debug mode, when ctx is None
+        if vars_env is not None: # add the variables to the environment
+            self.env.update(vars_env)
         self.vars = vars if vars is not None else ''
         self.ctx: context = ctx
         if debug:
