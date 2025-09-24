@@ -195,7 +195,7 @@ class DshellInterpreteur:
 
 
             elif isinstance(node, EndNode):
-                if node.error_message:
+                if self.eval_data_token(node.error_message):
                     raise RuntimeError("Execution stopped - EndNode encountered")
                 else:
                     raise DshellInterpreterStopExecution()
