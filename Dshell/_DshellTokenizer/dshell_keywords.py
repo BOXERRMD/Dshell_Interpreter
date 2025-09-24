@@ -19,6 +19,7 @@ from ..DISCORD_COMMANDS.dshell_interaction import *
 from ..DISCORD_COMMANDS.utils.utils_global import *
 from ..DISCORD_COMMANDS.utils.utils_list import *
 from ..DISCORD_COMMANDS.utils.utils_member import *
+from ..DISCORD_COMMANDS.utils.utils_string import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
@@ -42,6 +43,14 @@ dshell_commands: dict[str, Callable] = {
     'sort': utils_list_sort,
     'reverse': utils_list_reverse,
     'get': utils_list_get_value,
+
+    ## String utils
+    'split': utils_split_string,
+    'upper': utils_upper_string,
+    'lower': utils_lower_string,
+    'title': utils_title_string,
+    'strip': utils_strip_string,
+    'replace': utils_replace_string,
 
     ## Discord utils
     'name': utils_get_name, # get the name from id (channel, role, member)
