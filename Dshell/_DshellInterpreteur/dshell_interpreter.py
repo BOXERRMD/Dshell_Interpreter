@@ -9,6 +9,7 @@ from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissi
 from discord.ui import Button
 from discord.abc import PrivateChannel
 
+from .errors import *
 from .._DshellParser.ast_nodes import *
 from ..DISCORD_COMMANDS.utils.utils_permissions import DshellPermissions
 from .._DshellParser.dshell_parser import parse
@@ -194,7 +195,10 @@ class DshellInterpreteur:
 
 
             elif isinstance(node, EndNode):
-                raise RuntimeError("Execution stopped - EndNode encountered")
+                if node.error_message:
+                    raise RuntimeError("Execution stopped - EndNode encountered")
+                else:
+                    raise DshellInterpreterStopExecution()
 
     def eval_data_token(self, token: Token):
         """

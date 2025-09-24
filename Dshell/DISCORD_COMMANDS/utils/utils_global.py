@@ -1,5 +1,6 @@
 __all__ = [
     "utils_len",
+    "utils_random",
     "utils_get_name",
     "utils_get_id",
     "utils_get_roles",
@@ -7,8 +8,9 @@ __all__ = [
 
 from discord import Message, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, Member, Guild
 from discord.utils import get
-from typing import Union
+from typing import Union, Optional
 from enum import StrEnum
+from random import random, choice
 
 
 class DiscordType(StrEnum):
@@ -64,6 +66,20 @@ async def utils_len(ctx: Message, value):
         raise TypeError(f"value must be a list or a string in len command, not {type(value)}")
 
     return len(value)
+
+async def utils_random(ctx: Message, value: Optional["ListNode"] = None):
+    """
+    Return a random element from a list, or a random integer between 0 and value
+    :param value:
+    :return:
+    """
+    from ..._DshellParser.ast_nodes import ListNode
+    if value is not None and not isinstance(value, ListNode):
+        raise TypeError(f"value must be a list in random command, not {type(value)}")
+
+    if value is None:
+        return random()
+    return choice(value)
 
 async def utils_get_name(ctx : Message, value: int) -> Union[str, None]:
     """

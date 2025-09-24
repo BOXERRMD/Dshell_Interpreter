@@ -158,7 +158,13 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 return blocks, pointeur  # on renvoie les informations parsé à la dernière paramètre ouverte
 
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
-                end_node = EndNode()
+                error_message = True
+                if len(tokens_by_line) > 1:
+                    if tokens_by_line[1].type != DTT.BOOL:
+                        raise TypeError(f'[#END] the variable given must be a boolean, not {tokens_by_line[1].type}')
+                    else:
+                        error_message = tokens_by_line[1]
+                end_node = EndNode(error_message)
                 last_block.body.append(end_node)
 
         ############################## DISCORD KEYWORDS ##############################

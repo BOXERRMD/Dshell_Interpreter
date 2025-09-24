@@ -1,5 +1,5 @@
 from random import randint
-from typing import Optional, Any
+from typing import Optional, Any, Union
 
 from .._DshellTokenizer.dshell_token_type import Token
 
@@ -286,8 +286,8 @@ class EndNode(ASTNode):
     Node representing the end of the AST.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, error_message: Union[Token, bool] = True):
+        self.error_message: bool = error_message
 
     def __repr__(self):
         return f"<END>"
@@ -298,7 +298,8 @@ class EndNode(ASTNode):
         :return: Dictionary representation of the EndNode.
         """
         return {
-            "type": "EndNode"
+            "type": "EndNode",
+            "error_message": self.error_message
         }
 
 

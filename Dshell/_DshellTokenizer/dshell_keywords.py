@@ -29,6 +29,9 @@ dshell_discord_keyword: set[str] = {
 }
 dshell_commands: dict[str, Callable] = {
 
+    ## global utils
+    'random': utils_random,
+
     ## List utils
     'length': utils_len,
     'len': utils_len,
