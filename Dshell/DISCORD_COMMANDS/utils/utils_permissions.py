@@ -63,7 +63,10 @@ class DshellPermissions:
             for role_id in (
                     self.target['roles'] if isinstance(self.target['roles'], ListNode) else [
                         self.target['roles']]):  # allow a single ID
-                role = self.get_role(guild, role_id)
+                if role_id == guild.id:  # @everyone role
+                    role = guild.default_role
+                else:
+                    role = self.get_role(guild, role_id)
                 permissions[role] = PermissionOverwrite.from_pair(
                     allow=Permissions(permissions=self.target.get('allow', 0)),
                     deny=Permissions(permissions=self.target.get('deny', 0))
