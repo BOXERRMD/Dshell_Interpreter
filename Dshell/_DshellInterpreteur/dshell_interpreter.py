@@ -62,6 +62,7 @@ class DshellInterpreteur:
             '__message_content__': message.content,
             '__message_id__': message.id,
             '__message_url__': message.jump_url if hasattr(message, 'jump_url') else None,
+            '__last_message__': message.channel.last_message_id,
 
             '__channel__': message.channel.id,
             '__channel_name__': message.channel.name,

@@ -51,6 +51,9 @@ dshell_commands: dict[str, Callable] = {
     'title': utils_title_string,
     'strip': utils_strip_string,
     'replace': utils_replace_string,
+    'regex_findall': utils_regex_findall,
+    'regex_sub': utils_regex_sub,
+    'regex': utils_regex_search,
 
     ## Discord utils
     'name': utils_get_name, # get the name from id (channel, role, member)
@@ -70,6 +73,8 @@ dshell_commands: dict[str, Callable] = {
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
     "em": dshell_edit_message,  # edit message
+    "mh": dshell_get_history_messages,  # get message history
+    "gcm": dshell_get_content_message,  # get content of a message
 
     "sri": dshell_respond_interaction,  # respond to an interaction
     "sdi": dshell_defer_interaction,  # defer an interaction
@@ -98,9 +103,6 @@ dshell_commands: dict[str, Callable] = {
     "cp": dshell_check_permissions,  # check permissions
     "gmr": dshell_give_member_roles, # give roles
     "rmr": dshell_remove_member_roles, # remove roles
-
-    "ghm": dshell_get_hystory_messages,  # research regex in message
-    "src": dshell_research_regex_in_content,  # research regex in content
 
     "ec": dshell_edit_text_channel,  # edit text channel
     "evc": dshell_edit_voice_channel,  # edit voice channel

@@ -14,12 +14,12 @@ __all__ = [
     'dshell_delete_message',
     'dshell_purge_message',
     'dshell_edit_message',
-    'dshell_get_hystory_messages',
-    'dshell_research_regex_in_content',
+    'dshell_get_history_messages',
     'dshell_add_reactions',
     'dshell_remove_reactions',
     'dshell_clear_message_reactions',
-    'dshell_clear_one_reactions'
+    'dshell_clear_one_reactions',
+    'dshell_get_content_message'
 ]
 
 
@@ -167,7 +167,7 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     return edit_message.id
 
 
-async def dshell_get_hystory_messages(ctx: Message, channel=None, limit=None) -> "ListNode":
+async def dshell_get_history_messages(ctx: Message, channel=None, limit=None) -> "ListNode":
     """
     Searches for messages matching a regex in a channel
     """
@@ -184,26 +184,13 @@ async def dshell_get_hystory_messages(ctx: Message, channel=None, limit=None) ->
 
     messages = ListNode([])
     async for message in search_channel.history(limit=limit):
-        messages.add(message)
+        messages.add(message.id)
 
     if not messages:
         raise commands.CommandError(f"No messages in {search_channel.mention}.")
 
     return messages
 
-
-async def dshell_research_regex_in_content(ctx: Message, regex, content=None):
-    """
-    Searches for a regex in a specific message content
-    """
-
-    if not isinstance(regex, str):
-        raise Exception(f"Regex must be a string, not {type(regex)}!")
-
-    if not search(regex, str(content) if content is not None else ctx.content):
-        return False
-
-    return True
 
 
 async def dshell_add_reactions(ctx: Message, reactions, message=None):
@@ -257,3 +244,19 @@ async def dshell_clear_one_reactions(ctx: Message, message, emoji):
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
     await target_message.clear_reaction(emoji)
+
+async def dshell_get_content_message(ctx: Message, message=None):
+    """
+    Get the content of a message
+    """
+
+    target_message = ctx if message is None else utils_get_message(ctx, message)
+
+    try:
+        fetch_target_message = await target_message.fetch()
+    except:
+        raise Exception(f'Message not found !')
+
+    return fetch_target_message.content
+
+
