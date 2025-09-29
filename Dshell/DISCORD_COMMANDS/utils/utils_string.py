@@ -138,7 +138,7 @@ async def utils_regex_sub(ctx: Message, regex: str, replace: str, content: str =
 
     return sub(regex, replace, content if content is not None else ctx.content)
 
-async def utils_regex_search(ctx: Message, regex: str, content: str = None) -> bool:
+async def utils_regex_search(ctx: Message, regex: str, content: str = None) -> str:
     """
     Search for a regex in a string.
     :param regex:
@@ -152,4 +152,6 @@ async def utils_regex_search(ctx: Message, regex: str, content: str = None) -> b
     if content is not None and not isinstance(content, str):
         raise Exception(f"Content must be a string, not {type(content)}!")
 
-    return bool(search(regex, content if content is not None else ctx.content))
+    result = search(regex, content if content is not None else ctx.content)
+
+    return result.group() if result else ''
