@@ -382,6 +382,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, norma
     n = len(body)
     list_tokens: list[dict] = [tokens]
 
+    tokens_valide = (DTT.IDENT, DTT.COMMAND)
     i = 0
     while i < n:
 
@@ -389,7 +390,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, norma
             body[i].value = body[i].value.lower()
 
         if body[i].type == DTT.SEPARATOR and body[
-            i + 1].type == DTT.IDENT:  # Check if it's a separator and if the next token is an IDENT
+            i + 1].type in tokens_valide:  # Check if it's a separator and if the next token is an IDENT
             current_arg = body[i + 1].value  # change the current argument. It will be impossible to return to '*'
             tokens[current_arg] = ''  # create a key/value pair for it
             i += 2  # skip the IDENT after the separator since it has just been processed
@@ -406,7 +407,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, norma
 
         elif (body[i].type == DTT.SEPARATOR and
               (body[i + 1].type == DTT.MATHS_OPERATOR and body[i + 1].value == '*') and
-              body[i + 2].type == DTT.IDENT and
+              body[i + 2].type in tokens_valide and
               body[i + 3].type == DTT.ENGLOBE_SEPARATOR):
             current_arg = body[i + 2].value  # change the current argument
             tokens['--*'][current_arg] = body[i + 3].value

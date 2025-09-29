@@ -215,6 +215,8 @@ async def dshell_edit_text_channel(ctx: Message,
     """
     Edits a text channel on the server
     """
+    if name is not None and not isinstance(name, str):
+        raise Exception(f"Name must be a string, not {type(name)} !")
 
     if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
