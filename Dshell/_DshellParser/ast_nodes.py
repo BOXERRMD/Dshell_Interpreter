@@ -20,6 +20,7 @@ __all__ = [
     'SleepNode',
     'ListNode',
     'PermissionNode',
+    'EvalGroupNode',
     'ParamNode',
     'UiNode',
     'UiButtonNode',
@@ -405,6 +406,30 @@ class SleepNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class EvalGroupNode(ASTNode):
+    """
+    Node representing a group of evaluations in the AST.
+    This is used to group multiple evaluations together.
+    """
+
+    def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the body of the evaluation group
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<EVAL GROUP> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the EvalGroupNode to a dictionary representation.
+        :return: Dictionary representation of the EvalGroupNode.
+        """
+        return {
+            "type": "EvalGroupNode",
+            "body": [token.to_dict() for token in self.body]
+        }
 
 class ParamNode(ASTNode):
     """
@@ -431,7 +456,6 @@ class ParamNode(ASTNode):
             "type": "ParamNode",
             "body": [token.to_dict() for token in self.body]
         }
-
 
 class UiButtonNode(ASTNode):
     """

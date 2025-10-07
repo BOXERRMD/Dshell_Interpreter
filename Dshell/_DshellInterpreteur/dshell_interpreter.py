@@ -1,4 +1,4 @@
-from asyncio import sleep
+from asyncio import sleep, create_task
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
 from copy import deepcopy
@@ -57,10 +57,10 @@ class DshellInterpreteur:
             '__author_id__': message.author.id,
 
             '__message__': message.content,
-            '__message_author__': message.author.id,
-            '__message_before__': message.content,  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
             '__message_content__': message.content,
             '__message_id__': message.id,
+            '__message_author__': message.author.id,
+            '__message_before__': message.content,  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
             '__message_url__': message.jump_url if hasattr(message, 'jump_url') else None,
             '__last_message__': message.channel.last_message_id,
 
@@ -90,7 +90,7 @@ class DshellInterpreteur:
             '__guild_forum_channels__': ListNode([channel.id for channel in message.channel.guild.forum_channels]),
             '__guild_channels_count__': len(message.channel.guild.channels),
 
-        } if message is not None and not debug else {} # {} is used in debug mode, when ctx is None
+        } if message is not None and not debug else {'__ret__': None} # {} is used in debug mode, when ctx is None
         if vars_env is not None: # add the variables to the environment
             self.env.update(vars_env)
         self.vars = vars if vars is not None else ''
@@ -125,18 +125,18 @@ class DshellInterpreteur:
                 self.env['__ret__'] = result  # global return variable for all commands
 
             elif isinstance(node, ParamNode):
-                params = get_params(node, self)
+                params = await get_params(node, self)
                 self.env.update(params)  # update the environment
 
             elif isinstance(node, IfNode):
                 elif_valid = False
-                if eval_expression(node.condition, self):
+                if await eval_expression(node.condition, self):
                     await self.execute(node.body)
                     continue
                 elif node.elif_nodes:
 
                     for i in node.elif_nodes:
-                        if eval_expression(i.condition, self):
+                        if await eval_expression(i.condition, self):
                             await self.execute(i.body)
                             elif_valid = True
                             break
@@ -146,7 +146,7 @@ class DshellInterpreteur:
 
             elif isinstance(node, LoopNode):
                 self.env[node.variable.name.value] = 0
-                for i in DshellIterator(eval_expression(node.variable.body, self)):
+                for i in DshellIterator(await eval_expression(node.variable.body, self)):
                     self.env[node.variable.name.value] = i
                     c = deepcopy(node.body)
                     await self.execute(c)
@@ -156,37 +156,34 @@ class DshellInterpreteur:
 
                 first_node = node.body[0]
                 if isinstance(first_node, IfNode):
-                    self.env[node.name.value] = eval_expression_inline(first_node, self)
+                    self.env[node.name.value] = await eval_expression_inline(first_node, self)
 
                 elif isinstance(first_node, EmbedNode):
                     # rebuild the embed if it already exists
                     if node.name.value in self.env and isinstance(self.env[node.name.value], Embed):
-                        self.env[node.name.value] = rebuild_embed(self.env[node.name.value], first_node.body, first_node.fields, self)
+                        self.env[node.name.value] = await rebuild_embed(self.env[node.name.value], first_node.body, first_node.fields, self)
                     else:
-                        self.env[node.name.value] = build_embed(first_node.body, first_node.fields, self)
+                        self.env[node.name.value] = await build_embed(first_node.body, first_node.fields, self)
 
                 elif isinstance(first_node, PermissionNode):
                     # rebuild the permissions if it already exists
                     if node.name.value in self.env and isinstance(self.env[node.name.value], dict):
-                        self.env[node.name.value].update(build_permission(first_node.body, self))
+                        self.env[node.name.value].update(await build_permission(first_node.body, self))
                     else:
-                        self.env[node.name.value] = build_permission(first_node.body, self)
+                        self.env[node.name.value] = await build_permission(first_node.body, self)
 
                 elif isinstance(first_node, UiNode):
                     # rebuild the UI if it already exists
                     if node.name.value in self.env and isinstance(self.env[node.name.value], EasyModifiedViews):
-                        self.env[node.name.value] = rebuild_ui(first_node, self.env[node.name.value], self)
+                        self.env[node.name.value] = await rebuild_ui(first_node, self.env[node.name.value], self)
                     else:
-                        self.env[node.name.value] = build_ui(first_node, self)
-
-                elif isinstance(first_node, LengthNode):
-                    self.env[node.name.value] = length(first_node)
+                        self.env[node.name.value] = await build_ui(first_node, self)
 
                 else:
-                    self.env[node.name.value] = eval_expression(node.body, self)
+                    self.env[node.name.value] = await eval_expression(node.body, self)
 
             elif isinstance(node, SleepNode):
-                sleep_time = eval_expression(node.body, self)
+                sleep_time = await eval_expression(node.body, self)
                 if sleep_time > 3600:
                     raise Exception(f"Sleep time is too long! ({sleep_time} seconds) - maximum is 3600 seconds)")
                 elif sleep_time < 1:
@@ -196,12 +193,12 @@ class DshellInterpreteur:
 
 
             elif isinstance(node, EndNode):
-                if self.eval_data_token(node.error_message):
+                if await self.eval_data_token(node.error_message):
                     raise RuntimeError("Execution stopped - EndNode encountered")
                 else:
                     raise DshellInterpreterStopExecution()
 
-    def eval_data_token(self, token: Token):
+    async def eval_data_token(self, token: Token):
         """
         Eval a data token and returns its value in Python.
         :param token: The token to evaluate.
@@ -220,13 +217,14 @@ class DshellInterpreteur:
             return None
         elif token.type == DTT.LIST:
             return ListNode(
-                [self.eval_data_token(tok) for tok in token.value])  # token.value contient déjà une liste de Token
+                [await self.eval_data_token(tok) for tok in token.value])  # token.value contient déjà une liste de Token
         elif token.type == DTT.IDENT:
             if token.value in self.env.keys():
                 return self.env[token.value]
             return token.value
-        elif token.type == DTT.CALL_ARGS:
-            return (self.eval_data_token(tok) for tok in token.value)
+        elif token.type == DTT.EVAL_GROUP:
+            await self.execute(parse([token.value], StartNode([]))[0]) # obliger de parser car ce il n'est pas dejà un AST
+            return self.env['__ret__']
         elif token.type == DTT.STR:
             for match in findall(rf"\$({'|'.join(self.env.keys())})", token.value):
                 token.value = token.value.replace('$' + match, str(self.env[match]))
@@ -235,21 +233,22 @@ class DshellInterpreteur:
             return token.value  # fallback
 
 
-def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, Any]:
+async def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, Any]:
     """
     Get the parameters from a ParamNode.
     :param node: The ParamNode to get the parameters from.
     :param interpreter: The Dshell interpreter instance.
     :return: A dictionary of parameters.
     """
-    regrouped_args: dict[str, list] = regroupe_commandes(node.body, interpreter)[
-        0]  # just regroup the commands, no need to do anything else
+    regrouped_parameters = await regroupe_commandes(node.body, interpreter)
+    regrouped_args: dict[str, list] = regrouped_parameters[0]  # just regroup the commands, no need to do anything else
     regrouped_args.pop('*', ())
     englobe_args = regrouped_args.pop('--*', {})  # get the arguments that are not mandatory
     obligate = [i for i in regrouped_args.keys() if regrouped_args[i] == '*']  # get the obligatory parameters
 
     g: list[list[Token]] = DshellTokenizer(interpreter.vars).start()
-    env_give_variables = regroupe_commandes(g[0], interpreter)[0] if g else {}
+    regrouped_parameters = await regroupe_commandes(g[0], interpreter)
+    env_give_variables = regrouped_parameters[0] if g else {}
 
     gived_variables = env_give_variables.pop('*', ())  # get the variables given in the environment
     englobe_gived_variables: dict = env_give_variables.pop('--*',
@@ -285,19 +284,19 @@ def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, An
     return regrouped_args
 
 
-def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
+async def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
     """
     Eval a conditional expression inline.
     :param if_node: The IfNode to evaluate.
     :param interpreter: The Dshell interpreter instance.
     """
-    if eval_expression(if_node.condition, interpreter):
-        return eval_expression(if_node.body, interpreter)
+    if await eval_expression(if_node.condition, interpreter):
+        return await eval_expression(if_node.body, interpreter)
     else:
-        return eval_expression(if_node.else_body.body, interpreter)
+        return await eval_expression(if_node.else_body.body, interpreter)
 
 
-def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any:
+async def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any:
     """
     Evaluates an arithmetic and logical expression.
     :param tokens: A list of tokens representing the expression.
@@ -309,7 +308,7 @@ def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any
     for token in postfix:
 
         if token.type in {DTT.INT, DTT.FLOAT, DTT.BOOL, DTT.STR, DTT.LIST, DTT.IDENT}:
-            stack.append(interpreter.eval_data_token(token))
+            stack.append(await interpreter.eval_data_token(token))
 
         elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR, DTT.LOGIC_WORD_OPERATOR):
             op = token.value
@@ -349,7 +348,8 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
     :param args: The arguments to pass to the function.
     :param interpreter: The Dshell interpreter instance.
     """
-    reformatted = regroupe_commandes(args.body, interpreter)[0]
+    reformatted = await regroupe_commandes(args.body, interpreter)
+    reformatted = reformatted[0]
 
     # conversion des args en valeurs Python
     absolute_args = reformatted.pop('*', list())
@@ -363,7 +363,7 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
     return await function(*absolute_args, **keyword_args)
 
 
-def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, normalise: bool = False) -> list[dict[str, list[Any]]]:
+async def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, normalise: bool = False) -> list[dict[str, list[Any]]]:
     """
     Groups the command arguments in the form of a python dictionary.
     Note that you can specify the parameter you wish to pass via -- followed by the parameter name. But this is not mandatory!
@@ -376,8 +376,10 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, norma
     :param interpreter: The Dshell interpreter instance.
     :param normalise: If True, normalises the arguments (make value lowercase).
     """
-    tokens = {'*': [],
-              '--*': {}}  # tokens to return
+    # tokens to return
+    tokens = {'*': [], # not specied parameters
+              '--*': {}, # get all tokens after --* until reach the end. It's evaluated.
+              }
     current_arg = '*'  # the argument keys are the types they belong to. '*' is for all arguments not explicitly specified by a separator and an IDENT
     n = len(body)
     list_tokens: list[dict] = [tokens]
@@ -397,7 +399,7 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, norma
 
         elif body[
             i].type == DTT.SUB_SEPARATOR:  # allows to delimit parameters and to have several with the same name
-            list_tokens += regroupe_commandes(
+            list_tokens += await regroupe_commandes(
                 [Token(
                     type_=DTT.SEPARATOR, value=body[i].value, position=body[i].position)
                 ] + body[i + 1:], interpreter
@@ -415,66 +417,55 @@ def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, norma
 
         else:
             if current_arg == '*':
-                tokens[current_arg].append(interpreter.eval_data_token(body[i]))
+                tokens[current_arg].append(await interpreter.eval_data_token(body[i]))
             else:
-                tokens[current_arg] = interpreter.eval_data_token(body[i])  # add the token to the current argument
+                tokens[current_arg] = await interpreter.eval_data_token(body[i])  # add the token to the current argument
             i += 1
 
     return list_tokens
 
-def length(variable : LengthNode) -> int:
-    """
-    Count characters or items in string/list
-    :param variable:
-    :return:
-    """
-    if not isinstance(variable.body, ListNode) and variable.body.type not in (DTT.STR, DTT.IDENT):
-        raise Exception(f'Length take string, ident or list, not {type(variable.body)} !')
 
-    if isinstance(variable.body, ListNode):
-        return len(variable.body)
-    else:
-        return len(variable.body.value)
-
-def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> tuple[dict, list[dict]]:
+async def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> tuple[dict, list[dict]]:
     """
     Builds the arguments for an embed from the command information.
     """
-    args_main_embed: dict[str, list[Any]] = regroupe_commandes(body, interpreter)[0]
+    regrouped_parameters = await regroupe_commandes(body, interpreter)
+    args_main_embed: dict[str, list[Any]] = regrouped_parameters[0]
     args_main_embed.pop('*')  # remove unspecified parameters for the embed
     args_main_embed.pop('--*')
     args_main_embed: dict[str, Token]  # specify what it contains from now on
 
     args_fields: list[dict[str, Token]] = []
     for field in fields:  # do the same for the fields
-        a = regroupe_commandes(field.body, interpreter)[0]
-        a.pop('*')
-        a.pop('--*')
-        a: dict[str, Token]
-        args_fields.append(a)
+        y = await regroupe_commandes(field.body, interpreter)
+        args_field = y[0]
+        args_field.pop('*')
+        args_field.pop('--*')
+        args_field: dict[str, Token]
+        args_fields.append(args_field)
 
     if 'color' in args_main_embed:
         args_main_embed['color'] = build_colour(args_main_embed['color'])  # convert color to Colour object or int
 
     return args_main_embed, args_fields
 
-def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
+async def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
     """
     Builds an embed from the command information.
     """
 
-    args_main_embed, args_fields = build_embed_args(body, fields, interpreter)
+    args_main_embed, args_fields = await build_embed_args(body, fields, interpreter)
     embed = Embed(**args_main_embed)  # build the main embed
     for field in args_fields:
         embed.add_field(**field)  # add all fields
 
     return embed
 
-def rebuild_embed(embed: Embed, body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
+async def rebuild_embed(embed: Embed, body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
     """
     Rebuilds an embed from an existing embed and the command information.
     """
-    args_main_embed, args_fields = build_embed_args(body, fields, interpreter)
+    args_main_embed, args_fields = await build_embed_args(body, fields, interpreter)
 
     for key, value in args_main_embed.items():
         if key == 'color':
@@ -504,7 +495,7 @@ def build_colour(color: Union[int, ListNode]) -> Union[Colour, int]:
     else:
         raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")
 
-def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
+async def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
     """
     Builds the parameters for a UI component from the UiNode.
     Can accept buttons and select menus.
@@ -513,8 +504,8 @@ def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
     :return:
     """
     for ident_component in range(len(ui_node.buttons)):
-        args_button: dict[str, list[Any]] = \
-        regroupe_commandes(ui_node.buttons[ident_component].body, interpreter, normalise=True)[0]
+        regrouped_parameters = await regroupe_commandes(ui_node.buttons[ident_component].body, interpreter, normalise=True)
+        args_button: dict[str, list[Any]] = regrouped_parameters[0]
         args_button.pop('--*', ())
 
         code = args_button.pop('code', None)
@@ -532,7 +523,7 @@ def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
         args = args_button.pop('*', ())
         yield args, args_button, code
 
-def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedViews:
+async def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedViews:
     """
     Builds a UI component from the UiNode.
     Can accept buttons and select menus.
@@ -542,7 +533,7 @@ def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedVi
     """
     view = EasyModifiedViews()
 
-    for args, args_button, code in build_ui_parameters(ui_node, interpreter):
+    async for args, args_button, code in build_ui_parameters(ui_node, interpreter):
         b = Button(**args_button)
 
         view.add_items(b)
@@ -550,14 +541,14 @@ def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedVi
 
     return view
 
-def rebuild_ui(ui_node : UiNode, view: EasyModifiedViews, interpreter: DshellInterpreteur) -> EasyModifiedViews:
+async def rebuild_ui(ui_node : UiNode, view: EasyModifiedViews, interpreter: DshellInterpreteur) -> EasyModifiedViews:
     """
     Rebuilds a UI component from an existing EasyModifiedViews.
     :param view:
     :param interpreter:
     :return:
     """
-    for args, args_button, code in build_ui_parameters(ui_node, interpreter):
+    async for args, args_button, code in build_ui_parameters(ui_node, interpreter):
         try:
             ui = view.get_ui(args_button['custom_id'])
         except CustomIDNotFound:
@@ -613,12 +604,12 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
 
     data.update({'code': code})
 
-def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
+async def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
     Union[Member, Role], PermissionOverwrite]:
     """
     Builds a dictionary of PermissionOverwrite objects from the command information.
     """
-    args_permissions: list[dict[str, list[Any]]] = regroupe_commandes(body, interpreter)
+    args_permissions: list[dict[str, list[Any]]] = await regroupe_commandes(body, interpreter)
     permissions: dict[Union[Member, Role], PermissionOverwrite] = {}
 
     for i in args_permissions:

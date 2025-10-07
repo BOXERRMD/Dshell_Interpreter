@@ -17,7 +17,6 @@ class DshellTokenType(Enum):
     BOOL = auto(),
     NONE = auto(),
     LIST = auto()
-    CALL_ARGS = auto()
     DICT = auto()
     MENTION = auto()
     IDENT = auto()  # nom de variable, fonction
@@ -30,6 +29,7 @@ class DshellTokenType(Enum):
     MATHS_OPERATOR = auto()  # ==, +, -, *, etc.
     LOGIC_OPERATOR = auto(),
     LOGIC_WORD_OPERATOR = auto()  # and, or, not
+    EVAL_GROUP = auto()  # `code`
     COMMENT = auto()  # lignes commençant par ##
 
 

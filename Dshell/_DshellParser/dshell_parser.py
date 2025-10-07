@@ -262,6 +262,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
         elif first_token_line.type == DTT.STR:
             last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([first_token_line])))
 
+        elif first_token_line.type == DTT.EVAL_GROUP:
+            parse([first_token_line.value], last_block)
 
         else:
             last_block.body += tokens_by_line
@@ -326,7 +328,7 @@ def to_postfix(expression):
     operators: list[Token] = []
 
     for token in expression:
-        if token.type in (DTT.IDENT, DTT.CALL_ARGS, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL):  # Si c'est un ident
+        if token.type in (DTT.IDENT, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL):  # Si c'est un ident
             output.append(token)
         elif token.value in dshell_operators:
             while (operators and operators[-1].value in dshell_operators and

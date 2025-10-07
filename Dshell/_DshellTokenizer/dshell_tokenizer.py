@@ -17,6 +17,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.ENGLOBE_SEPARATOR: compile(rf"--\*\w+\s*(.*?)\s*(?=--|$)"),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
     DTT.COMMENT: compile(r"::(.*?)$"),
+    DTT.EVAL_GROUP: compile(r"`(.*?)`"),
     DTT.LIST: compile(r"\[(.*?)\]"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
     DTT.SEPARATOR: compile(rf"(--)"),
@@ -80,7 +81,7 @@ class DshellTokenizer:
 
                         if token_type in (
                                 DTT.LIST,
-                                DTT.CALL_ARGS):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
+                                DTT.EVAL_GROUP):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
                             result = self.tokenizer([token.value])
                             token.value = result[0] if len(
                                 result) > 0 else result  # gère si la structure de donnée est vide ou non
