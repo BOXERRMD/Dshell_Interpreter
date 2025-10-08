@@ -2,7 +2,7 @@ from asyncio import sleep
 from re import search
 from typing import Union
 
-from discord import MISSING, PermissionOverwrite, Member, Role, Message
+from discord import MISSING, PermissionOverwrite, Member, Role, Message, CategoryChannel
 from discord.utils import _MissingSentinel
 
 from .utils.utils_message import utils_get_message
@@ -21,7 +21,9 @@ __all__ = [
     'dshell_create_voice_channel',
     'dshell_edit_text_channel',
     'dshell_edit_voice_channel',
-    'dshell_edit_thread'
+    'dshell_edit_thread',
+    'dshell_create_category',
+    'dshell_edit_category'
 ]
 
 
@@ -206,6 +208,7 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
 async def dshell_edit_text_channel(ctx: Message,
                                    channel=None,
                                    name=None,
+                                   category=MISSING,
                                    position=MISSING,
                                    slowmode=MISSING,
                                    topic=MISSING,
@@ -221,6 +224,9 @@ async def dshell_edit_text_channel(ctx: Message,
     if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
+    if category is not None and not isinstance(category, int):
+        raise Exception(f"Category must be an integer, not {type(category)} !")
+
     if not isinstance(slowmode, (_MissingSentinel, int)):
         raise Exception(f"Slowmode must be an integer, not {type(slowmode)} !")
 
@@ -231,12 +237,14 @@ async def dshell_edit_text_channel(ctx: Message,
         raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+    new_categoy = ctx.channel.category if category == MISSING else (ctx.channel.guild.get_channel(category) if category is not None else None)
 
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
 
     await channel_to_edit.edit(name=name if name is not None else channel_to_edit.name,
                                position=position if position is not MISSING else channel_to_edit.position,
+                               category=new_categoy,
                                slowmode_delay=slowmode if slowmode is not MISSING else channel_to_edit.slowmode_delay,
                                topic=topic if topic is not MISSING else channel_to_edit.topic,
                                nsfw=nsfw if nsfw is not MISSING else channel_to_edit.nsfw,
@@ -249,6 +257,7 @@ async def dshell_edit_text_channel(ctx: Message,
 async def dshell_edit_voice_channel(ctx: Message,
                                     channel=None,
                                     name=None,
+                                    category=MISSING,
                                     position=MISSING,
                                     bitrate=MISSING,
                                     permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
@@ -259,16 +268,21 @@ async def dshell_edit_voice_channel(ctx: Message,
     if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
+    if category is not None and not isinstance(category, int):
+        raise Exception(f"Category must be an integer, not {type(category)} !")
+
     if not isinstance(bitrate, (_MissingSentinel, int)):
         raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+    new_categoy = ctx.channel.category if category == MISSING else (ctx.channel.guild.get_channel(category) if category is not None else None)
 
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
 
     await channel_to_edit.edit(name=name if name is not None else channel_to_edit.name,
                                position=position if position is not MISSING else channel_to_edit.position,
+                               category=new_categoy,
                                bitrate=bitrate if bitrate is not MISSING else channel_to_edit.bitrate,
                                overwrites=permissions if permissions is not MISSING else channel_to_edit.overwrites,
                                reason=reason)
@@ -391,3 +405,45 @@ async def dshell_delete_thread(ctx: Message, thread: Union[int, str] = None, rea
 
     return thread.thread.id
 
+async def dshell_create_category(ctx: Message,
+                                   name,
+                                   position=MISSING,
+                                   permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                   reason=None):
+    """
+    Creates a category on the server
+    """
+
+    if not isinstance(position, (_MissingSentinel, int)):
+        raise Exception(f"Position must be an integer, not {type(position)} !")
+
+    created_category = await ctx.guild.create_category(str(name),
+                                                      position=position,
+                                                      overwrites=permissions,
+                                                      reason=reason)
+
+    return created_category.id
+
+async def dshell_edit_category(ctx: Message,
+                                category,
+                                name=None,
+                                position=MISSING,
+                                permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                reason=None):
+    """
+    Edits a category on the server
+    """
+    if not isinstance(position, (_MissingSentinel, int)):
+        raise Exception(f"Position must be an integer, not {type(position)} !")
+
+    category_to_edit = ctx.channel.guild.get_channel(category)
+
+    if category_to_edit is None or not isinstance(category_to_edit, CategoryChannel):
+        raise Exception(f"Category {category} not found or is not a category !")
+
+    await category_to_edit.edit(name=name if name is not None else category_to_edit.name,
+                                position=position if position is not MISSING else category_to_edit.position,
+                                overwrites=permissions if permissions is not MISSING else category_to_edit.overwrites,
+                                reason=reason)
+
+    return category_to_edit.id

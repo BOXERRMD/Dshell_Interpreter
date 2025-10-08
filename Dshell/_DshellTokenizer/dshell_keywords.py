@@ -82,6 +82,7 @@ dshell_commands: dict[str, Callable] = {
 
     "cc": dshell_create_text_channel,  # create channel
     "cvc": dshell_create_voice_channel,  # create voice channel
+    "cca": dshell_create_category,  # create category
     "dc": dshell_delete_channel,  # delete channel
     "dcs": dshell_delete_channels,  # delete several channels by name or regex
 
@@ -106,6 +107,7 @@ dshell_commands: dict[str, Callable] = {
 
     "ec": dshell_edit_text_channel,  # edit text channel
     "evc": dshell_edit_voice_channel,  # edit voice channel
+    "eca": dshell_edit_category,  # edit category
 
     "cr": dshell_create_role, # create role
     "dr": dshell_delete_roles, # delete role
