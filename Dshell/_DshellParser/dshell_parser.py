@@ -318,7 +318,7 @@ def parser_inline(tokens: list[Token]) -> tuple[list[list[Token]], bool]:
     return result, True
 
 
-def to_postfix(expression):
+def to_postfix(expression, interpreter=None):
     """
     Transforme l'expression en notation postfixée (RPN)
     :param expression: l'expression donné par le tokenizer
@@ -328,7 +328,7 @@ def to_postfix(expression):
     operators: list[Token] = []
 
     for token in expression:
-        if token.type in (DTT.IDENT, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL):  # Si c'est un ident
+        if token.type in (DTT.IDENT, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL, DTT.EVAL_GROUP):  # Si c'est un ident
             output.append(token)
         elif token.value in dshell_operators:
             while (operators and operators[-1].value in dshell_operators and

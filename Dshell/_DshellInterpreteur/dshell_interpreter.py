@@ -302,12 +302,12 @@ async def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) 
     :param tokens: A list of tokens representing the expression.
     :param interpreter: The Dshell interpreter instance.
     """
-    postfix = to_postfix(tokens)
+    postfix = to_postfix(tokens, interpreter)
     stack = []
 
     for token in postfix:
 
-        if token.type in {DTT.INT, DTT.FLOAT, DTT.BOOL, DTT.STR, DTT.LIST, DTT.IDENT}:
+        if token.type in {DTT.INT, DTT.FLOAT, DTT.BOOL, DTT.STR, DTT.LIST, DTT.IDENT, DTT.EVAL_GROUP}:
             stack.append(await interpreter.eval_data_token(token))
 
         elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR, DTT.LOGIC_WORD_OPERATOR):
