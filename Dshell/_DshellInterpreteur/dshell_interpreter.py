@@ -55,12 +55,19 @@ class DshellInterpreteur:
             '__author_bot__': message.author.bot,
             '__author_nick__': message.author.nick if hasattr(message.author, 'nick') else None,
             '__author_id__': message.author.id,
+            '__author_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the author on message add event reaction
+            '__author_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the author on message remove event reaction
 
             '__message__': message.content,
             '__message_content__': message.content,
             '__message_id__': message.id,
             '__message_author__': message.author.id,
             '__message_before__': message.content,  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
+            '__message_created_at__': str(message.created_at),
+            '__message_edited_at__': str(message.edited_at),
+            '__message_reactions__': ListNode([str(reaction.emoji) for reaction in message.reactions]),
+            '__message_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction added on message add event reaction
+            '__message_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction removed on message remove event reaction
             '__message_url__': message.jump_url if hasattr(message, 'jump_url') else None,
             '__last_message__': message.channel.last_message_id,
 
