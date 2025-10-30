@@ -548,7 +548,7 @@ class ListNode(ASTNode):
         """
         self.iterable: list[Any] = body
         self.len_iterable: int = len(body)
-        self.iterateur_count: int = 0
+        self.iterator_count: int = 0
 
     def to_dict(self):
         """
@@ -564,8 +564,8 @@ class ListNode(ASTNode):
         """
         Add a value to the list.
         """
-        if self.len_iterable > 10000:
-            raise PermissionError('The list is too long, it must not exceed 10,000 elements !')
+        if self.len_iterable > 1000:
+            raise PermissionError('The list is too long, it must not exceed 1000 elements !')
 
         self.iterable.append(value)
         self.len_iterable += 1
@@ -612,7 +612,7 @@ class ListNode(ASTNode):
         """
         self.iterable = []
         self.len_iterable = 0
-        self.iterateur_count = 0
+        self.iterator_count = 0
 
     def sort(self, reverse: bool = False):
         """
@@ -654,12 +654,12 @@ class ListNode(ASTNode):
         :return: an element from the list.
         """
 
-        if self.iterateur_count >= self.len_iterable:
-            self.iterateur_count = 0
+        if self.iterator_count >= self.len_iterable:
+            self.iterator_count = 0
             raise StopIteration()
 
-        v = self.iterable[self.iterateur_count]
-        self.iterateur_count += 1
+        v = self.iterable[self.iterator_count]
+        self.iterator_count += 1
         return v
 
     def __len__(self):

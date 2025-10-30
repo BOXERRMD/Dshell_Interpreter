@@ -1,3 +1,4 @@
+contextvars
 py-cord==2.6.1
 requests
 pycordviews

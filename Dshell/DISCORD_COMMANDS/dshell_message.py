@@ -6,6 +6,7 @@ from discord.ext import commands
 from pycordViews import EasyModifiedViews
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
+from .._DshellInterpreteur.cached_messages import dshell_cached_messages
 from .._utils import NoneType
 
 __all__ = [
@@ -167,7 +168,9 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     return edit_message.id
 
 
-async def dshell_get_history_messages(ctx: Message, channel=None, limit=None) -> "ListNode":
+async def dshell_get_history_messages(ctx: Message,
+                                      channel=None,
+                                      limit=None) -> "ListNode":
     """
     Searches for messages matching a regex in a channel
     """
@@ -182,13 +185,16 @@ async def dshell_get_history_messages(ctx: Message, channel=None, limit=None) ->
 
     from .._DshellParser.ast_nodes import ListNode
 
+    cached_messages = dshell_cached_messages.get()
     messages = ListNode([])
     async for message in search_channel.history(limit=limit):
-        messages.add(message.id)
+        message_id = message.id
+        messages.add(message_id)
+        cached_messages[message_id] = message
 
     if not messages:
         raise commands.CommandError(f"No messages in {search_channel.mention}.")
-
+    dshell_cached_messages.set(cached_messages)
     return messages
 
 

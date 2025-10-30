@@ -1,4 +1,4 @@
-from asyncio import sleep, create_task
+from asyncio import sleep
 from re import findall
 from typing import TypeVar, Union, Any, Optional, Callable
 from copy import deepcopy
@@ -18,6 +18,7 @@ from .._DshellTokenizer.dshell_keywords import *
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
+from .cached_messages import dshell_cached_messages
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode)
 context = TypeVar('context', AutoShardedBot, Message, PrivateChannel, Interaction)
@@ -49,6 +50,7 @@ class DshellInterpreteur:
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
 
             '__author__': message.author.id,
+            '__author_name__': message.author.name,
             '__author_display_name__': message.author.display_name,
             '__author_avatar__': message.author.display_avatar.url if message.author.display_avatar else None,
             '__author_discriminator__': message.author.discriminator,
@@ -100,8 +102,9 @@ class DshellInterpreteur:
         } if message is not None and not debug else {'__ret__': None} # {} is used in debug mode, when ctx is None
         if vars_env is not None: # add the variables to the environment
             self.env.update(vars_env)
-        self.vars = vars if vars is not None else ''
+        self.vars = vars or ''
         self.ctx: context = ctx
+        dshell_cached_messages.set(dict()) # save all messages view in the current scoop
         if debug:
             print_ast(self.ast)
 
@@ -204,6 +207,8 @@ class DshellInterpreteur:
                     raise RuntimeError("Execution stopped - EndNode encountered")
                 else:
                     raise DshellInterpreterStopExecution()
+
+        dshell_cached_messages.reset()
 
     async def eval_data_token(self, token: Token):
         """

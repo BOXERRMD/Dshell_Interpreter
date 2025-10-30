@@ -1,11 +1,9 @@
-from typing import Union, TYPE_CHECKING
+from typing import Union
 from discord import Guild, Member, Role, Permissions, PermissionOverwrite
 
-from ..._DshellParser.ast_nodes import ListNode
 from .utils_global import utils_what_discord_type_is, DiscordType
 
 class DshellPermissions:
-
     def __init__(self, target: dict[str, list[int]]):
         """
         Creates a Dshell permissions object.
@@ -13,7 +11,7 @@ class DshellPermissions:
         Expected parameters: “allow”, “deny”, ‘members’, “roles”.
         For “members” and “roles”, values must be ID ListNodes.
         """
-        self.target: dict[str, Union[ListNode, int]] = target
+        self.target: dict[str, Union["ListNode", int]] = target
 
     @staticmethod
     def get_member(guild, member_id: int) -> Member:
@@ -46,6 +44,7 @@ class DshellPermissions:
         :param guild: The Discord server
         :return: A dictionary of PermissionOverwrite objects with members and roles as keys
         """
+        from ..._DshellParser.ast_nodes import ListNode
         permissions: dict[Union[Member, Role, None], PermissionOverwrite] = {}
         target_keys = self.target.keys()
 

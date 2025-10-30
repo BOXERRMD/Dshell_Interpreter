@@ -1,16 +1,24 @@
 from discord import Message, PartialMessage, AllowedMentions
-from typing import Union
+from typing import Union, Optional
 from re import search
 
-def utils_get_message(ctx: Message, message: Union[int, str]) -> PartialMessage:
+from ..._DshellInterpreteur.cached_messages import dshell_cached_messages
+
+def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMessage]:
     """
     Returns the message object of the specified message ID or link.
     Message is only available in the same server as the command and in the same channel.
     If the message is a link, it must be in the format: https://discord.com/channels/{guild_id}/{channel_id}/{message_id}
     """
+    cached_messages = dshell_cached_messages.get()
 
     if isinstance(message, int):
-        return ctx.channel.get_partial_message(message)
+        if message in cached_messages:
+            return cached_messages[message]
+
+        cached_messages[message] = ctx.channel.get_partial_message(message)
+        dshell_cached_messages.set(cached_messages)
+        return cached_messages[message]
 
     elif isinstance(message, str):
         match = search(r'https://discord\.com/channels/(\d+)/(\d+)/(\d+)', message)
@@ -23,7 +31,9 @@ def utils_get_message(ctx: Message, message: Union[int, str]) -> PartialMessage:
         if guild_id != ctx.guild.id:
             raise Exception("The message must be from the same server as the command !")
 
-        return ctx.guild.get_channel(channel_id).get_partial_message(message_id)
+        cached_messages[message_id] = ctx.guild.get_channel(channel_id).get_partial_message(message_id)
+        dshell_cached_messages.set(cached_messages)
+        return cached_messages[message_id]
 
     raise Exception(f"Message must be an integer or a string, not {type(message)} !")
 
@@ -40,7 +50,7 @@ def utils_autorised_mentions(global_mentions: bool = None,
 
     from discord import AllowedMentions
 
-    if not isinstance(global_mentions, (type(None), bool)):
+    if global_mentions is not None and not isinstance(global_mentions, bool):
         raise Exception(f'Mention parameter must be a boolean or None, not {type(global_mentions)} !')
 
     if not isinstance(everyone_mention, bool):
@@ -66,3 +76,21 @@ def utils_autorised_mentions(global_mentions: bool = None,
                                roles=roles_mentions,
                                users=users_mentions,
                                replied_user=reply_mention)
+
+async def utils_get_author_id_message(ctx: Message, message: Optional[int] = None):
+    """
+    Return author ID of the message given (or ctx if message=None)
+    :param ctx: 
+    :param message: message ID
+    :return: 
+    """
+    if message is not None and not isinstance(message, int):
+        raise Exception(f'Message parameter must be an integer or None, not {type(message)} !')
+
+    target_message = ctx
+    if message is not None:
+        try:
+            target_message = await utils_get_message(ctx, message).fetch()
+        except:
+            raise Exception(f"[message_author] Author ID message to get is not found !")
+    return target_message.author.id

@@ -28,8 +28,20 @@ dshell_keyword: set[str] = {
 dshell_discord_keyword: set[str] = {
     'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui', 'button', 'select'
 }
+
+async def dshell_debug(ctx, x):
+    """
+    Print all x parameter
+    :param ctx:
+    :param x:
+    :return:
+    """
+    print(x)
+    return x
+
 dshell_commands: dict[str, Callable] = {
 
+    "debug": dshell_debug,
     ## global utils
     'random': utils_random,
 
@@ -161,57 +173,3 @@ dshell_logical_operators: dict[str, tuple[Callable, int]] = {
 dshell_operators: dict[str, tuple[Callable, int]] = dshell_logical_operators.copy()
 dshell_operators.update(dshell_logical_word_operators)
 dshell_operators.update(dshell_mathematical_operators)
-
-'''
-C_create_var = "var"
-    C_obligate_var = "ovar" # makes variables mandatory
-
-    # guild
-    C_create_channel = "cc"
-    C_create_voice_channel = "cvc"
-    C_create_forum_channel = "cfc"
-    C_create_category = "cca"
-    C_create_role = "cr"
-
-    C_delete_channel = "dc"
-    C_delete_category = "dca"
-    C_delete_role = "dr"
-
-    C_edit_channel = "ec"
-    C_edit_voice_channel = "evc"
-    C_edit_forum_channel = "efc"
-    C_edit_category = "eca"
-    C_edit_role = "er"
-    C_edit_guild = "eg"
-
-    # forum
-    C_edit_ForumTag = "eft"
-    C_create_thread = "ct"
-    C_delete_tread = "dt"
-
-    # member
-    C_edit_nickname = "en"
-    C_ban_member = "bm"
-    C_unban_member = "um"
-    C_kick_member = "km"
-    C_timeout_member = "tm"
-    C_move_member = "mm"
-    C_add_roles = "ar"
-    C_remove_roles = "rr"
-
-    # message
-    C_send_message = "sm"
-    C_respond_message = "rm"
-    C_edit_message = "em"
-    C_send_user_message = "sum"
-    C_delete_message = "dm"
-    C_purge_message = "pm"
-    C_create_embed = "e"
-    C_regex = "regex"
-    C_add_emoji = "ae"
-    C_remove_emoji = "re"
-    C_clear_emoji = "ce"
-    C_remove_reaction = "rre"
-
-    # button
-    C_create_button = "b"'''
