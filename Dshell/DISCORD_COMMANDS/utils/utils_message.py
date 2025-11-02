@@ -1,5 +1,5 @@
 from discord import Message, PartialMessage, AllowedMentions
-from typing import Union, Optional
+from typing import Union
 from re import search
 
 from ..._DshellInterpreteur.cached_messages import dshell_cached_messages
@@ -76,25 +76,3 @@ def utils_autorised_mentions(global_mentions: bool = None,
                                roles=roles_mentions,
                                users=users_mentions,
                                replied_user=reply_mention)
-
-async def utils_get_author_id_message(ctx: Message, message: Optional[int] = None):
-    """
-    Return author ID of the message given (or ctx if message=None)
-    :param ctx: 
-    :param message: message ID
-    :return: 
-    """
-    if message is not None and not isinstance(message, int):
-        raise Exception(f'Message parameter must be an integer or None, not {type(message)} !')
-
-    target_message = ctx
-    if message is not None:
-        target_message = utils_get_message(ctx, message)
-
-        if isinstance(target_message, PartialMessage):
-            try:
-                target_message = await target_message.fetch()
-            except:
-                raise Exception(f"[message_author] Author ID message to get is not found !")
-
-    return target_message.author.id

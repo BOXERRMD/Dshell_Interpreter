@@ -20,7 +20,6 @@ from ..DISCORD_COMMANDS.utils.utils_global import *
 from ..DISCORD_COMMANDS.utils.utils_list import *
 from ..DISCORD_COMMANDS.utils.utils_member import *
 from ..DISCORD_COMMANDS.utils.utils_string import *
-from ..DISCORD_COMMANDS.utils.utils_message import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
@@ -72,7 +71,6 @@ dshell_commands: dict[str, Callable] = {
     'name': utils_get_name, # get the name from id (channel, role, member)
     'id': utils_get_id, # get the id from name (channel, role, member)
     'roles': utils_get_roles, # get all roles of a member
-    'author_id': utils_get_author_id_message, # get the author id from a message
 
     ## Member utils
     'has_perms': utils_has_permissions, # check if a member has the specified permissions
@@ -89,6 +87,9 @@ dshell_commands: dict[str, Callable] = {
     "em": dshell_edit_message,  # edit message
     "mh": dshell_get_history_messages,  # get message history
     "gcm": dshell_get_content_message,  # get content of a message
+    "gma": dshell_get_author_id_message,  # get author id of a message
+    "gml": dshell_get_message_link,  # get message link
+    "gmc": dshell_get_message_category_id,  # get message category id
 
     "sri": dshell_respond_interaction,  # respond to an interaction
     "sdi": dshell_defer_interaction,  # defer an interaction

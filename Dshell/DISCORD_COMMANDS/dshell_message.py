@@ -1,7 +1,6 @@
-from re import search
-
 from discord import Embed, Message, PartialMessage
 from discord.ext import commands
+from typing import Optional
 
 from pycordViews import EasyModifiedViews
 
@@ -20,7 +19,10 @@ __all__ = [
     'dshell_remove_reactions',
     'dshell_clear_message_reactions',
     'dshell_clear_one_reactions',
-    'dshell_get_content_message'
+    'dshell_get_content_message',
+    'dshell_get_author_id_message',
+    'dshell_get_message_link',
+    'dshell_get_message_category_id',
 ]
 
 
@@ -268,4 +270,62 @@ async def dshell_get_content_message(ctx: Message, message=None):
 
     return fetch_target_message.content
 
+
+async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = None):
+    """
+    Return author ID of the message given (or ctx if message=None)
+    :param ctx:
+    :param message: message ID
+    :return:
+    """
+    if message is not None and not isinstance(message, int):
+        raise Exception(f'Message parameter must be an integer or None, not {type(message)} !')
+
+    target_message = ctx
+    if message is not None:
+        target_message = utils_get_message(ctx, message)
+
+        if isinstance(target_message, PartialMessage):
+            try:
+                target_message = await target_message.fetch()
+            except:
+                raise Exception(f"[message_author] Author ID message to get is not found !")
+
+    return target_message.author.id
+
+async def dshell_get_message_link(ctx: Message, message: int):
+    """
+    Return the link of a message given its ID
+    :param ctx:
+    :param message: message ID
+    :return:
+    """
+    if not isinstance(message, int):
+        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
+
+    target_message = utils_get_message(ctx, message)
+
+    return target_message.jump_url
+
+async def dshell_get_message_category_id(ctx: Message, message: int = None):
+    """
+    Return the category ID of a message given its ID
+    :param ctx:
+    :param message: message ID
+    :return:
+    """
+    if message is not None and not isinstance(message, int):
+        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
+
+    target_message = ctx
+    if message is not None:
+        target_message = utils_get_message(ctx, message)
+
+        if isinstance(target_message, PartialMessage):
+            try:
+                target_message = await target_message.fetch()
+            except:
+                raise Exception(f"[message_author] Author ID message to get is not found !")
+
+    return target_message.channel.category.id
 
