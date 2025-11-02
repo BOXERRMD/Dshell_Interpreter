@@ -104,6 +104,7 @@ dshell_commands: dict[str, Callable] = {
     "gc": dshell_get_channel,  # get channel
     "gcs": dshell_get_channels,  # get channels by name or regex
     "gccs": dshell_get_channels_in_category,  # get channels in category
+    "gcc": dshell_get_channel_category_id,  # get channel category id
 
     "ct": dshell_create_thread_message,  # create thread
     "dt": dshell_delete_thread,  # delete thread

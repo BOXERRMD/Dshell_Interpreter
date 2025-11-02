@@ -23,7 +23,8 @@ __all__ = [
     'dshell_edit_voice_channel',
     'dshell_edit_thread',
     'dshell_create_category',
-    'dshell_edit_category'
+    'dshell_edit_category',
+    'dshell_get_channel_category_id',
 ]
 
 
@@ -459,3 +460,18 @@ async def dshell_edit_category(ctx: Message,
                                 reason=reason)
 
     return category_to_edit.id
+
+async def dshell_get_channel_category_id(ctx: Message, channel=None):
+    """
+    Returns the category ID of a channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    if channel_to_check.category is None:
+        return None
+
+    return channel_to_check.category.id if channel_to_check.category is not None else 0

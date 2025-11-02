@@ -194,8 +194,6 @@ async def dshell_get_history_messages(ctx: Message,
         messages.add(message_id)
         cached_messages[message_id] = message
 
-    if not messages:
-        raise commands.CommandError(f"No messages in {search_channel.mention}.")
     dshell_cached_messages.set(cached_messages)
     return messages
 
@@ -325,7 +323,7 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
             try:
                 target_message = await target_message.fetch()
             except:
-                raise Exception(f"[message_author] Author ID message to get is not found !")
+                raise Exception(f"[category_message] Message ID to get is not found !")
 
-    return target_message.channel.category.id
+    return target_message.channel.category.id if target_message.channel.category is not None else 0
 
