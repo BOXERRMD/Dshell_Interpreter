@@ -4,7 +4,7 @@ from re import search
 
 from ..._DshellInterpreteur.cached_messages import dshell_cached_messages
 
-def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMessage]:
+def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMessage, Message]:
     """
     Returns the message object of the specified message ID or link.
     Message is only available in the same server as the command and in the same channel.
@@ -89,8 +89,12 @@ async def utils_get_author_id_message(ctx: Message, message: Optional[int] = Non
 
     target_message = ctx
     if message is not None:
-        try:
-            target_message = await utils_get_message(ctx, message).fetch()
-        except:
-            raise Exception(f"[message_author] Author ID message to get is not found !")
+        target_message = utils_get_message(ctx, message)
+
+        if isinstance(target_message, PartialMessage):
+            try:
+                target_message = await target_message.fetch()
+            except:
+                raise Exception(f"[message_author] Author ID message to get is not found !")
+
     return target_message.author.id

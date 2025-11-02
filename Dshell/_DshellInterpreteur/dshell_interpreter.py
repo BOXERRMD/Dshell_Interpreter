@@ -208,8 +208,6 @@ class DshellInterpreteur:
                 else:
                     raise DshellInterpreterStopExecution()
 
-        dshell_cached_messages.reset()
-
     async def eval_data_token(self, token: Token):
         """
         Eval a data token and returns its value in Python.
@@ -252,15 +250,45 @@ async def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[s
     :param interpreter: The Dshell interpreter instance.
     :return: A dictionary of parameters.
     """
-    regrouped_parameters = await regroupe_commandes(node.body, interpreter)
-    regrouped_args: dict[str, list] = regrouped_parameters[0]  # just regroup the commands, no need to do anything else
-    regrouped_args.pop('*', ())
-    englobe_args = regrouped_args.pop('--*', {})  # get the arguments that are not mandatory
-    obligate = [i for i in regrouped_args.keys() if regrouped_args[i] == '*']  # get the obligatory parameters
+    async def split_args(node: ParamNode, interpreter: DshellInterpreteur) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], list[str]]:
+        """
+        Split arguments from a ParamNode.
+        Simple parameters are specified by the key '*'
+        Englobed parameters are specified by the key '--*'
+        Obligate parameters are specified by the value '*'
+        :return: A tuple of simple parameters (*), englobe parameters (--*), specified parameters (--), and obligated parameters (value '*').
+        """
+        regrouped_parameters = await regroupe_commandes(node.body, interpreter)
+        regrouped_parameters = regrouped_parameters[0]  # get the first dictionary (there can be several if SUB_SEPARATOR is used)
+        simple_parameters: dict[str, Any] = regrouped_parameters.pop('*', ())
+        englobe_parameters: dict[str, Any] = regrouped_parameters.pop('--*', {})
+        specified_parameters: dict[str, Any] = regrouped_parameters # all other parameters with their names as keys and a value gived before or not.
 
-    g: list[list[Token]] = DshellTokenizer(interpreter.vars).start()
-    regrouped_parameters = await regroupe_commandes(g[0], interpreter)
-    env_give_variables = regrouped_parameters[0] if g else {}
+        obligated_parameters: list[str] = [] # specify the obligated parameters (those with value '*')
+
+        for key, value in specified_parameters.items():
+            if value == '*':
+                obligated_parameters.append(key)
+        for key, value in englobe_parameters.items():
+            if value == '*':
+                obligated_parameters.append(key)
+
+        return simple_parameters, englobe_parameters, specified_parameters, obligated_parameters
+
+
+
+    simple_params, englobe_args, regrouped_args, obligate = await split_args(node, interpreter)
+
+    variables_given_for_the_command: list[list[Token]] = DshellTokenizer(interpreter.vars).start() # tokenize the vars given to the command
+
+    if not variables_given_for_the_command and obligate:
+        raise Exception(f"The following parameters are obligatory, but no value was given for them: {', '.join(obligate)}.")
+
+    if not variables_given_for_the_command:
+        variables_given_for_the_command = ([], )
+
+    regrouped_parameters = await regroupe_commandes(variables_given_for_the_command[0], interpreter)
+    env_give_variables: dict = regrouped_parameters[0] if variables_given_for_the_command else {}
 
     gived_variables = env_give_variables.pop('*', ())  # get the variables given in the environment
     englobe_gived_variables: dict = env_give_variables.pop('--*',
@@ -270,7 +298,7 @@ async def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[s
         regrouped_args[key] = value
         gived_variables.pop(0)
 
-    if len(gived_variables) > 0:
+    if gived_variables:
         for key in englobe_args.keys():
             regrouped_args[key] = ' '.join([str(i) for i in gived_variables])
             del englobe_args[key]
@@ -281,19 +309,21 @@ async def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[s
         if key == englobe_gived_key:
             regrouped_args[key] = englobe_gived_value
 
-    regrouped_args.update(englobe_args)  # add the englobe args to the regrouped args
+    final_args: dict[str, Any] = englobe_args
+    final_args.update(regrouped_args)
 
     for key, value in env_give_variables.items():
-        if key in regrouped_args:
-            regrouped_args[key] = value  # update the regrouped args with the env variables
+        if key in final_args:
+            final_args[key] = value  # update the regrouped args with the env variables
         else:
             raise Exception(f"'{key}' is not a valid parameter, but was given in the environment.")
 
     for key in obligate:
-        if regrouped_args[key] == '*':
+        if final_args[key] == '*':
             raise Exception(f"'{key}' is an obligatory parameter, but no value was given for it.")
 
-    return regrouped_args
+    return final_args
+
 
 
 async def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:

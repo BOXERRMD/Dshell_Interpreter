@@ -2,7 +2,7 @@ from asyncio import sleep
 from re import search
 from typing import Union
 
-from discord import MISSING, PermissionOverwrite, Member, Role, Message, CategoryChannel
+from discord import MISSING, PermissionOverwrite, Member, Role, Message, CategoryChannel, PartialMessage
 from discord.utils import _MissingSentinel
 
 from .utils.utils_message import utils_get_message
@@ -224,7 +224,7 @@ async def dshell_edit_text_channel(ctx: Message,
     if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    if category is not None and not isinstance(category, int):
+    if not isinstance(category, (_MissingSentinel, int)):
         raise Exception(f"Category must be an integer, not {type(category)} !")
 
     if not isinstance(slowmode, (_MissingSentinel, int)):
@@ -237,7 +237,7 @@ async def dshell_edit_text_channel(ctx: Message,
         raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
-    new_categoy = ctx.channel.category if category == MISSING else (ctx.channel.guild.get_channel(category) if category is not None else None)
+    new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
 
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
@@ -268,14 +268,14 @@ async def dshell_edit_voice_channel(ctx: Message,
     if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")
 
-    if category is not None and not isinstance(category, int):
+    if not isinstance(category, (_MissingSentinel, int)):
         raise Exception(f"Category must be an integer, not {type(category)} !")
 
     if not isinstance(bitrate, (_MissingSentinel, int)):
         raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
-    new_categoy = ctx.channel.category if category == MISSING else (ctx.channel.guild.get_channel(category) if category is not None else None)
+    new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
 
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
@@ -320,7 +320,11 @@ async def dshell_create_thread_message(ctx: Message,
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
-    m = await message.fetch()
+    if isinstance(message, PartialMessage):
+        m = await message.fetch()
+    else:
+        m = message
+
     thread = await m.create_thread(name=name,
                     auto_archive_duration=archive,
                     slowmode_delay=slowmode)
@@ -372,7 +376,11 @@ async def dshell_get_thread(ctx: Message, message: Union[int, str] = None):
     if message is None:
         message = ctx.id
 
-    message = await utils_get_message(ctx, message).fetch()
+    target_message = utils_get_message(ctx, message)
+    if isinstance(target_message, PartialMessage):
+        message = await target_message.fetch()
+    else:
+        message = target_message
 
     if not hasattr(message, 'thread'):
         return None
@@ -393,7 +401,11 @@ async def dshell_delete_thread(ctx: Message, thread: Union[int, str] = None, rea
     if thread is None:
         thread = ctx.id
 
-    thread = await utils_get_message(ctx, thread).fetch()
+    target_message = utils_get_message(ctx, thread)
+    if isinstance(target_message, PartialMessage):
+        thread = await target_message.fetch()
+    else:
+        thread = target_message
 
     if not hasattr(thread, 'thread'):
         raise Exception("The specified message does not have a thread !")

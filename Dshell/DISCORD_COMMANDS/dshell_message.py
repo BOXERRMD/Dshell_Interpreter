@@ -1,6 +1,6 @@
 from re import search
 
-from discord import Embed, Message
+from discord import Embed, Message, PartialMessage
 from discord.ext import commands
 
 from pycordViews import EasyModifiedViews
@@ -258,10 +258,13 @@ async def dshell_get_content_message(ctx: Message, message=None):
 
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
-    try:
-        fetch_target_message = await target_message.fetch()
-    except:
-        raise Exception(f'Message not found !')
+    if isinstance(target_message, PartialMessage):
+        try:
+            fetch_target_message = await target_message.fetch()
+        except:
+            raise Exception(f'Message not found !')
+    else:
+        fetch_target_message = target_message
 
     return fetch_target_message.content
 

@@ -99,7 +99,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if tokens_by_line[1].type != DTT.IDENT:
                     raise TypeError(f'[LOOP] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-                if tokens_by_line[2].type not in (DTT.IDENT, DTT.STR, DTT.INT, DTT.FLOAT, DTT.LIST):
+                if tokens_by_line[2].type not in (DTT.IDENT, DTT.STR, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.EVAL_GROUP):
                     raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
                                     f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
 
