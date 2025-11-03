@@ -2,7 +2,7 @@ from asyncio import sleep
 from re import search
 from typing import Union
 
-from discord import MISSING, PermissionOverwrite, Member, Role, Message, CategoryChannel, PartialMessage
+from discord import MISSING, PermissionOverwrite, Member, Role, Message, CategoryChannel, PartialMessage, VoiceChannel
 from discord.utils import _MissingSentinel
 
 from .utils.utils_message import utils_get_message
@@ -24,7 +24,15 @@ __all__ = [
     'dshell_edit_thread',
     'dshell_create_category',
     'dshell_edit_category',
+    'dshell_delete_category',
     'dshell_get_channel_category_id',
+    'dshell_get_channel_nsfw',
+    'dshell_get_channel_slowmode',
+    'dshell_get_channel_topic',
+    'dshell_get_channel_threads',
+    'dshell_get_channel_position',
+    'dshell_get_channel_url',
+    'dshell_get_channel_voice_members',
 ]
 
 
@@ -461,6 +469,25 @@ async def dshell_edit_category(ctx: Message,
 
     return category_to_edit.id
 
+async def dshell_delete_category(ctx: Message, category=None, reason=None):
+    """
+    Deletes a category.
+    """
+
+    if category is None and ctx.channel.category is None:
+        raise Exception("Category must be specified !")
+
+    category_to_delete = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
+
+    if category_to_delete is None or not isinstance(category_to_delete, CategoryChannel):
+        raise Exception(f"Category {category} not found or is not a category !")
+
+    await category_to_delete.delete(reason=reason)
+
+    return category_to_delete.id
+
+############################# CHANNEL INFO ##############################
+
 async def dshell_get_channel_category_id(ctx: Message, channel=None):
     """
     Returns the category ID of a channel.
@@ -475,3 +502,111 @@ async def dshell_get_channel_category_id(ctx: Message, channel=None):
         return None
 
     return channel_to_check.category.id if channel_to_check.category is not None else 0
+
+async def dshell_get_channel_nsfw(ctx: Message, channel=None):
+    """
+    Returns if the channel is NSFW.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    return channel_to_check.nsfw
+
+async def dshell_get_channel_slowmode(ctx: Message, channel=None):
+    """
+    Returns the slowmode delay of a channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    if not hasattr(channel_to_check, 'slowmode_delay'):
+        raise Exception(f"Channel {channel} is not a text channel !")
+
+    return channel_to_check.slowmode_delay
+
+async def dshell_get_channel_topic(ctx: Message, channel=None):
+    """
+    Returns the topic of a channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    if not hasattr(channel_to_check, 'topic'):
+        raise Exception(f"Channel {channel} is not a text channel !")
+
+    return channel_to_check.topic
+
+async def dshell_get_channel_threads(ctx: Message, channel=None):
+    """
+    Returns the list of threads in a channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    if not hasattr(channel_to_check, 'threads'):
+        raise Exception(f"Channel {channel} is not a text channel !")
+
+    from .._DshellParser.ast_nodes import ListNode
+    threads = ListNode([])
+
+    for thread in channel_to_check.threads:
+        threads.add(thread.id)
+
+    return threads
+
+async def dshell_get_channel_position(ctx: Message, channel=None):
+    """
+    Returns the position of a channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    return channel_to_check.position
+
+async def dshell_get_channel_url(ctx: Message, channel=None):
+    """
+    Returns the URL of a channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    return channel_to_check.jump_url
+
+async def dshell_get_channel_voice_members(ctx: Message, channel=None):
+    """
+    Returns the list of members in a voice channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    if not isinstance(channel_to_check, VoiceChannel):
+        raise Exception(f"Channel {channel} is not a voice channel !")
+
+    from .._DshellParser.ast_nodes import ListNode
+    members = ListNode([])
+
+    for member in channel_to_check.members:
+        members.add(member.id)
+
+    return members

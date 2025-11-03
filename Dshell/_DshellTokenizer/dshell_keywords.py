@@ -85,11 +85,15 @@ dshell_commands: dict[str, Callable] = {
     "dm": dshell_delete_message,
     "pm": dshell_purge_message,
     "em": dshell_edit_message,  # edit message
+    "pinm": dshell_pin_message,  # pin message
     "mh": dshell_get_history_messages,  # get message history
     "gcm": dshell_get_content_message,  # get content of a message
     "gma": dshell_get_author_id_message,  # get author id of a message
     "gml": dshell_get_message_link,  # get message link
     "gmc": dshell_get_message_category_id,  # get message category id
+    "gmp": dshell_get_channel_pined_messages,  # get channel pined messages
+    "gmat": dshell_get_message_attachments,  # get message attachments
+    "ims": dshell_is_message_system,  # is message system
 
     "sri": dshell_respond_interaction,  # respond to an interaction
     "sdi": dshell_defer_interaction,  # defer an interaction
@@ -98,6 +102,7 @@ dshell_commands: dict[str, Callable] = {
     "cc": dshell_create_text_channel,  # create channel
     "cvc": dshell_create_voice_channel,  # create voice channel
     "cca": dshell_create_category,  # create category
+    "dca": dshell_delete_category,  # delete category
     "dc": dshell_delete_channel,  # delete channel
     "dcs": dshell_delete_channels,  # delete several channels by name or regex
 
@@ -105,6 +110,11 @@ dshell_commands: dict[str, Callable] = {
     "gcs": dshell_get_channels,  # get channels by name or regex
     "gccs": dshell_get_channels_in_category,  # get channels in category
     "gcc": dshell_get_channel_category_id,  # get channel category id
+    "gcnsfw": dshell_get_channel_nsfw,  # get channel nsfw status
+    "gcsl": dshell_get_channel_slowmode,  # get channel slowmode
+    "gct": dshell_get_channel_topic,  # get channel topic
+    "gcth": dshell_get_channel_threads,  # get channel threads
+    "gvcm": dshell_get_channel_voice_members,  # get voice channel members
 
     "ct": dshell_create_thread_message,  # create thread
     "dt": dshell_delete_thread,  # delete thread

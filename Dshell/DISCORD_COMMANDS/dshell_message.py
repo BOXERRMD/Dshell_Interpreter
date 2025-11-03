@@ -19,10 +19,14 @@ __all__ = [
     'dshell_remove_reactions',
     'dshell_clear_message_reactions',
     'dshell_clear_one_reactions',
+    'dshell_pin_message',
     'dshell_get_content_message',
     'dshell_get_author_id_message',
     'dshell_get_message_link',
     'dshell_get_message_category_id',
+    'dshell_get_message_attachments',
+    'dshell_get_channel_pined_messages',
+    'dshell_is_message_system',
 ]
 
 
@@ -169,36 +173,6 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
 
     return edit_message.id
 
-
-async def dshell_get_history_messages(ctx: Message,
-                                      channel=None,
-                                      limit=None) -> "ListNode":
-    """
-    Searches for messages matching a regex in a channel
-    """
-
-    if limit is not None and not isinstance(limit, int):
-        raise Exception(f"Limit must be an integer or None, not {type(limit)}!")
-
-    search_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
-
-    if search_channel is None:
-        raise Exception(f"Channel {channel} to search not found!")
-
-    from .._DshellParser.ast_nodes import ListNode
-
-    cached_messages = dshell_cached_messages.get()
-    messages = ListNode([])
-    async for message in search_channel.history(limit=limit):
-        message_id = message.id
-        messages.add(message_id)
-        cached_messages[message_id] = message
-
-    dshell_cached_messages.set(cached_messages)
-    return messages
-
-
-
 async def dshell_add_reactions(ctx: Message, reactions, message=None):
     """
     Adds reactions to a message
@@ -239,6 +213,8 @@ async def dshell_clear_message_reactions(ctx: Message, message):
 
     await message.clear_reactions()
 
+    return message.id
+
 async def dshell_clear_one_reactions(ctx: Message, message, emoji):
     """
     Clear one emoji on the target message
@@ -250,6 +226,63 @@ async def dshell_clear_one_reactions(ctx: Message, message, emoji):
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
     await target_message.clear_reaction(emoji)
+
+    return target_message.id
+
+async def dshell_pin_message(ctx: Message, message=None):
+    """
+    Pin a message
+    """
+
+    target_message = ctx if message is None else utils_get_message(ctx, message)
+
+    await target_message.pin()
+
+    return target_message.id
+
+async def dshell_unpin_message(ctx: Message, message=None, reason=None):
+    """
+    Unpin a message
+    """
+
+    target_message = ctx if message is None else utils_get_message(ctx, message)
+
+    if reason is not None and not isinstance(reason, str):
+        raise Exception(f'Reason must be a string or None, not {type(reason)} !')
+
+    await target_message.unpin()
+
+    return target_message.id
+
+
+################################# GET MESSAGE INFO #################################
+
+async def dshell_get_history_messages(ctx: Message,
+                                      channel=None,
+                                      limit=None) -> "ListNode":
+    """
+    Searches for messages matching a regex in a channel
+    """
+
+    if limit is not None and not isinstance(limit, int):
+        raise Exception(f"Limit must be an integer or None, not {type(limit)}!")
+
+    search_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if search_channel is None:
+        raise Exception(f"Channel {channel} to search not found!")
+
+    from .._DshellParser.ast_nodes import ListNode
+
+    cached_messages = dshell_cached_messages.get()
+    messages = ListNode([])
+    async for message in search_channel.history(limit=limit):
+        message_id = message.id
+        messages.add(message_id)
+        cached_messages[message_id] = message
+
+    dshell_cached_messages.set(cached_messages)
+    return messages
 
 async def dshell_get_content_message(ctx: Message, message=None):
     """
@@ -327,3 +360,75 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
 
     return target_message.channel.category.id if target_message.channel.category is not None else 0
 
+async def dshell_get_message_attachments(ctx: Message, message: int = None):
+    """
+    Return the attachments of a message given its ID
+    :param ctx:
+    :param message: message ID
+    :return:
+    """
+    if message is not None and not isinstance(message, int):
+        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
+
+    target_message = ctx
+    if message is not None:
+        target_message = utils_get_message(ctx, message)
+
+        if isinstance(target_message, PartialMessage):
+            try:
+                target_message = await target_message.fetch()
+            except:
+                raise Exception(f"[attachments_message] Message ID to get is not found !")
+
+    from .._DshellParser.ast_nodes import ListNode
+
+    attachments = ListNode([])
+
+    for attachment in target_message.attachments:
+        attachments.add(attachment.url)
+
+    return attachments
+
+async def dshell_get_channel_pined_messages(ctx: Message, channel=None):
+    """
+    Returns a list of pined messages IDs in a channel.
+    """
+
+    channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    if channel_to_check is None:
+        raise Exception(f"Channel {channel} not found !")
+
+    pinned_messages = await channel_to_check.pins()
+
+    from .._DshellParser.ast_nodes import ListNode
+    messages_list = ListNode([])
+
+    cached_messages = dshell_cached_messages.get()
+    for message in pinned_messages:
+        messages_list.add(message.id)
+        cached_messages[message.id] = message
+
+    return messages_list
+
+async def dshell_is_message_system(ctx: Message, message: int = None):
+    """
+    Return if the message is a system message
+    :param ctx:
+    :param message: message ID
+    :return:
+    """
+    if message is not None and not isinstance(message, int):
+        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
+
+    target_message = ctx
+    if message is not None:
+        target_message = utils_get_message(ctx, message)
+
+        if isinstance(target_message, PartialMessage):
+            try:
+                target_message = await target_message.fetch()
+            except:
+                raise Exception(f"[is_system_message] Message ID to get is not found !")
+
+    return target_message.is_system()
