@@ -74,6 +74,10 @@ async def dshell_send_message(ctx: Message,
                                                 allowed_mentions=allowed_mentions,
                                                 view=view)
 
+    cached_messages = dshell_cached_messages.get()
+    cached_messages[sended_message.id] = sended_message
+    dshell_cached_messages.set(cached_messages)
+
     return sended_message.id
 
 
@@ -114,6 +118,12 @@ async def dshell_respond_message(ctx: Message,
                                      allowed_mentions=autorised_mentions,
                                      delete_after=delete,
                                      embeds=embeds)
+
+    cached_messages = dshell_cached_messages.get()
+    cached_messages[sended_message.id] = sended_message
+    dshell_cached_messages.set(cached_messages)
+
+    return sended_message.id
 
     return sended_message.id
 
