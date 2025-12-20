@@ -14,6 +14,9 @@ class DshellArgumentsData:
     def __repr__(self):
         return f"DshellArgumentsData(value={self.value}, obligatory={self.obligatory})"
 
+    def __str__(self):
+        return str(self.value)
+
 class DshellArguments:
     """
     Manage Dhsell parameters and arguments passed to a command call.

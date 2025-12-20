@@ -264,14 +264,12 @@ async def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[s
     regrouped_variables = await regroupe_commandes(_[0] if _ else tuple(), interpreter)
 
     already_modified = set()
-    regrouped_variables.parameters.pop('*', None)  # remove non-specified parameters
+    variables_non_specified_parameters = regrouped_variables.parameters.pop('*', None).value  # remove non-specified parameters
 
     for param_name, param_data in regrouped_variables.parameters.items():
         regrouped_parameters.update_parameter(param_name, param_data)
         variables = sub(rf"--([*']?)({escape(param_name)})\s+(.*)\s*?(.*)$", remplacer, variables, count=1)
         already_modified.add(param_name)
-
-    variables_post_regrouped: list[str] = variables.strip().split(' ') if variables else []
 
     index_variable = 0
     for var in regrouped_parameters.parameters.keys():
@@ -279,16 +277,19 @@ async def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[s
 
             parameter_type = regrouped_parameters.get_parameter(var).type
 
-            if parameter_type == DTT.PARAMETER and index_variable < len(variables_post_regrouped):
-                regrouped_parameters.set_parameter(var, variables_post_regrouped[index_variable], parameter_type)  # variables_post_regrouped[index_variable] n'est pas un token donc impossible de l'évaluer ! pose problème dans les commandes qui requière autre chose que des str
+            if parameter_type == DTT.PARAMETER and index_variable < len(variables_non_specified_parameters):
+                regrouped_parameters.set_parameter(var, variables_non_specified_parameters[index_variable], parameter_type)  # variables_post_regrouped[index_variable] n'est pas un token donc impossible de l'évaluer ! pose problème dans les commandes qui requière autre chose que des str
                 index_variable += 1
 
             elif parameter_type == DTT.STR_PARAMETER:
-                regrouped_parameters.set_parameter(var, ' '.join(variables_post_regrouped[:index_variable]), parameter_type)
+                variables_post_regrouped: list[str] = variables.strip().split(' ') if variables else []  # set uniquement pour les paramètres full str
+                str_parameters_set_for_variables = variables_post_regrouped[index_variable:]
+                # la ligne dessous permet de set un paramètre full str avec plusieurs mots. Si les variables restantes sont vides, on met la valeur par défaut (obligé de passer la fonction str car sinon ça met un DshellArgumentsData)
+                regrouped_parameters.set_parameter(var, ' '.join(str_parameters_set_for_variables if str_parameters_set_for_variables else [str(regrouped_parameters.parameters.get(var, ''))]), parameter_type)
                 break
 
             elif parameter_type == DTT.PARAMETERS:
-                regrouped_parameters.set_parameter(var, ListNode(variables_post_regrouped[index_variable:]), parameter_type)
+                regrouped_parameters.set_parameter(var, ListNode(variables_non_specified_parameters[index_variable:]), parameter_type)
                 break
 
     for param_name, param_data in regrouped_parameters.parameters.items():
@@ -400,7 +401,7 @@ async def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur,
                 body[index].value = body[index].value.lower()
 
         # If the current token is the last one and is a parameter marker, add it with empty value
-        """if index == n - 1 and body[index].type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
+        if index == n - 1 and body[index].type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
             if body[index].type == DTT.PARAMETER:
                 instance_dhsell_arguments.set_parameter(body[index].value, '', DTT.PARAMETER)
             elif body[index].type == DTT.STR_PARAMETER:
@@ -408,7 +409,7 @@ async def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur,
             else:  # DTT.PARAMETERS
                 instance_dhsell_arguments.set_parameter(body[index].value, ListNode([]), DTT.PARAMETERS)
             index += 1
-            continue"""
+            continue
 
         if body[index].type == DTT.PARAMETER:
 
@@ -637,8 +638,6 @@ async def build_permission(body: list[Token], interpreter: DshellInterpreteur) -
     Builds a dictionary of PermissionOverwrite objects from the command information.
     """
     args_permissions: DshellArguments = await regroupe_commandes(body, interpreter, normalise=True)
-
-    print(args_permissions)
 
     x = args_permissions.get_dict_parameters()
     x.pop('*', None)
