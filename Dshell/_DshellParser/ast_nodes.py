@@ -44,7 +44,7 @@ class StartNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<Command> - {self.body}"
+        return f"<StartNode> - {self.body}"
 
     def to_dict(self):
         """

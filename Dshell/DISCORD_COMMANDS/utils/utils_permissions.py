@@ -1,7 +1,22 @@
 from typing import Union
-from discord import Guild, Member, Role, Permissions, PermissionOverwrite
+from discord import Guild, Member, Role, Permissions, PermissionOverwrite, Message
 
 from .utils_global import utils_what_discord_type_is, DiscordType
+
+async def utils_update_permissions(ctx: Message,
+                                   permission1: dict[Union[Member, Role, None], PermissionOverwrite],
+                                   permission2: dict[Union[Member, Role, None], PermissionOverwrite]) -> dict:
+
+    if not isinstance(permission1, dict):
+        raise ValueError(f"permission1 must be a permission block, not {type(permission1).__name__}")
+
+    if not isinstance(permission2, dict):
+        raise ValueError(f"permission2 must be a permission block, not {type(permission2).__name__}")
+
+    permission1.update(permission2)
+
+    return permission1
+
 
 class DshellPermissions:
     def __init__(self, target: dict[str, list[int]]):

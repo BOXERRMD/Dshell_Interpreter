@@ -4,7 +4,7 @@ __all__ = [
     "MASK_CHARACTER"
 ]
 
-from re import DOTALL, IGNORECASE
+from re import DOTALL, IGNORECASE, ASCII
 from re import compile, Pattern, finditer, escape, sub, findall
 
 from .dshell_keywords import *
@@ -14,13 +14,14 @@ from .dshell_token_type import Token
 MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
-    DTT.ENGLOBE_SEPARATOR: compile(rf"--\*\w+\s*(.*?)\s*(?=--|$)"),
+    DTT.PARAMETERS: compile(rf"--\*\s*(\w+)\s*", flags=ASCII),
+    DTT.STR_PARAMETER: compile(rf"--\'\s*(\w+)\s*", flags=ASCII),
+    DTT.PARAMETER: compile(rf"--\s*(\w+)\s*", flags=ASCII),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
     DTT.COMMENT: compile(r"::(.*?)$"),
     DTT.EVAL_GROUP: compile(r"`(.*?)`"),
     DTT.LIST: compile(r"\[(.*?)\]"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
-    DTT.SEPARATOR: compile(rf"(--)"),
     DTT.SUB_SEPARATOR: compile(rf"(~~)"),
     DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
     DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
@@ -69,8 +70,6 @@ class DshellTokenizer:
                 for match in finditer(pattern, ligne):  # iter les résultat du match pour avoir leur position
 
                     start_match = match.start()  # position de début du match
-                    if token_type == DTT.ENGLOBE_SEPARATOR:
-                        start_match += len(match.group(0)) - len(match.group(1))  # si c'est un séparateur englobant, on enlève les --* du début
 
                     if token_type != DTT.COMMENT:  # si ce n'est pas un commentaire
                         token = Token(token_type, match.group(1), (line_number, start_match))  # on enregistre son token

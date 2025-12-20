@@ -20,6 +20,7 @@ from ..DISCORD_COMMANDS.utils.utils_global import *
 from ..DISCORD_COMMANDS.utils.utils_list import *
 from ..DISCORD_COMMANDS.utils.utils_member import *
 from ..DISCORD_COMMANDS.utils.utils_string import *
+from ..DISCORD_COMMANDS.utils.utils_permissions import utils_update_permissions
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
@@ -74,6 +75,9 @@ dshell_commands: dict[str, Callable] = {
 
     ## Member utils
     'has_perms': utils_has_permissions, # check if a member has the specified permissions
+
+    ## Permission utils
+    'update_perms': utils_update_permissions, # update permission dict
 
     ## Pastbin command
     "gp": dshell_get_pastbin,  # get pastbin
