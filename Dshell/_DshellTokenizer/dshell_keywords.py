@@ -152,9 +152,6 @@ dshell_commands: dict[str, Callable] = {
 
 dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
 
-    r".": (lambda a, b: a.b, 9),
-    r"->": (lambda a: a.at, 10),  # equivalent to calling .at(key)
-
     r"+": (lambda a, b: a + b, 6),
     r"-": (lambda a, b=None: -a if b is None else a - b, 6),
     # warning: ambiguity between unary and binary to be handled in your parser
@@ -163,6 +160,10 @@ dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
     r"%": (lambda a, b: a % b, 7),
     r"//": (lambda a, b: a // b, 7),
     r"/": (lambda a, b: a / b, 7),
+    r">>": (lambda a, b: a >> b, 5),
+    r"<<": (lambda a, b: a << b, 5),
+    r"^": (lambda a, b: a ^ b, 5)
+
 }
 
 dshell_logical_word_operators: dict[str, tuple[Callable, int]] = {

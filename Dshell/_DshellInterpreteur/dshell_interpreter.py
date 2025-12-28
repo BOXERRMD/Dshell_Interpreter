@@ -5,7 +5,7 @@ from copy import deepcopy
 from pycordViews import EasyModifiedViews
 from pycordViews.views.errors import CustomIDNotFound
 
-from discord import AutoShardedBot, Embed, Colour, PermissionOverwrite, Permissions, Guild, Member, Role, Message, Interaction, ButtonStyle
+from discord import AutoShardedBot, Embed, PermissionOverwrite, Member, Role, Message, Interaction, ButtonStyle
 from discord.ui import Button
 from discord.abc import PrivateChannel
 
@@ -20,6 +20,7 @@ from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 from .cached_messages import dshell_cached_messages
 from .dshell_arguments import DshellArguments
+from ..DISCORD_COMMANDS.utils.utils_global import utils_build_colour
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode)
 context = TypeVar('context', AutoShardedBot, Message, PrivateChannel, Interaction)
@@ -474,7 +475,7 @@ async def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], inte
         args_fields.append(args_field)
 
     if 'color' in args_main_embed:
-        args_main_embed['color'] = build_colour(args_main_embed['color'])  # convert color to Colour object or int
+        args_main_embed['color'] = utils_build_colour(args_main_embed['color'])  # convert color to Colour object or int
 
     return args_main_embed, args_fields
 
@@ -509,20 +510,6 @@ async def rebuild_embed(embed: Embed, body: list[Token], fields: list[FieldEmbed
 
     return embed
 
-def build_colour(color: Union[int, ListNode]) -> Union[Colour, int]:
-    """
-    Builds a Colour object from an integer or a ListNode.
-    :param color: The color to build.
-    :return: A Colour object.
-    """
-    if isinstance(color, int):
-        return color
-    elif isinstance(color, (ListNode, list)):
-        if not len(color) == 3:
-            raise ValueError(f"Color must be a list of 3 integers, not {len(color)} elements !")
-        return Colour.from_rgb(*color)
-    else:
-        raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")
 
 async def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
     """

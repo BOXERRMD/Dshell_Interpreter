@@ -666,7 +666,9 @@ class ListNode(ASTNode):
         return self.len_iterable
 
     def __getitem__(self, item):
-        return self.iterable[item]
+        if 0 <= item <= self.len_iterable-1:
+            return self.iterable[item]
+        raise IndexError(f"Index out of range on ListNode !")
 
     def __bool__(self):
         return bool(self.iterable)

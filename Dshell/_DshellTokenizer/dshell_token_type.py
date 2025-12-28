@@ -17,7 +17,6 @@ class DshellTokenType(Enum):
     BOOL = auto(),
     NONE = auto(),
     LIST = auto()
-    DICT = auto()
     MENTION = auto()
     IDENT = auto()  # nom de variable, fonction
     KEYWORD = auto()  # if, let, end, etc.
@@ -26,7 +25,6 @@ class DshellTokenType(Enum):
     PARAMETER = auto()  # --
     PARAMETERS = auto(),  # --*
     STR_PARAMETER = auto(),  # --"
-    SUB_SEPARATOR = auto(),  # ~~
     MATHS_OPERATOR = auto()  # ==, +, -, *, etc.
     LOGIC_OPERATOR = auto(),
     LOGIC_WORD_OPERATOR = auto()  # and, or, not

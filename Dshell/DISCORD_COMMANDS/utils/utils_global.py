@@ -6,7 +6,7 @@ __all__ = [
     "utils_get_roles",
 ]
 
-from discord import Message, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, Member, Guild
+from discord import Message, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, Member, Guild, Colour
 from discord.utils import get
 from typing import Union, Optional
 from enum import StrEnum
@@ -153,3 +153,27 @@ async def utils_get_roles(ctx: Message, value: int):
 
     from ..._DshellParser.ast_nodes import ListNode
     return ListNode([i.id for i in member.roles])
+
+
+def utils_build_colour(color: Union[int, "ListNode"]) -> Union[Colour, int]:
+    """
+    Builds a Colour object from an integer or a ListNode.
+    :param color: The color to build.
+    :return: A Colour object.
+    """
+    from ..._DshellParser.ast_nodes import ListNode
+    if isinstance(color, int):
+        return color
+    elif isinstance(color, (ListNode, list)):
+        r, g, b = color[0], color[1], color[2]
+
+        if not len(color) == 3:
+            raise ValueError(f"Color must be a list of 3 integers, not {len(color)} elements !")
+        elif not (isinstance(r, int) and isinstance(g, int) and isinstance(b, int)):
+            raise TypeError(f"Color must be an integer or a ListNode of integers !")
+        elif not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
+            raise Exception(f"Color ListNode integer must be between 0 <= x <= 255")
+        else:
+            return Colour.from_rgb(*color)
+    else:
+        raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")

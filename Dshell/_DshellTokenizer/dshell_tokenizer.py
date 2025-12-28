@@ -22,7 +22,6 @@ table_regex: dict[DTT, Pattern] = {
     DTT.EVAL_GROUP: compile(r"`(.*?)`"),
     DTT.LIST: compile(r"\[(.*?)\]"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
-    DTT.SUB_SEPARATOR: compile(rf"(~~)"),
     DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
     DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
     DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b"),

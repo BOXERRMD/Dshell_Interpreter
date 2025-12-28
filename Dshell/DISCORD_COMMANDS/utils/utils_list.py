@@ -8,6 +8,7 @@ __all__ = [
     "utils_list_get_value",
 ]
 
+
 async def utils_list_add(ctx, value: "ListNode", *elements):
     """
     Add an element to a list
@@ -94,16 +95,16 @@ async def utils_list_reverse(ctx, value: "ListNode"):
     value.reverse()
     return value
 
-async def utils_list_get_value(ctx, value: "ListNode", index: int = 0):
+async def utils_list_get_value(ctx, list_: "ListNode", index: int = 0):
     """
     Get a value from a list
-    :param value:
+    :param list_:
     :param index:
     :return:
     """
     from ..._DshellParser.ast_nodes import ListNode
-    if not isinstance(value, ListNode):
+    if not isinstance(list_, ListNode):
         raise TypeError("value must be a list in get command")
     if not isinstance(index, int):
         raise TypeError("index must be an integer in get command")
-    return value[index]
+    return list_[index]
