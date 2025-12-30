@@ -23,7 +23,7 @@ from ..DISCORD_COMMANDS.utils.utils_string import *
 from ..DISCORD_COMMANDS.utils.utils_permissions import utils_update_permissions
 
 dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param'
+    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code'
 }
 
 dshell_discord_keyword: set[str] = {

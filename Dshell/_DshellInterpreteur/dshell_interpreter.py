@@ -32,10 +32,11 @@ class DshellInterpreteur:
     Make what you want with Dshell code to interact with Discord !
     """
 
-    def __init__(self, code: str, ctx: context,
+    def __init__(self, code: Union[str, list[ASTNode]], ctx: context,
                  debug: bool = False,
                  vars: Optional[str] = None,
-                 vars_env: Optional[dict[str, Any]] = None):
+                 vars_env: Optional[dict[str, Any]] = None,
+                 code_already_parsed: bool = False):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
@@ -43,10 +44,15 @@ class DshellInterpreteur:
         :param debug: If True, prints the AST of the code and put the ctx to None.
         :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
         :param vars_env: Optional dictionary of additional environment variables to add to the interpreter's environment.
+        :param code_already_parsed: Must be True if the code gived is already AstNodes
 
         Note: __message_before__ (message content before edit) can be overwritten by vars_env parameter.
         """
-        self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
+        if not code_already_parsed:
+            self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
+        else:
+            self.ast: list[ASTNode] = code
+
         message = ctx.message if isinstance(ctx, Interaction) else ctx
         self.env: dict[str, Any] = {
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
@@ -190,6 +196,12 @@ class DshellInterpreteur:
                         self.env[node.name.value] = await rebuild_ui(first_node, self.env[node.name.value], self)
                     else:
                         self.env[node.name.value] = await build_ui(first_node, self)
+
+                elif isinstance(first_node, CodeNode):
+                    if node.name.value in self.env and isinstance(self.env[node.name.value], CodeNode):
+                        self.env[node.name.value].update(first_node)
+                    else:
+                        self.env[node.name.value] = first_node
 
                 else:
                     self.env[node.name.value] = await eval_expression(node.body, self)
@@ -526,6 +538,9 @@ async def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
         code = args_button.pop('code', None)
         style = args_button.pop('style', 'primary').lower()
         custom_id = args_button.pop('custom_id', str(ident_component))
+
+        if code is None and not isinstance(code, CodeNode):
+            raise TypeError(f"Button code muste be a CodeNode or None, not {type(code)}")
 
         if not isinstance(custom_id, str):
             raise TypeError(f"Button custom_id must be a string, not {type(custom_id)} !")

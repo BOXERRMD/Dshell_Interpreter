@@ -157,6 +157,28 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 blocks.pop()  # on supprime le dernier bloc (le paramètre)
                 return blocks, pointeur  # on renvoie les informations parsé à la dernière paramètre ouverte
 
+            elif first_token_line.value == 'code':
+
+                if len(tokens_by_line) < 2:
+                    raise SyntaxError(f"[CODE] take one argument on line {first_token_line.position}")
+
+                if tokens_by_line[1].type != DTT.IDENT:
+                    raise TypeError(f'[CODE] the variable given must be a ident, '
+                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+
+                code_node = CodeNode(body=[])
+                var_node = VarNode(tokens_by_line[1], [code_node])
+                last_block.body.append(var_node)
+                _, p = parse(token_lines[pointeur + 1:], code_node)
+                pointeur += p + 1
+
+            elif first_token_line.value == '#code':
+                if not isinstance(last_block, CodeNode):
+                    raise SyntaxError(f"[#CODE] No code open on line {first_token_line.position}")
+
+                blocks.pop()
+                return blocks, pointeur
+
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
                 error_message = True
                 if len(tokens_by_line) > 1:

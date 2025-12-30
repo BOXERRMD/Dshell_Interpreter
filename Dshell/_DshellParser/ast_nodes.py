@@ -22,6 +22,7 @@ __all__ = [
     'PermissionNode',
     'EvalGroupNode',
     'ParamNode',
+    'CodeNode',
     'UiNode',
     'UiButtonNode',
     'UiSelectNode'
@@ -236,7 +237,7 @@ class VarNode(ASTNode):
     Node representing a variable declaration in the AST.
     """
 
-    def __init__(self, name: Token, body: list[Token]):
+    def __init__(self, name: Token, body: list[Union[Token, ASTNode]]):
         """
         :param name: Token representing the variable name
         :param body: list of tokens representing the body of the variable
@@ -454,6 +455,29 @@ class ParamNode(ASTNode):
         """
         return {
             "type": "ParamNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
+class CodeNode(ASTNode):
+    """
+    Node representing a block of code to pass in arguments.
+    """
+    def __init__(self, body: list[ASTNode]):
+        """
+        :param body: list of Node representing the code already parsed
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<CODE> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the CodeNode to a dictionary representation.
+        :return: Dictionary representation of the CodeNode.
+        """
+        return {
+            "type": "CodeNode",
             "body": [token.to_dict() for token in self.body]
         }
 

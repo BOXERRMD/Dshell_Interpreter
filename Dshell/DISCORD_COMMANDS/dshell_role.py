@@ -13,7 +13,7 @@ __all__ = [
 async def dshell_create_role(ctx: Message,
                              name: str = MISSING,
                              permissions: dict[None, PermissionOverwrite] = MISSING,
-                             color: int = MISSING,
+                             color: Union["ListNode", int] = MISSING,
                              hoist: bool = MISSING,
                              mentionable: bool = MISSING,
                              reason: str = None):
@@ -26,10 +26,10 @@ async def dshell_create_role(ctx: Message,
     if not isinstance(permissions, (dict, _MissingSentinel)):
         raise Exception(f"Permissions must be a PermissionNode, not {type(permissions)} !")
 
-    from .._DshellInterpreteur.dshell_interpreter import build_colour
+    from .._DshellInterpreteur.dshell_interpreter import utils_build_colour
 
     if not isinstance(color, _MissingSentinel):
-        color = build_colour(color)
+        color = utils_build_colour(color)
 
     if not isinstance(hoist, (bool, _MissingSentinel)):
         raise Exception(f"Hoist must be a boolean, not {type(permissions)} !")
@@ -52,7 +52,7 @@ async def dshell_create_role(ctx: Message,
     return created_role.id
 
 
-async def dshell_delete_roles(ctx: Message, roles, reason=None):
+async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reason: str=None):
     """
     Delete the role on the server
     """
@@ -76,14 +76,14 @@ async def dshell_delete_roles(ctx: Message, roles, reason=None):
 
 
 async def dshell_edit_role(ctx: Message,
-                           role,
-                           name=None,
+                           role: int,
+                           name: str=None,
                            permissions: dict[None, PermissionOverwrite]=None,
-                           color=None,
-                           hoist=None,
-                           mentionable=None,
-                           position=None,
-                           reason=None,):
+                           color: Union["ListNode", int]=None,
+                           hoist: bool=None,
+                           mentionable: bool=None,
+                           position: int=None,
+                           reason: str=None,):
     """
     Edit the current role
     """
@@ -103,10 +103,10 @@ async def dshell_edit_role(ctx: Message,
             allow, deny = permissions[None].pair()
             permissions = allow
 
-    from .._DshellInterpreteur.dshell_interpreter import build_colour
+    from .._DshellInterpreteur.dshell_interpreter import utils_build_colour
 
     if color is not None:
-        color = build_colour(color)
+        color = utils_build_colour(color)
 
     if not isinstance(hoist, (bool, NoneType)):
         raise Exception(f"Hoist must be a boolean, not {type(permissions)} !")
