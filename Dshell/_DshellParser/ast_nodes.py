@@ -1,6 +1,4 @@
-from random import randint
-from typing import Optional, Any, Union
-
+from Dshell.full_import import Any, randint, Optional, Union
 from .._DshellTokenizer.dshell_token_type import Token
 
 __all__ = [

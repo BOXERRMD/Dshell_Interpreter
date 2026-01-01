@@ -1,6 +1,15 @@
-from datetime import timedelta, datetime, UTC
+from Dshell.full_import import (Message,
+                           Embed,
+                           MISSING,
+                           Member,
+                           Permissions,
+                           Role)
 
-from discord import MISSING, Message, Member, Permissions, Role, Embed
+from .._DshellParser.ast_nodes import ListNode
+
+from Dshell.full_import import (datetime,
+                           timedelta,
+                           UTC)
 
 __all__ = [
     "dshell_send_private_message",
@@ -31,7 +40,7 @@ async def dshell_send_private_message(ctx: Message, message: str = None, member:
     if member_to_send is None:
         raise Exception(f'Member {member} not found!')
 
-    from .._DshellParser.ast_nodes import ListNode
+
 
     if embeds is None:
         embeds = ListNode([])

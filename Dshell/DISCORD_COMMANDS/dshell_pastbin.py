@@ -1,5 +1,4 @@
-from discord import Message
-from requests import get
+from Dshell.full_import import get, Message
 
 __all__ = [
     'dshell_get_pastbin'

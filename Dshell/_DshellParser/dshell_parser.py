@@ -6,12 +6,9 @@ __all__ = [
     "ast_to_dict",
 ]
 
-from typing import Union
-
-from .ast_nodes import *
-from .._DshellTokenizer import dshell_operators
-from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
+from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from .ast_nodes import *
 
 
 def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[ASTNode], int]:
@@ -346,6 +343,8 @@ def to_postfix(expression, interpreter=None):
     :param expression: l'expression donné par le tokenizer
     :return: l'expression en notation postfixée
     """
+    from Dshell._DshellTokenizer import dshell_operators
+
     output = []
     operators: list[Token] = []
 

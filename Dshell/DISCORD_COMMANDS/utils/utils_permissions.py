@@ -1,7 +1,22 @@
-from typing import Union
-from discord import Guild, Member, Role, Permissions, PermissionOverwrite, Message
+from Dshell.full_import import (Member,
+                            Role,
+                            PermissionOverwrite,
+                            Permissions,
+                            Guild,
+                            Message)
+
+from Dshell.full_import import Union, TYPE_CHECKING
+
+from ..._DshellParser.ast_nodes import ListNode
+
+from ..._DshellTokenizer.dshell_token_type import Token
+from ..._DshellInterpreteur.dshell_arguments import DshellArguments
+from ..._DshellInterpreteur.utils_interpreter import regroupe_commandes
 
 from .utils_global import utils_what_discord_type_is, DiscordType
+
+if TYPE_CHECKING:
+    from ..._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
 async def utils_update_permissions(ctx: Message,
                                    permission1: dict[Union[Member, Role, None], PermissionOverwrite],
@@ -16,6 +31,19 @@ async def utils_update_permissions(ctx: Message,
     permission1.update(permission2)
 
     return permission1
+
+
+async def build_permission(body: list[Token], interpreter: "DshellInterpreteur") -> dict[
+    Union[Member, Role], PermissionOverwrite]:
+    """
+    Builds a dictionary of PermissionOverwrite objects from the command information.
+    """
+    args_permissions: DshellArguments = await regroupe_commandes(body, interpreter, normalise=True)
+
+    x = args_permissions.get_dict_parameters()
+    x.pop('*', None)
+
+    return DshellPermissions(x).get_permission_overwrite(interpreter.ctx.channel.guild)
 
 
 class DshellPermissions:
@@ -59,7 +87,6 @@ class DshellPermissions:
         :param guild: The Discord server
         :return: A dictionary of PermissionOverwrite objects with members and roles as keys
         """
-        from ..._DshellParser.ast_nodes import ListNode
         permissions: dict[Union[Member, Role, None], PermissionOverwrite] = {}
         target_keys = self.target.keys()
 

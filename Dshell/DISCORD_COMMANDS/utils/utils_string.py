@@ -10,10 +10,13 @@ __all__ = [
     "utils_regex_search"
 ]
 
-from discord import Message
-from re import search, findall, sub
+from Dshell.full_import import Message
+from ..._DshellParser.ast_nodes import ListNode
+from Dshell.full_import import (search,
+                            sub,
+                            findall)
 
-async def utils_split_string(ctx: Message, value: str, separator: str = ' ') -> "ListNode":
+async def utils_split_string(ctx: Message, value: str, separator: str = ' ') -> ListNode:
     """
     Split a string into a list of strings using the specified separator.
     :param value:
@@ -26,8 +29,6 @@ async def utils_split_string(ctx: Message, value: str, separator: str = ' ') -> 
 
     if not isinstance(separator, str):
         raise TypeError(f"separator must be a str in split command, not {type(separator)}")
-
-    from ..._DshellParser.ast_nodes import ListNode
 
     return ListNode(value.split(separator))
 
@@ -99,7 +100,7 @@ async def utils_replace_string(ctx: Message, value: str, old: str, new: str) -> 
 
     return value.replace(old, new)
 
-async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> "ListNode":
+async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> ListNode:
     """
     Find all occurrences of a regex in a string.
     :param regex:
@@ -112,8 +113,6 @@ async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> 
 
     if content is not None and not isinstance(content, str):
         raise Exception(f"Content must be a string, not {type(content)}!")
-
-    from ..._DshellParser.ast_nodes import ListNode
 
     return ListNode(findall(regex, content if content is not None else ctx.content))
 

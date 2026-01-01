@@ -1,30 +1,25 @@
-from asyncio import sleep
-from re import findall, sub, escape
-from typing import TypeVar, Union, Any, Optional, Callable
-from copy import deepcopy
-from pycordViews import EasyModifiedViews
-from pycordViews.views.errors import CustomIDNotFound
-
-from discord import AutoShardedBot, Embed, PermissionOverwrite, Member, Role, Message, Interaction, ButtonStyle
-from discord.ui import Button
-from discord.abc import PrivateChannel
-
-from .errors import *
-from .._DshellParser.ast_nodes import *
-from ..DISCORD_COMMANDS.utils.utils_permissions import DshellPermissions
-from .._DshellParser.dshell_parser import parse
-from .._DshellParser.dshell_parser import to_postfix, print_ast
-from .._DshellTokenizer.dshell_keywords import *
-from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import Token
+from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from .._DshellInterpreteur.errors import DshellInterpreterStopExecution
+from Dshell.full_import import TypeVar, Union, Optional, Any, Callable, deepcopy, sleep, findall
+from .._DshellParser.ast_nodes import *
+from Dshell.full_import import AutoShardedBot, Interaction, Message, PrivateChannel, Embed
+from Dshell.full_import import EasyModifiedViews
+from .._DshellParser.dshell_parser import parse, print_ast
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 from .cached_messages import dshell_cached_messages
-from .dshell_arguments import DshellArguments
-from ..DISCORD_COMMANDS.utils.utils_global import utils_build_colour
+from .._DshellTokenizer.dshell_keywords import dshell_commands
+from .utils_interpreter import get_params, eval_expression, eval_expression_inline, regroupe_commandes
+from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
+from ..DISCORD_COMMANDS.dshell_ui import build_ui, rebuild_ui
+from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
+
+from Dshell.full_import import Union, Member, Role, PermissionOverwrite
+
+
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode)
 context = TypeVar('context', AutoShardedBot, Message, PrivateChannel, Interaction)
-ButtonStyleValues: tuple = tuple(i.name for i in ButtonStyle)
 
 class DshellInterpreteur:
     """
@@ -35,8 +30,7 @@ class DshellInterpreteur:
     def __init__(self, code: Union[str, list[ASTNode]], ctx: context,
                  debug: bool = False,
                  vars: Optional[str] = None,
-                 vars_env: Optional[dict[str, Any]] = None,
-                 code_already_parsed: bool = False):
+                 vars_env: Optional[dict[str, Any]] = None):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
@@ -44,14 +38,13 @@ class DshellInterpreteur:
         :param debug: If True, prints the AST of the code and put the ctx to None.
         :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
         :param vars_env: Optional dictionary of additional environment variables to add to the interpreter's environment.
-        :param code_already_parsed: Must be True if the code gived is already AstNodes
 
         Note: __message_before__ (message content before edit) can be overwritten by vars_env parameter.
         """
-        if not code_already_parsed:
+        if not isinstance(code, CodeNode):
             self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
         else:
-            self.ast: list[ASTNode] = code
+            self.ast: list[ASTNode] = code.body
 
         message = ctx.message if isinstance(ctx, Interaction) else ctx
         self.env: dict[str, Any] = {
@@ -198,7 +191,7 @@ class DshellInterpreteur:
                         self.env[node.name.value] = await build_ui(first_node, self)
 
                 elif isinstance(first_node, CodeNode):
-                    if node.name.value in self.env and isinstance(self.env[node.name.value], CodeNode):
+                    if node.name.value in self.env and isinstance(self.env[node.name.value], first_node):
                         self.env[node.name.value].update(first_node)
                     else:
                         self.env[node.name.value] = first_node
@@ -257,118 +250,6 @@ class DshellInterpreteur:
             return token.value  # fallback
 
 
-async def get_params(node: ParamNode, interpreter: DshellInterpreteur) -> dict[str, Any]:
-    """
-    Get the parameters from a ParamNode.
-    :param node: The ParamNode to get the parameters from.
-    :param interpreter: The Dshell interpreter instance.
-    :return: A dictionary of parameters.
-    """
-    def remplacer(match) -> str:
-        spacial_char = match.group(1)
-        if spacial_char:
-            return ''
-        return match.group(4)
-
-    variables = interpreter.vars
-    regrouped_parameters: DshellArguments = await regroupe_commandes(node.body, interpreter)
-
-    _ = DshellTokenizer(variables).start()
-    regrouped_variables = await regroupe_commandes(_[0] if _ else tuple(), interpreter)
-
-    already_modified = set()
-    variables_non_specified_parameters = regrouped_variables.parameters.pop('*', None).value  # remove non-specified parameters
-
-    for param_name, param_data in regrouped_variables.parameters.items():
-        regrouped_parameters.update_parameter(param_name, param_data)
-        variables = sub(rf"--([*']?)({escape(param_name)})\s+(.*)\s*?(.*)$", remplacer, variables, count=1)
-        already_modified.add(param_name)
-
-    index_variable = 0
-    for var in regrouped_parameters.parameters.keys():
-        if var not in already_modified:
-
-            parameter_type = regrouped_parameters.get_parameter(var).type
-
-            if parameter_type == DTT.PARAMETER and index_variable < len(variables_non_specified_parameters):
-                regrouped_parameters.set_parameter(var, variables_non_specified_parameters[index_variable], parameter_type)  # variables_post_regrouped[index_variable] n'est pas un token donc impossible de l'évaluer ! pose problème dans les commandes qui requière autre chose que des str
-                index_variable += 1
-
-            elif parameter_type == DTT.STR_PARAMETER:
-                variables_post_regrouped: list[str] = variables.strip().split(' ') if variables else []  # set uniquement pour les paramètres full str
-                str_parameters_set_for_variables = variables_post_regrouped[index_variable:]
-                # la ligne dessous permet de set un paramètre full str avec plusieurs mots. Si les variables restantes sont vides, on met la valeur par défaut (obligé de passer la fonction str car sinon ça met un DshellArgumentsData)
-                regrouped_parameters.set_parameter(var, ' '.join(str_parameters_set_for_variables if str_parameters_set_for_variables else [str(regrouped_parameters.parameters.get(var, ''))]), parameter_type)
-                break
-
-            elif parameter_type == DTT.PARAMETERS:
-                regrouped_parameters.set_parameter(var, ListNode(variables_non_specified_parameters[index_variable:]), parameter_type)
-                break
-
-    for param_name, param_data in regrouped_parameters.parameters.items():
-        if param_data.obligatory and param_data.value == '*':
-            raise Exception(f"Parameter '{param_name}' is obligatory but not specified!")
-
-    x = regrouped_parameters.get_dict_parameters()
-    x.pop('*', None)
-    return x
-
-
-async def eval_expression_inline(if_node: IfNode, interpreter: DshellInterpreteur) -> Token:
-    """
-    Eval a conditional expression inline.
-    :param if_node: The IfNode to evaluate.
-    :param interpreter: The Dshell interpreter instance.
-    """
-    if await eval_expression(if_node.condition, interpreter):
-        return await eval_expression(if_node.body, interpreter)
-    else:
-        return await eval_expression(if_node.else_body.body, interpreter)
-
-
-async def eval_expression(tokens: list[Token], interpreter: DshellInterpreteur) -> Any:
-    """
-    Evaluates an arithmetic and logical expression.
-    :param tokens: A list of tokens representing the expression.
-    :param interpreter: The Dshell interpreter instance.
-    """
-    postfix = to_postfix(tokens, interpreter)
-    stack = []
-
-    for token in postfix:
-
-        if token.type in {DTT.INT, DTT.FLOAT, DTT.BOOL, DTT.STR, DTT.LIST, DTT.IDENT, DTT.EVAL_GROUP}:
-            stack.append(await interpreter.eval_data_token(token))
-
-        elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR, DTT.LOGIC_WORD_OPERATOR):
-            op = token.value
-
-            if op == "not":
-                a = stack.pop()
-                result = dshell_operators[op][0](a)
-
-            else:
-                b = stack.pop()
-                try:
-                    a = stack.pop()
-                except IndexError:
-                    if op == "-":
-                        a = 0
-                    else:
-                        raise SyntaxError(f"Invalid expression: {op} operator requires two operands, but only one was found.")
-
-                result = dshell_operators[op][0](a, b)
-
-            stack.append(result)
-
-        else:
-            raise SyntaxError(f"Unexpected token type: {token.type} - {token.value}")
-
-    if len(stack) != 1:
-        raise SyntaxError("Invalid expression: stack should contain exactly one element after evaluation.")
-
-    return stack[0]
-
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):
     """
@@ -388,263 +269,6 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
 
     return await function(*args, **kwargs)
 
-
-async def regroupe_commandes(body: list[Token], interpreter: DshellInterpreteur, normalise: bool = False) -> DshellArguments:
-    """
-    Groups the command arguments in the form of a python dictionary.
-    Note that you can specify the parameter you wish to pass via -- followed by the parameter name. But this is not mandatory!
-    Non-mandatory parameters will be stored in a list in the form of tokens with the key \`*\`.
-    The others, having been specified via a separator, will be in the form of a list of tokens with the IDENT token as key, following the separator for each argument.
-    If two parameters have the same name, the last one will overwrite the previous one.
-    To accept duplicates, use the SUB_SEPARATOR (~~) to create a sub-dictionary for parameters with the same name (sub-dictionary is added to the list returned).
-
-    :param body: The list of tokens to group.
-    :param interpreter: The Dshell interpreter instance.
-    :param normalise: If True, normalises the arguments (make value lowercase).
-    """
-    # tokens to return
-
-    instance_dhsell_arguments = DshellArguments()
-    index = 0
-    n = len(body)
-
-    while index < n:
-
-        if normalise and hasattr(body[index], 'value') and isinstance(body[index].value, str):
-                body[index].value = body[index].value.lower()
-
-        # If the current token is the last one and is a parameter marker, add it with empty value
-        if index == n - 1 and body[index].type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
-            if body[index].type == DTT.PARAMETER:
-                instance_dhsell_arguments.set_parameter(body[index].value, '', DTT.PARAMETER)
-            elif body[index].type == DTT.STR_PARAMETER:
-                instance_dhsell_arguments.set_parameter(body[index].value, '', DTT.STR_PARAMETER)
-            else:  # DTT.PARAMETERS
-                instance_dhsell_arguments.set_parameter(body[index].value, ListNode([]), DTT.PARAMETERS)
-            index += 1
-            continue
-
-        if body[index].type == DTT.PARAMETER:
-
-            value = ''
-            current_index = index
-            while (index + 1) < n and body[index + 1].type not in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
-
-                value = await interpreter.eval_data_token(body[index + 1])
-                index += 1
-                break
-
-            instance_dhsell_arguments.set_parameter(body[current_index].value, value, DTT.PARAMETER, obligatory=value == '*')
-            index += 1
-
-        elif body[index].type == DTT.STR_PARAMETER:
-
-            final_argument = ''
-            current_index = index
-
-            while (index + 1) < n and body[index + 1].type not in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
-
-                final_argument += body[index + 1].value + ' '
-                index += 1
-                instance_dhsell_arguments.set_parameter(body[current_index].value, final_argument, type_=DTT.STR_PARAMETER)
-
-            index += 1
-
-        elif body[index].type == DTT.PARAMETERS:
-
-            list_parameters = []
-            current_index = index
-            while (index + 1) < n and body[index + 1].type not in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
-
-                list_parameters.append(await interpreter.eval_data_token(body[index + 1]))
-                index += 1
-                instance_dhsell_arguments.set_parameter(body[current_index].value, ListNode(list_parameters), type_=DTT.PARAMETERS)
-
-            index += 1
-
-        else:
-            instance_dhsell_arguments.add_non_specified_parameters(await interpreter.eval_data_token(body[index]))
-            index += 1
-
-    return instance_dhsell_arguments
-
-
-async def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> tuple[dict, list[dict]]:
-    """
-    Builds the arguments for an embed from the command information.
-    """
-    regrouped_parameters = await regroupe_commandes(body, interpreter)
-    args_main_embed: dict[str, list[Any]] = regrouped_parameters.get_dict_parameters()
-    args_main_embed.pop('*')  # remove unspecified parameters for the embed
-    args_main_embed: dict[str, Token]  # specify what it contains from now on
-
-    args_fields: list[dict[str, Token]] = []
-    for field in fields:  # do the same for the fields
-        y = await regroupe_commandes(field.body, interpreter)
-        args_field = y.get_dict_parameters()
-        args_field.pop('*')
-        args_field: dict[str, Token]
-        args_fields.append(args_field)
-
-    if 'color' in args_main_embed:
-        args_main_embed['color'] = utils_build_colour(args_main_embed['color'])  # convert color to Colour object or int
-
-    return args_main_embed, args_fields
-
-async def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
-    """
-    Builds an embed from the command information.
-    """
-
-    args_main_embed, args_fields = await build_embed_args(body, fields, interpreter)
-    embed = Embed(**args_main_embed)  # build the main embed
-    for field in args_fields:
-        embed.add_field(**field)  # add all fields
-
-    return embed
-
-async def rebuild_embed(embed: Embed, body: list[Token], fields: list[FieldEmbedNode], interpreter: DshellInterpreteur) -> Embed:
-    """
-    Rebuilds an embed from an existing embed and the command information.
-    """
-    args_main_embed, args_fields = await build_embed_args(body, fields, interpreter)
-
-    for key, value in args_main_embed.items():
-        if key == 'color':
-            embed.colour = value
-        else:
-            setattr(embed, key, value)
-
-    if args_fields:
-        embed.clear_fields()
-        for field in args_fields:
-            embed.add_field(**field)
-
-    return embed
-
-
-async def build_ui_parameters(ui_node: UiNode, interpreter: DshellInterpreteur):
-    """
-    Builds the parameters for a UI component from the UiNode.
-    Can accept buttons and select menus.
-    :param ui_node:
-    :param interpreter:
-    :return:
-    """
-    for ident_component in range(len(ui_node.buttons)):
-        regrouped_parameters = await regroupe_commandes(ui_node.buttons[ident_component].body, interpreter, normalise=True)
-        args_button: dict[str, list[Any]] = regrouped_parameters.get_dict_parameters()
-
-        code = args_button.pop('code', None)
-        style = args_button.pop('style', 'primary').lower()
-        custom_id = args_button.pop('custom_id', str(ident_component))
-
-        if code is None and not isinstance(code, CodeNode):
-            raise TypeError(f"Button code muste be a CodeNode or None, not {type(code)}")
-
-        if not isinstance(custom_id, str):
-            raise TypeError(f"Button custom_id must be a string, not {type(custom_id)} !")
-
-        if style not in ButtonStyleValues:
-            raise ValueError(f"Button style must be one of {', '.join(ButtonStyleValues)}, not '{style}' !")
-
-        args_button['custom_id'] = custom_id
-        args_button['style'] = ButtonStyle[style]
-        args = args_button.pop('*', ())
-        yield args, args_button, code
-
-async def build_ui(ui_node: UiNode, interpreter: DshellInterpreteur) -> EasyModifiedViews:
-    """
-    Builds a UI component from the UiNode.
-    Can accept buttons and select menus.
-    :param ui_node:
-    :param interpreter:
-    :return:
-    """
-    view = EasyModifiedViews()
-
-    async for args, args_button, code in build_ui_parameters(ui_node, interpreter):
-        b = Button(**args_button)
-
-        view.add_items(b)
-        view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code})
-
-    return view
-
-async def rebuild_ui(ui_node : UiNode, view: EasyModifiedViews, interpreter: DshellInterpreteur) -> EasyModifiedViews:
-    """
-    Rebuilds a UI component from an existing EasyModifiedViews.
-    :param view:
-    :param interpreter:
-    :return:
-    """
-    async for args, args_button, code in build_ui_parameters(ui_node, interpreter):
-        try:
-            ui = view.get_ui(args_button['custom_id'])
-        except CustomIDNotFound:
-            raise ValueError(f"Button with custom_id '{args_button['custom_id']}' not found in the view !")
-
-        ui.label = args_button.get('label', ui.label)
-        ui.style = args_button.get('style', ui.style)
-        ui.emoji = args_button.get('emoji', ui.emoji)
-        ui.disabled = args_button.get('disabled', ui.disabled)
-        ui.url = args_button.get('url', ui.url)
-        ui.row = args_button.get('row', ui.row)
-        new_code = code if code is not None else view.get_callable_data(args_button['custom_id'])['code']
-        view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': args_button.get('code', code)})
-
-    return view
-
-
-async def ui_button_callback(button: Button, interaction: Interaction, data: dict[str, Any]):
-    """
-    Callback for UI buttons.
-    Executes the code associated with the button.
-    :param button:
-    :param interaction:
-    :param data:
-    :return:
-    """
-    code = data.pop('code', None)
-    if code is not None:
-        local_env = {
-            '__ret__': None,
-            '__guild__': interaction.guild.name if interaction.guild else None,
-            '__channel__': interaction.channel.name if interaction.channel else None,
-            '__author__': interaction.user.name,
-            '__author_display_name__': interaction.user.display_name,
-            '__author_avatar__': interaction.user.display_avatar.url if interaction.user.display_avatar else None,
-            '__author_discriminator__': interaction.user.discriminator,
-            '__author_bot__': interaction.user.bot,
-            '__author_nick__': interaction.user.nick if hasattr(interaction.user, 'nick') else None,
-            '__author_id__': interaction.user.id,
-            '__message__': interaction.message.content if hasattr(interaction.message, 'content') else None,
-            '__message_id__': interaction.message.id if hasattr(interaction.message, 'id') else None,
-            '__channel_name__': interaction.channel.name if interaction.channel else None,
-            '__channel_type__': interaction.channel.type.name if hasattr(interaction.channel, 'type') else None,
-            '__channel_id__': interaction.channel.id if interaction.channel else None,
-            '__private_channel__': isinstance(interaction.channel, PrivateChannel),
-        }
-        local_env.update(data)
-        x = DshellInterpreteur(code, interaction, debug=False)
-        x.env.update(local_env)
-        await x.execute()
-    else:
-        await interaction.response.defer(invisible=True)
-
-    data.update({'code': code})
-
-async def build_permission(body: list[Token], interpreter: DshellInterpreteur) -> dict[
-    Union[Member, Role], PermissionOverwrite]:
-    """
-    Builds a dictionary of PermissionOverwrite objects from the command information.
-    """
-    args_permissions: DshellArguments = await regroupe_commandes(body, interpreter, normalise=True)
-
-    x = args_permissions.get_dict_parameters()
-    x.pop('*', None)
-
-    return DshellPermissions(x).get_permission_overwrite(interpreter.ctx.channel.guild)
 
 
 

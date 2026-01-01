@@ -1,9 +1,20 @@
-from asyncio import sleep
-from re import search
-from typing import Union
+from Dshell.full_import import (Message,
+                           MISSING,
+                           _MissingSentinel,
+                           Member,
+                           Role,
+                           PermissionOverwrite,
+                           CategoryChannel,
+                           VoiceChannel,
+                           PartialMessage)
 
-from discord import MISSING, PermissionOverwrite, Member, Role, Message, CategoryChannel, PartialMessage, VoiceChannel
-from discord.utils import _MissingSentinel
+from .._DshellParser.ast_nodes import ListNode
+
+from Dshell.full_import import search
+
+from Dshell.full_import import sleep
+
+from Dshell.full_import import Union
 
 from .utils.utils_message import utils_get_message
 from .utils.utils_thread import utils_get_thread
@@ -58,7 +69,7 @@ async def dshell_get_channels(ctx: Message, name=None, regex=None):
     if regex is not None and not isinstance(regex, str):
         raise Exception(f"Regex must be a string, not {type(regex)} !")
 
-    from .._DshellParser.ast_nodes import ListNode
+
     channels = ListNode([])
 
     for channel in ctx.channel.guild.channels:
@@ -91,7 +102,7 @@ async def dshell_get_channels_in_category(ctx: Message, category=None, name=None
     if regex is not None and not isinstance(regex, str):
         raise Exception(f"Regex must be a string, not {type(regex)} !")
 
-    from .._DshellParser.ast_nodes import ListNode
+
     channels = ListNode([])
 
     category_channel = ctx.channel.guild.get_channel(category)
@@ -558,7 +569,7 @@ async def dshell_get_channel_threads(ctx: Message, channel=None):
     if not hasattr(channel_to_check, 'threads'):
         raise Exception(f"Channel {channel} is not a text channel !")
 
-    from .._DshellParser.ast_nodes import ListNode
+
     threads = ListNode([])
 
     for thread in channel_to_check.threads:
@@ -603,7 +614,7 @@ async def dshell_get_channel_voice_members(ctx: Message, channel=None):
     if not isinstance(channel_to_check, VoiceChannel):
         raise Exception(f"Channel {channel} is not a voice channel !")
 
-    from .._DshellParser.ast_nodes import ListNode
+
     members = ListNode([])
 
     for member in channel_to_check.members:

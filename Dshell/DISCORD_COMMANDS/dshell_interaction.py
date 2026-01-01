@@ -4,9 +4,10 @@ __all__ = [
     'dshell_delete_original_message'
 ]
 
-from types import NoneType
-from discord import Interaction, Embed, AllowedMentions
-from pycordViews import EasyModifiedViews
+
+from Dshell.full_import import (Interaction,
+                           Embed,
+                           EasyModifiedViews)
 
 from .utils.utils_message import utils_autorised_mentions
 
@@ -40,9 +41,9 @@ async def dshell_respond_interaction(ctx: Interaction,
                                                 users_mentions,
                                                 reply_mention)
 
-    from .._DshellParser.ast_nodes import ListNode
+    from Dshell._DshellParser.ast_nodes import ListNode
 
-    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
     if embeds is None:
@@ -51,7 +52,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    if not isinstance(view, (EasyModifiedViews, NoneType)):
+    if view is not None and not isinstance(view, EasyModifiedViews):
         raise Exception(f'View must be an UI bloc or None, not {type(view)} !')
 
     sended_message = await ctx.response.send_message(

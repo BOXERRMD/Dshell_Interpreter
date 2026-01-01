@@ -1,12 +1,15 @@
-from discord import Embed, Message, PartialMessage
-from discord.ext import commands
-from typing import Optional
+from Dshell.full_import import (Message,
+                           Embed,
+                           PartialMessage,
+                           EasyModifiedViews,
+                           Interaction)
 
-from pycordViews import EasyModifiedViews
+from .._DshellParser.ast_nodes import ListNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .._DshellInterpreteur.cached_messages import dshell_cached_messages
-from .._utils import NoneType
+
+from Dshell.full_import import Optional
 
 __all__ = [
     'dshell_send_message',
@@ -54,9 +57,9 @@ async def dshell_send_message(ctx: Message,
     if channel_to_send is None:
         raise Exception(f'Channel {channel} not found!')
 
-    from .._DshellParser.ast_nodes import ListNode
 
-    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+
+    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
     if embeds is None:
@@ -65,7 +68,7 @@ async def dshell_send_message(ctx: Message,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    if not isinstance(view, (EasyModifiedViews, NoneType)):
+    if view is not None and not isinstance(view, EasyModifiedViews):
         raise Exception(f'Channel must be an UI or None, not {type(channel_to_send)} !')
 
     sended_message = await channel_to_send.send(message,
@@ -101,9 +104,7 @@ async def dshell_respond_message(ctx: Message,
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
     mention_author = True if reply_mention else False
 
-    from .._DshellParser.ast_nodes import ListNode
-
-    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
     if embeds is None:
@@ -122,8 +123,6 @@ async def dshell_respond_message(ctx: Message,
     cached_messages = dshell_cached_messages.get()
     cached_messages[sended_message.id] = sended_message
     dshell_cached_messages.set(cached_messages)
-
-    return sended_message.id
 
     return sended_message.id
 
@@ -165,12 +164,12 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     """
     edit_message = utils_get_message(ctx, message)
 
-    from .._DshellParser.ast_nodes import ListNode
 
-    if not isinstance(embeds, (ListNode, Embed, NoneType)):
+
+    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
-    if not isinstance(view, (EasyModifiedViews, NoneType)):
+    if view is not None and not isinstance(view, EasyModifiedViews):
         raise Exception(f'View must be an UI bloc or None, not {type(view)} !')
 
     if embeds is None:
@@ -282,7 +281,7 @@ async def dshell_get_history_messages(ctx: Message,
     if search_channel is None:
         raise Exception(f"Channel {channel} to search not found!")
 
-    from .._DshellParser.ast_nodes import ListNode
+
 
     cached_messages = dshell_cached_messages.get()
     messages = ListNode([])
@@ -390,7 +389,7 @@ async def dshell_get_message_attachments(ctx: Message, message: int = None):
             except:
                 raise Exception(f"[attachments_message] Message ID to get is not found !")
 
-    from .._DshellParser.ast_nodes import ListNode
+
 
     attachments = ListNode([])
 
@@ -411,7 +410,7 @@ async def dshell_get_channel_pined_messages(ctx: Message, channel=None):
 
     pinned_messages = await channel_to_check.pins()
 
-    from .._DshellParser.ast_nodes import ListNode
+
     messages_list = ListNode([])
 
     cached_messages = dshell_cached_messages.get()

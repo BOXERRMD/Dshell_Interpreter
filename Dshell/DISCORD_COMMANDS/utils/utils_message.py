@@ -1,8 +1,11 @@
-from discord import Message, PartialMessage, AllowedMentions
-from typing import Union
-from re import search
+from Dshell.full_import import (Message,
+                            PartialMessage)
+
+from Dshell.full_import import search
 
 from ..._DshellInterpreteur.cached_messages import dshell_cached_messages
+
+from Dshell.full_import import Union
 
 def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMessage, Message]:
     """

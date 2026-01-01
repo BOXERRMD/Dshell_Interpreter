@@ -1,9 +1,11 @@
 __all__ = [
     "utils_has_permissions",
 ]
-from discord import Message, PermissionOverwrite
 
-from .utils_global import utils_what_discord_type_is, DiscordType
+from Dshell.full_import import (Message,
+                            PermissionOverwrite)
+
+from .utils_global import DiscordType, utils_what_discord_type_is
 
 async def utils_has_permissions(ctx: Message, member: int, permission: dict[None, PermissionOverwrite]) -> bool:
     """

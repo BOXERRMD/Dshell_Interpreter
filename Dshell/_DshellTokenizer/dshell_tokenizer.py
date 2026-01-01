@@ -4,12 +4,25 @@ __all__ = [
     "MASK_CHARACTER"
 ]
 
-from re import DOTALL, IGNORECASE, ASCII
-from re import compile, Pattern, finditer, escape, sub, findall
-
-from .dshell_keywords import *
-from .dshell_token_type import DshellTokenType as DTT
 from .dshell_token_type import Token
+from .dshell_token_type import DshellTokenType as DTT
+
+from Dshell.full_import import (Pattern,
+                           ASCII,
+                           DOTALL,
+                           IGNORECASE,
+                           compile,
+                           escape,
+                           findall,
+                           finditer,
+                           sub)
+
+from .dshell_keywords import (dshell_keyword,
+                              dshell_discord_keyword,
+                              dshell_commands,
+                              dshell_mathematical_operators,
+                              dshell_logical_operators,
+                              dshell_logical_word_operators)
 
 MASK_CHARACTER = '§'
 

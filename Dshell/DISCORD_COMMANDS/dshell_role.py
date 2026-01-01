@@ -1,7 +1,7 @@
-from discord import MISSING, Message, PermissionOverwrite
-from discord.utils import _MissingSentinel
-from typing import Union
-from .._utils import NoneType
+from Dshell.full_import import (Message, MISSING, PermissionOverwrite, _MissingSentinel, Union)
+
+from .._DshellParser.ast_nodes import ListNode
+from .utils.utils_global import utils_build_colour
 
 __all__ = [
     'dshell_create_role',
@@ -13,7 +13,7 @@ __all__ = [
 async def dshell_create_role(ctx: Message,
                              name: str = MISSING,
                              permissions: dict[None, PermissionOverwrite] = MISSING,
-                             color: Union["ListNode", int] = MISSING,
+                             color: Union[ListNode, int] = MISSING,
                              hoist: bool = MISSING,
                              mentionable: bool = MISSING,
                              reason: str = None):
@@ -25,8 +25,6 @@ async def dshell_create_role(ctx: Message,
 
     if not isinstance(permissions, (dict, _MissingSentinel)):
         raise Exception(f"Permissions must be a PermissionNode, not {type(permissions)} !")
-
-    from .._DshellInterpreteur.dshell_interpreter import utils_build_colour
 
     if not isinstance(color, _MissingSentinel):
         color = utils_build_colour(color)
@@ -56,7 +54,7 @@ async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reaso
     """
     Delete the role on the server
     """
-    from .._DshellInterpreteur.dshell_interpreter import ListNode
+    from Dshell._DshellInterpreteur.dshell_interpreter import ListNode
     roles: Union[int, ListNode]
     if not isinstance(roles, (int, ListNode)):
         raise Exception(f"Role must be a int, role mention or NodeList of both, not {type(roles)} !")
@@ -92,10 +90,10 @@ async def dshell_edit_role(ctx: Message,
 
     role_to_edit = ctx.guild.get_role(role)
 
-    if not isinstance(name, (str, NoneType)):
+    if name is not None and not isinstance(name, str):
         raise Exception(f"Name must be a string, not {type(name)} !")
 
-    if not isinstance(permissions, (dict, NoneType)):
+    if permissions is not None and not isinstance(permissions, dict):
         raise Exception(f"Permissions must be a PermissionNode, not {type(permissions)} !")
 
     if isinstance(permissions, dict):
@@ -103,18 +101,16 @@ async def dshell_edit_role(ctx: Message,
             allow, deny = permissions[None].pair()
             permissions = allow
 
-    from .._DshellInterpreteur.dshell_interpreter import utils_build_colour
-
     if color is not None:
         color = utils_build_colour(color)
 
-    if not isinstance(hoist, (bool, NoneType)):
+    if hoist is not None and not isinstance(hoist, bool):
         raise Exception(f"Hoist must be a boolean, not {type(permissions)} !")
 
-    if not isinstance(mentionable, (bool, NoneType)):
+    if mentionable is not None and not isinstance(mentionable, bool):
         raise Exception(f"Mentionable must be a boolean, not {type(permissions)} !")
 
-    if not isinstance(position, (int, NoneType)):
+    if position is not None and not isinstance(position, int):
         raise Exception(f"Position must be an integer, not {type(permissions)} !")
 
     await role_to_edit.edit(name=name if name is not None else role_to_edit.name,

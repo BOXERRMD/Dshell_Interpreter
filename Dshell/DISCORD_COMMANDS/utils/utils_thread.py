@@ -1,8 +1,10 @@
-from discord import Message, Thread
-from discord.errors import NotFound
+from Dshell.full_import import (Message,
+                            Thread,
+                            NotFound)
 
-from typing import Union
-from re import search
+from Dshell.full_import import Union
+
+from Dshell.full_import import search
 
 
 async def utils_get_thread(ctx: Message, thread: Union[int, str]) -> Thread:

@@ -8,19 +8,10 @@ __all__ = [
     "dshell_logical_word_operators"
 ]
 
-from typing import Callable
+from ..DISCORD_COMMANDS import *
 
-from ..DISCORD_COMMANDS.dshell_channel import *
-from ..DISCORD_COMMANDS.dshell_member import *
-from ..DISCORD_COMMANDS.dshell_message import *
-from ..DISCORD_COMMANDS.dshell_pastbin import *
-from ..DISCORD_COMMANDS.dshell_role import *
-from ..DISCORD_COMMANDS.dshell_interaction import *
-from ..DISCORD_COMMANDS.utils.utils_global import *
-from ..DISCORD_COMMANDS.utils.utils_list import *
-from ..DISCORD_COMMANDS.utils.utils_member import *
-from ..DISCORD_COMMANDS.utils.utils_string import *
-from ..DISCORD_COMMANDS.utils.utils_permissions import utils_update_permissions
+from Dshell.full_import import Callable
+
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code'

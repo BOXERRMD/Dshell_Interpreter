@@ -4,4 +4,5 @@ from .dshell_member import *
 from .dshell_pastbin import *
 from .dshell_role import *
 from .dshell_interaction import *
+from .dshell_embed import *
 from .utils import *

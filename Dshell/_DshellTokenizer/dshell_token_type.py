@@ -1,5 +1,4 @@
-from enum import Enum, auto
-from typing import Union
+from Dshell.full_import import Enum, auto, Union
 
 __all__ = [
     'DshellTokenType',
@@ -33,7 +32,7 @@ class DshellTokenType(Enum):
 
 
 class Token:
-    def __init__(self, type_: "DTT", value: Union[str, list], position: tuple[int, int]):
+    def __init__(self, type_: DshellTokenType, value: Union[str, list], position: tuple[int, int]):
         self.type = type_
         self.value = value
         self.position = position
