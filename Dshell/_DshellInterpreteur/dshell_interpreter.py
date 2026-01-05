@@ -285,6 +285,7 @@ async def eval_CodeNode(eval_node: EvalNode, interpreter: DshellInterpreteur):
     argscommand = await regroupe_commandes(eval_node.argsNode.body, interpreter)
     kwargs = argscommand.get_dict_parameters()
     kwargs.pop('*', None)
+    env_temp_variables = {key: interpreter.env[key] for key in kwargs.keys() if key in interpreter.env.keys()}
 
     interpreter.env.update(kwargs)
     await interpreter.execute(codeNode.body)
@@ -293,6 +294,8 @@ async def eval_CodeNode(eval_node: EvalNode, interpreter: DshellInterpreteur):
         # clean the environment of all variables who stored arguments passed to the eval
         if key != '__ret__':
             del interpreter.env[key]
+
+    interpreter.env.update(env_temp_variables)  # restore previous variables
 
     return interpreter.env['__ret__']
 
