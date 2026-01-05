@@ -243,6 +243,8 @@ class DshellInterpreteur:
                 [await self.eval_data_token(tok) for tok in token.value])  # token.value contient déjà une liste de Token
         elif token.type == DTT.IDENT:
             if token.value in self.env.keys():
+                if isinstance(self.env[token.value], CodeNode):
+                    return deepcopy(self.env[token.value])
                 return self.env[token.value]
             return token.value
         elif token.type == DTT.EVAL_GROUP:
@@ -285,17 +287,14 @@ async def eval_CodeNode(eval_node: EvalNode, interpreter: DshellInterpreteur):
     argscommand = await regroupe_commandes(eval_node.argsNode.body, interpreter)
     kwargs = argscommand.get_dict_parameters()
     kwargs.pop('*', None)
-    env_temp_variables = {key: interpreter.env[key] for key in kwargs.keys() if key in interpreter.env.keys()}
+    env_temp_variables = interpreter.env.copy()  # save previous variables
 
     interpreter.env.update(kwargs)
     await interpreter.execute(codeNode.body)
 
-    for key in kwargs.keys():
-        # clean the environment of all variables who stored arguments passed to the eval
-        if key != '__ret__':
-            del interpreter.env[key]
-
+    interpreter.env.clear()
     interpreter.env.update(env_temp_variables)  # restore previous variables
+    del codeNode
 
     return interpreter.env['__ret__']
 
