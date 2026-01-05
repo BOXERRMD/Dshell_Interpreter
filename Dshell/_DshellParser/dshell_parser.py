@@ -176,6 +176,24 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 blocks.pop()
                 return blocks, pointeur
 
+            elif first_token_line.value == 'eval':
+                if len(tokens_by_line) < 2:
+                    raise SyntaxError(f"[EVAL] take one or more arguments on line {first_token_line.position}")
+
+                if tokens_by_line[1].type != DTT.IDENT:
+                    raise TypeError(f'[EVAL] the first variable given must be a ident (CodeNode), '
+                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+
+                eval_node = EvalNode(codeNode=tokens_by_line[1], argsNode=ArgsCommandNode(tokens_by_line[2:]))
+                last_block.body.append(eval_node)
+
+            elif first_token_line.value == 'return':
+                if len(tokens_by_line) < 2:
+                    raise SyntaxError(f"[RETURN] take one or more arguments on line {first_token_line.position}")
+
+                return_node = ReturnNode(body=tokens_by_line[1:])
+                last_block.body.append(return_node)
+
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
                 error_message = True
                 if len(tokens_by_line) > 1:

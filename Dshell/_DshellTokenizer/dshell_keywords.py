@@ -14,7 +14,7 @@ from Dshell.full_import import Callable
 
 
 dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code'
+    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code', 'eval', 'return'
 }
 
 dshell_discord_keyword: set[str] = {

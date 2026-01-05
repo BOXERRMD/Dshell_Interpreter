@@ -21,6 +21,8 @@ __all__ = [
     'EvalGroupNode',
     'ParamNode',
     'CodeNode',
+    'EvalNode',
+    'ReturnNode',
     'UiNode',
     'UiButtonNode',
     'UiSelectNode'
@@ -476,6 +478,58 @@ class CodeNode(ASTNode):
         """
         return {
             "type": "CodeNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
+class EvalNode(ASTNode):
+    """
+    Node representing an evaluation in the AST.
+    This is used to evaluate expressions in Dshell.
+    """
+
+    def __init__(self, codeNode: Token, argsNode: ArgsCommandNode):
+        """
+        :param body: list of tokens representing the expression to evaluate
+        """
+        self.codeNode = codeNode
+        self.argsNode = argsNode
+
+    def __repr__(self):
+        return f"<EVAL> - {self.argsNode} -> {self.codeNode}"
+
+    def to_dict(self):
+        """
+        Convert the EvalNode to a dictionary representation.
+        :return: Dictionary representation of the EvalNode.
+        """
+        return {
+            "type": "EvalNode",
+            "codeNode": self.codeNode.to_dict(),
+            "argsNode": self.argsNode.to_dict()
+        }
+
+class ReturnNode(ASTNode):
+    """
+    Node representing a return statement in the AST.
+    This is used to return values from functions in Dshell.
+    """
+
+    def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the value to return
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<RETURN> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the ReturnNode to a dictionary representation.
+        :return: Dictionary representation of the ReturnNode.
+        """
+        return {
+            "type": "ReturnNode",
             "body": [token.to_dict() for token in self.body]
         }
 

@@ -14,7 +14,7 @@ from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
 from ..DISCORD_COMMANDS.dshell_ui import build_ui, rebuild_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
 
-from Dshell.full_import import Union, Member, Role, PermissionOverwrite
+from Dshell.full_import import Union
 
 
 
@@ -27,7 +27,7 @@ class DshellInterpreteur:
     Make what you want with Dshell code to interact with Discord !
     """
 
-    def __init__(self, code: Union[str, list[ASTNode]], ctx: context,
+    def __init__(self, code: Union[str, CodeNode], ctx: context,
                  debug: bool = False,
                  vars: Optional[str] = None,
                  vars_env: Optional[dict[str, Any]] = None):
@@ -208,6 +208,12 @@ class DshellInterpreteur:
 
                 await sleep(sleep_time)
 
+            elif isinstance(node, EvalNode):
+
+                await eval_CodeNode(node, self)
+
+            elif isinstance(node, ReturnNode):
+                self.env['__ret__'] = await eval_expression(node.body, self)
 
             elif isinstance(node, EndNode):
                 if await self.eval_data_token(node.error_message):
@@ -269,7 +275,26 @@ async def call_function(function: Callable, args: ArgsCommandNode, interpreter: 
 
     return await function(*args, **kwargs)
 
+async def eval_CodeNode(eval_node: EvalNode, interpreter: DshellInterpreteur):
+    """
+    Eval a CodeNode and return its value.
+    :param eval_node: The EvalNode with the code to evaluate.
+    :param interpreter: The Dshell interpreter instance.
+    """
+    codeNode = await interpreter.eval_data_token(eval_node.codeNode)
+    argscommand = await regroupe_commandes(eval_node.argsNode.body, interpreter)
+    kwargs = argscommand.get_dict_parameters()
+    kwargs.pop('*', None)
 
+    interpreter.env.update(kwargs)
+    await interpreter.execute(codeNode.body)
+
+    for key in kwargs.keys():
+        # clean the environment of all variables who stored arguments passed to the eval
+        if key != '__ret__':
+            del interpreter.env[key]
+
+    return interpreter.env['__ret__']
 
 
 class DshellIterator:
