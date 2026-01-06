@@ -9,6 +9,8 @@ from .._DshellParser.ast_nodes import UiNode, CodeNode
 
 from .._DshellInterpreteur.utils_interpreter import regroupe_commandes
 
+from .._DshellInterpreteur.dshell_scope import new_scope
+
 from Dshell.full_import import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -33,7 +35,7 @@ async def build_ui_parameters(ui_node: UiNode, interpreter: "DshellInterpreteur"
         style = args_button.pop('style', 'primary').lower()
         custom_id = args_button.pop('custom_id', str(ident_component))
 
-        if code is None and not isinstance(code, CodeNode):
+        if code is not None and not isinstance(code, CodeNode):
             raise TypeError(f"Button code muste be a CodeNode or None, not {type(code)}")
 
         if not isinstance(custom_id, str):
@@ -60,7 +62,7 @@ async def build_ui(ui_node: UiNode, interpreter: "DshellInterpreteur") -> EasyMo
     async for args, args_button, code in build_ui_parameters(ui_node, interpreter):
         b = Button(**args_button)
         view.add_items(b)
-        view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code})
+        view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, 'interpreter': interpreter})
 
     return view
 
@@ -84,7 +86,7 @@ async def rebuild_ui(ui_node : UiNode, view: EasyModifiedViews, interpreter: "Ds
         ui.url = args_button.get('url', ui.url)
         ui.row = args_button.get('row', ui.row)
         new_code = code if code is not None else view.get_callable_data(args_button['custom_id'])['code']
-        view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': args_button.get('code', code)})
+        view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': new_code, 'interpreter': interpreter})
 
     return view
 
@@ -99,6 +101,7 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
     :return:
     """
     code = data.pop('code', None)
+    interpreter: "DshellInterpreteur" = data.pop('interpreter', None)
     if code is not None:
         local_env = {
             '__ret__': None,
@@ -121,9 +124,8 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
         }
         local_env.update(data)
         from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
-        x = DshellInterpreteur(code, interaction, debug=False)
-        x.env.update(local_env)
-        await x.execute() # wait the current execution to finish
+        with new_scope(interpreter, local_env):
+            await DshellInterpreteur(code, ctx=interaction, debug=False, vars_env=interpreter.env).execute()
     else:
         await interaction.response.defer(invisible=True)
 

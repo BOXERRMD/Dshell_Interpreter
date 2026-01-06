@@ -31,7 +31,7 @@ class DshellInterpreteur:
     def __init__(self, code: Union[str, CodeNode], ctx: context,
                  debug: bool = False,
                  vars: Optional[str] = None,
-                 vars_env: Optional[dict[str, Any]] = None):
+                 vars_env: Optional[dict[str, Any] | Scope] = None):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
@@ -43,7 +43,10 @@ class DshellInterpreteur:
         Note: __message_before__ (message content before edit) can be overwritten by vars_env parameter.
         """
         if not isinstance(code, CodeNode):
-            self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
+            try:
+                self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
+            except Exception as e:
+                raise e
         else:
             self.ast: list[ASTNode] = code.body
 
@@ -104,7 +107,9 @@ class DshellInterpreteur:
 
         } if message is not None and not debug else {'__ret__': None}) # {} is used in debug mode, when ctx is None
 
-        if vars_env is not None: # add the variables to the environment
+        if isinstance(vars_env, Scope):
+            self.env = vars_env
+        elif vars_env is not None: # add the variables to the environment
             self.env.update(vars_env)
 
         self.vars = vars or ''
@@ -214,7 +219,7 @@ class DshellInterpreteur:
 
             elif isinstance(node, EvalNode):
 
-                await eval_CodeNode(node, self)
+                self.env.set('__ret__', await eval_CodeNode(node, self))
 
             elif isinstance(node, ReturnNode):
                 self.env.set('__ret__', await eval_expression(node.body, self))
@@ -292,10 +297,12 @@ async def eval_CodeNode(eval_node: EvalNode, interpreter: DshellInterpreteur):
     kwargs = argscommand.get_dict_parameters()
     kwargs.pop('*', None)
 
+    result = None
     with new_scope(interpreter, kwargs):
         await interpreter.execute(codeNode.body)
+        result = interpreter.env.get('__ret__')
 
-    return interpreter.env.get('__ret__')
+    return result
 
 
 class DshellIterator:
