@@ -31,6 +31,9 @@ class Scope:
             keys.update(self.parent.keys())
         return keys
 
+    def clear(self):
+        self.vars.clear()
+
 @contextmanager
 def new_scope(interpreter, initial_vars=None):
     parent = interpreter.env
@@ -40,4 +43,5 @@ def new_scope(interpreter, initial_vars=None):
     try:
         yield
     finally:
+        interpreter.env.clear()
         interpreter.env = parent

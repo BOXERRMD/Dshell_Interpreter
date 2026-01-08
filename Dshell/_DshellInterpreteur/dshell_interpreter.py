@@ -266,6 +266,11 @@ class DshellInterpreteur:
         else:
             return token.value  # fallback
 
+    def clear(self):
+        """
+        Clear the interpreter environment.
+        """
+        self.env.clear()
 
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):
