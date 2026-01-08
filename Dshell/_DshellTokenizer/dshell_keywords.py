@@ -62,7 +62,6 @@ dshell_commands: dict[str, Callable] = {
     ## Discord utils
     'name': utils_get_name, # get the name from id (channel, role, member)
     'id': utils_get_id, # get the id from name (channel, role, member)
-    'roles': utils_get_roles, # get all roles of a member
 
     ## Member utils
     'has_perms': utils_has_permissions, # check if a member has the specified permissions
@@ -133,6 +132,7 @@ dshell_commands: dict[str, Callable] = {
     "cr": dshell_create_role, # create role
     "dr": dshell_delete_roles, # delete role
     "er": dshell_edit_role, # edit role
+    'roles': utils_get_roles,  # get all roles of a member
 
     "ar": dshell_add_reactions,  # add reactions to a message
     "rr": dshell_remove_reactions,  # remove reactions from a message

@@ -29,6 +29,8 @@ from Dshell.full_import import (Message,
 from Dshell.full_import import (random,
                             choice)
 
+from ..._DshellParser.ast_nodes import ListNode
+
 
 class DiscordType(StrEnum):
     MEMBER = "member"
@@ -78,7 +80,6 @@ async def utils_len(ctx: Message, value):
     :param value:
     :return:
     """
-    from Dshell._DshellParser.ast_nodes import ListNode
     if not isinstance(value, (str, ListNode)):
         raise TypeError(f"value must be a list or a string in len command, not {type(value)}")
 
@@ -90,7 +91,6 @@ async def utils_random(ctx: Message, value: Optional["ListNode"] = None):
     :param value:
     :return:
     """
-    from Dshell._DshellParser.ast_nodes import ListNode
     if value is not None and not isinstance(value, ListNode):
         raise TypeError(f"value must be a list in random command, not {type(value)}")
 
@@ -168,7 +168,6 @@ async def utils_get_roles(ctx: Message, value: int):
     if what_is != DiscordType.MEMBER:
         raise TypeError(f"value must be a member id in roles command, not {what_is}")
 
-    from Dshell._DshellParser.ast_nodes import ListNode
     return ListNode([i.id for i in member.roles])
 
 
@@ -178,7 +177,6 @@ def utils_build_colour(color: Union[int, "ListNode"]) -> Union[Colour, int]:
     :param color: The color to build.
     :return: A Colour object.
     """
-    from Dshell._DshellParser.ast_nodes import ListNode
     if isinstance(color, int):
         return color
     elif isinstance(color, (ListNode, list)):

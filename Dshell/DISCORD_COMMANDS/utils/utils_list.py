@@ -21,10 +21,8 @@ async def utils_list_add(ctx, value: ListNode, *elements):
         raise TypeError("value must be a list in add command")
 
     for elem in elements:
-        if isinstance(elem, ListNode):
-            value.extend(elem)
-        else:
             value.add(elem)
+
     return value
 
 async def utils_list_remove(ctx, value: ListNode, element, count: int = 1):
@@ -90,15 +88,15 @@ async def utils_list_reverse(ctx, value: ListNode):
     value.reverse()
     return value
 
-async def utils_list_get_value(ctx, list_: ListNode, index: int = 0):
+async def utils_list_get_value(ctx, value: ListNode, index: int = 0):
     """
     Get a value from a list
-    :param list_:
+    :param value:
     :param index:
     :return:
     """
-    if not isinstance(list_, ListNode):
+    if not isinstance(value, ListNode):
         raise TypeError("value must be a list in get command")
     if not isinstance(index, int):
         raise TypeError("index must be an integer in get command")
-    return list_[index]
+    return value[index]

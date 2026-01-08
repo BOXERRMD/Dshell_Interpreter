@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 
 ButtonStyleValues: tuple = tuple(i.name for i in ButtonStyle)
+print(ButtonStyleValues)
 
 async def build_ui_parameters(ui_node: UiNode, interpreter: "DshellInterpreteur"):
     """
