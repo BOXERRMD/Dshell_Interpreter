@@ -254,41 +254,51 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 blocks.pop()
                 return blocks, pointeur
 
-            elif first_token_line.value == 'ui':
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[UI] Take one argument on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[UI] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                ui_node = UiNode([])
-                var_node = VarNode(tokens_by_line[1], body=[ui_node])
-                last_block.body.append(var_node)
-                _, p = parse(token_lines[pointeur + 1:], ui_node)
-                pointeur += p + 1
-
-            elif first_token_line.value == '#ui':
-                if not isinstance(last_block, UiNode):
-                    raise SyntaxError(f'[#UI] No UI open on line {first_token_line.position} !')
-                blocks.pop()
-                return blocks, pointeur
-
             elif first_token_line.value == 'button':
                 if len(tokens_by_line) <= 1:
                     raise SyntaxError(f'[BUTTON] Take one or more arguments on line {first_token_line.position} !')
-                if not isinstance(last_block, UiNode):
-                    raise SyntaxError(f'[BUTTON] No UI open on line {first_token_line.position} !')
+                if tokens_by_line[1].type != DTT.IDENT:
+                    raise TypeError(f'[BUTTON] the variable given must be a ident, '
+                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                button_node = UiButtonNode(tokens_by_line[1:])
-                last_block.buttons.append(button_node)
+                button_node = UiButtonNode([])
+                var_node = VarNode(tokens_by_line[1], body=[button_node])
+                last_block.body.append(var_node)
+                _, p = parse(token_lines[pointeur + 1:], button_node)
+                pointeur += p + 1
+
+            elif first_token_line.value == '#button':
+                if not isinstance(last_block, UiButtonNode):
+                    raise SyntaxError(f'[#BUTTON] No UIButton open on line {first_token_line.position} !')
+                blocks.pop()
+                return blocks, pointeur
 
             elif first_token_line.value == 'select':
                 if len(tokens_by_line) <= 1:
                     raise SyntaxError(f'[SELECT] Take one or more arguments on line {first_token_line.position} !')
-                if not isinstance(last_block, UiNode):
-                    raise SyntaxError(f'[SELECT] No UI open on line {first_token_line.position} !')
-                select_node = UiSelectNode(tokens_by_line[1:])
-                last_block.selects.append(select_node)
+                if tokens_by_line[1].type != DTT.IDENT:
+                    raise TypeError(f'[SELECT] the variable given must be a ident, '
+                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+
+                select_node = UiSelectNode([])
+                var_node = VarNode(tokens_by_line[1], body=[select_node])
+                last_block.body.append(var_node)
+                _, p = parse(token_lines[pointeur + 1:], select_node)
+                pointeur += p + 1
+
+            elif first_token_line.value == '#select':
+                if not isinstance(last_block, UiSelectNode):
+                    raise SyntaxError(f'[#SELECT] No UISelect open on line {first_token_line.position} !')
+                blocks.pop()
+                return blocks, pointeur
+
+            elif first_token_line.value == 'option':
+                if len(tokens_by_line) <= 1:
+                    raise SyntaxError(f'[OPTION] Take one or more arguments on line {first_token_line.position} !')
+                if not isinstance(last_block, UiSelectNode):
+                    raise SyntaxError(f'[OPTION] No UISelect open on line {first_token_line.position} !')
+
+                last_block.options.append(OptionUiSelectNode(tokens_by_line[1:]))
 
         ############################## AUTRE ##############################
 
@@ -426,10 +436,6 @@ def print_ast(ast: list[ASTNode], decalage: int = 0):
         elif isinstance(i, ParamNode):
             print(f"{' ' * decalage}PARAM -> {i.body}")
 
-        elif isinstance(i, UiNode):
-            print(f"{' ' * decalage}UI ->")
-            print_ast(i.buttons, decalage + 5)
-            print_ast(i.selects, decalage + 5)
 
         elif isinstance(i, UiButtonNode):
             print(f"{' ' * decalage}BUTTON -> {i.body}")

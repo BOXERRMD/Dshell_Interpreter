@@ -23,9 +23,9 @@ __all__ = [
     'CodeNode',
     'EvalNode',
     'ReturnNode',
-    'UiNode',
     'UiButtonNode',
-    'UiSelectNode'
+    'UiSelectNode',
+    'OptionUiSelectNode'
 ]
 
 
@@ -569,9 +569,10 @@ class UiSelectNode(ASTNode):
         :param body: list of tokens representing the select component
         """
         self.body = body
+        self.options: list[OptionUiSelectNode] = []
 
     def __repr__(self):
-        return f"<UI SELECT> - {self.body}"
+        return f"<UI SELECT> - {self.body} -> {self.options}"
 
     def to_dict(self):
         """
@@ -583,32 +584,29 @@ class UiSelectNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
-class UiNode(ASTNode):
+class OptionUiSelectNode(ASTNode):
     """
-    Node representing a UI component in the AST.
-    This is used to define UI elements for commands in Dshell.
+    Node representing an option in a UI select component in the AST.
+    This is used to define options for select elements for commands in Dshell.
     """
 
-    def __init__(self, buttons: Optional[list[UiButtonNode]] = None,
-                 selects: Optional[list[UiSelectNode]] = None):
+    def __init__(self, body: list[Token]):
         """
-        :param body: list of tokens representing the UI component
+        :param body: list of tokens representing the option component
         """
-        self.buttons = buttons or []
-        self.selects = selects or []
+        self.body = body
 
     def __repr__(self):
-        return f"<UI> - {self.buttons}\n\n - {self.selects}"
+        return f"<UI SELECT OPTION> - {self.body}"
 
     def to_dict(self):
         """
-        Convert the UiNode to a dictionary representation.
-        :return: Dictionary representation of the UiNode.
+        Convert the OptionUiSelectNode to a dictionary representation.
+        :return: Dictionary representation of the OptionUiSelectNode.
         """
         return {
-            "type": "UiNode",
-            "buttons": [token.to_dict() for token in self.buttons],
-            "selects": [token.to_dict() for token in self.selects],
+            "type": "OptionUiSelectNode",
+            "body": [token.to_dict() for token in self.body]
         }
 
 class ListNode(ASTNode):

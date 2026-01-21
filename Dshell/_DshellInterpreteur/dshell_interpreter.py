@@ -109,7 +109,7 @@ class DshellInterpreteur:
 
         if isinstance(vars_env, Scope):
             self.env = vars_env
-        elif vars_env is not None: # add the variables to the environment
+        elif isinstance(vars_env, dict): # add the variables to the environment
             self.env.update(vars_env)
 
         self.vars = vars or ''
@@ -192,7 +192,7 @@ class DshellInterpreteur:
                     else:
                         self.env.set(node.name.value, await build_permission(first_node.body, self))
 
-                elif isinstance(first_node, UiNode):
+                elif isinstance(first_node, (UiButtonNode, UiSelectNode)):
                     # rebuild the UI if it already exists
                     if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), EasyModifiedViews):
                         self.env.set(node.name.value, await rebuild_ui(first_node, self.env.get(node.name.value), self))
@@ -271,6 +271,7 @@ class DshellInterpreteur:
         Clear the interpreter environment.
         """
         self.env.clear()
+        self.ast.clear()
 
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):

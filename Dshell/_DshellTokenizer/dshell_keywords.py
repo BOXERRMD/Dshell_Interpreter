@@ -18,7 +18,7 @@ dshell_keyword: set[str] = {
 }
 
 dshell_discord_keyword: set[str] = {
-    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui', 'button', 'select'
+    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui', 'button', '#button', 'select', '#select', 'option'
 }
 
 async def dshell_debug(ctx, x):
