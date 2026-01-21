@@ -27,7 +27,6 @@ SelectSyleValues: dict = {'string': ComponentType.string_select,
                           'user': ComponentType.user_select,
                           'mention': ComponentType.mentionable_select,
                           'channel': ComponentType.channel_select}
-print(ButtonStyleValues)
 
 async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: "DshellInterpreteur"):
     """
@@ -181,8 +180,6 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
     :return:
     """
     view = EasyModifiedViews()
-
-    print(ui_node)
 
     if isinstance(ui_node, UiButtonNode):
         async for _, args_button, code in build_ui_button_parameters(ui_node, interpreter):

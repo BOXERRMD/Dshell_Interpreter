@@ -169,8 +169,8 @@ class DshellInterpreteur:
             elif isinstance(node, LoopNode):
                 self.env.set(node.variable.name.value, 0)
                 for i in DshellIterator(await eval_expression(node.variable.body, self)):
-                    with new_scope(self, {node.variable.name.value: i}):
-                        await self.execute(node.body)
+                    self.env.set(node.variable.name.value, i)
+                    await self.execute(node.body)
 
             elif isinstance(node, VarNode):
 
