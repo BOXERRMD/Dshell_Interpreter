@@ -166,15 +166,15 @@ dshell_logical_word_operators: dict[str, tuple[Callable, int]] = {
 
 dshell_logical_operators: dict[str, tuple[Callable, int]] = {
 
-    r"<": (lambda a, b: a < b, 4),
     r"<=": (lambda a, b: a <= b, 4),
     r"=<": (lambda a, b: a <= b, 4),
-    r"=": (lambda a, b: a == b, 4),
     r"!=": (lambda a, b: a != b, 4),
     r"=!": (lambda a, b: a != b, 4),
-    r">": (lambda a, b: a > b, 4),
     r">=": (lambda a, b: a >= b, 4),
     r"=>": (lambda a, b: a >= b, 4),
+    r"<": (lambda a, b: a < b, 4),
+    r">": (lambda a, b: a > b, 4),
+    r"=": (lambda a, b: a == b, 4),
     r"&": (lambda a, b: a & b, 2),
     r"|": (lambda a, b: a | b, 1),
 
