@@ -194,10 +194,13 @@ class DshellInterpreteur:
 
                 elif isinstance(first_node, (UiButtonNode, UiSelectNode)):
                     # rebuild the UI if it already exists
-                    if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), EasyModifiedViews):
-                        self.env.set(node.name.value, await rebuild_ui(first_node, self.env.get(node.name.value), self))
+                    #if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), EasyModifiedViews):
+                        #self.env.set(node.name.value, await rebuild_ui(first_node, self.env.get(node.name.value), self))
+                    #else:
+                    if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), ListNode):
+                        self.env.get(node.name.value).add(await build_ui(first_node, self))
                     else:
-                        self.env.set(node.name.value, await build_ui(first_node, self))
+                        self.env.set(node.name.value, ListNode([await build_ui(first_node, self)])) # store UIs in a list
 
                 elif isinstance(first_node, CodeNode):
                     if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), first_node):

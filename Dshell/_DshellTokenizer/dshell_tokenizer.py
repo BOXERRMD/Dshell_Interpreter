@@ -45,18 +45,20 @@ table_regex: dict[DTT, Pattern] = {
     DTT.INT: compile(r"(\d+)"),
     DTT.BOOL: compile(r"(True|False)", flags=IGNORECASE),
     DTT.NONE: compile(r"(None)", flags=IGNORECASE),
-    DTT.IDENT: compile(rf"([A-Za-z0-9_]+)")
+    DTT.IDENT: compile(rf"([A-Za-z0-9_]+)"),
+    DTT.ANY_CHARACTER: compile(rf"([^{MASK_CHARACTER}\n\s]+)"),
 }
 
 
 class DshellTokenizer:
 
-    def __init__(self, code: str):
+    def __init__(self, code: str, math_any_character: bool = False):
         """
         Init le tokenizer.
         :param code: Le code à tokenizer
         """
         self.code: str = code
+        self.match_any_character: bool = math_any_character
 
     def start(self):
         """
@@ -78,6 +80,9 @@ class DshellTokenizer:
             tokens_par_ligne: list[Token] = []
 
             for token_type, pattern in table_regex.items():  # iter la table de régex pour tous les tester sur la ligne
+
+                if not self.match_any_character and token_type == DTT.ANY_CHARACTER:
+                    continue
 
                 for match in finditer(pattern, ligne):  # iter les résultat du match pour avoir leur position
 

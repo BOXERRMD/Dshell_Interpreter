@@ -67,7 +67,7 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
 
             while (index + 1) < n and body[index + 1].type not in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
 
-                final_argument += body[index + 1].value + ' '
+                final_argument += body[index + 1].value + ''
                 index += 1
                 instance_dhsell_arguments.set_parameter(body[current_index].value, final_argument, type_=DTT.STR_PARAMETER)
 
@@ -108,7 +108,7 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
     regrouped_parameters: DshellArguments = await regroupe_commandes(node.body, interpreter)
 
     from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
-    _ = DshellTokenizer(variables).start()
+    _ = DshellTokenizer(variables, math_any_character=True).start()
     regrouped_variables = await regroupe_commandes(_[0] if _ else tuple(), interpreter)
 
     already_modified = set()

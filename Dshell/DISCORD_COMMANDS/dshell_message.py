@@ -69,7 +69,7 @@ async def dshell_send_message(ctx: Message,
         embeds = ListNode([embeds])
 
     if view is not None and not isinstance(view, EasyModifiedViews):
-        raise Exception(f'Channel must be an UI or None, not {type(channel_to_send)} !')
+        raise Exception(f'View must be an UI or None, not {type(channel_to_send)} !')
 
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,

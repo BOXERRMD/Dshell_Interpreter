@@ -28,6 +28,7 @@ class DshellTokenType(Enum):
     LOGIC_OPERATOR = auto(),
     LOGIC_WORD_OPERATOR = auto()  # and, or, not
     EVAL_GROUP = auto()  # `code`
+    ANY_CHARACTER = auto()  # pour les caractères non reconnus mais utilisé dans les données passé en paramètre des commandes
     COMMENT = auto()  # lignes commençant par ##
 
 
