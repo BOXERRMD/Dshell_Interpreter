@@ -11,6 +11,7 @@ from Dshell.full_import import (Pattern,
                            ASCII,
                            DOTALL,
                            IGNORECASE,
+                           MULTILINE,
                            compile,
                            escape,
                            findall,
@@ -27,13 +28,13 @@ from .dshell_keywords import (dshell_keyword,
 MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
+    DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
+    DTT.LIST: compile(r"\[(.*)\]"),
+    DTT.EVAL_GROUP: compile(r"`(.*)`"),
     DTT.PARAMETERS: compile(rf"--\*\s*(\w+)\s*", flags=ASCII),
     DTT.STR_PARAMETER: compile(rf"--\'\s*(\w+)\s*", flags=ASCII),
     DTT.PARAMETER: compile(rf"--\s*(\w+)\s*", flags=ASCII),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
-    DTT.COMMENT: compile(r"::(.*?)$"),
-    DTT.EVAL_GROUP: compile(r"`(.*?)`"),
-    DTT.LIST: compile(r"\[(.*?)\]"),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
     DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
     DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
@@ -78,44 +79,53 @@ class DshellTokenizer:
         line_number = 1
         for ligne in commandes_lines:  # iter chaque ligne du code
             tokens_par_ligne: list[Token] = []
+            is_comment: bool = False
 
             for token_type, pattern in table_regex.items():  # iter la table de régex pour tous les tester sur la ligne
 
                 if not self.match_any_character and token_type == DTT.ANY_CHARACTER:
                     continue
 
+                if is_comment:
+                    is_comment = False
+                    break
+
                 for match in finditer(pattern, ligne):  # iter les résultat du match pour avoir leur position
+
+                    if token_type == DTT.COMMENT:  # si on tombe sur un commentaire, on arrête le tokenizage de la ligne
+                        is_comment = True
+                        break
 
                     start_match = match.start()  # position de début du match
 
-                    if token_type != DTT.COMMENT:  # si ce n'est pas un commentaire
-                        token = Token(token_type, match.group(1), (line_number, start_match))  # on enregistre son token
-                        tokens_par_ligne.append(token)
+                    token = Token(token_type, match.group(1), (line_number, start_match))  # on enregistre son token
+                    tokens_par_ligne.append(token)
 
-                        if token_type == DTT.STR:
-                            token.value = token.value.replace(r'\"', '"')
+                    if token_type == DTT.STR:
+                        token.value = token.value.replace(r'\"', '"')
 
-                        if token_type in (
-                                DTT.LIST,
-                                DTT.EVAL_GROUP):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
-                            result = self.tokenizer([token.value])
-                            token.value = result[0] if len(
-                                result) > 0 else result  # gère si la structure de donnée est vide ou non
+                    if token_type in (
+                            DTT.LIST,
+                            DTT.EVAL_GROUP):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
+                        result = self.tokenizer([token.value])
+                        token.value = result[0] if len(
+                            result) > 0 else result  # gère si la structure de donnée est vide ou non
 
-                            for token_in_list in token.value:
-                                token_in_list.position = (line_number, token_in_list.position[1])
+                        for token_in_list in token.value:
+                            token_in_list.position = (line_number, token_in_list.position[1])
 
-                            for token_in_line in range(len(tokens_par_ligne)-1):
-                                if tokens_par_ligne[token_in_line].position[1] > start_match:
-                                    str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
-                                    tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
-                                    token.value.extend(str_tokens_in_list)
-                                    token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
-                                    break
+                        """for token_in_line in range(len(tokens_par_ligne)-1):
+                            if tokens_par_ligne[token_in_line].position[1] > start_match:
+                                str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
+                                tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
+                                token.value.extend(str_tokens_in_list)
+                                token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
+                                break"""
+
 
                     len_match = len(match.group(0))  # longueur du match trouvé
                     ligne = ligne[:start_match] + (MASK_CHARACTER * len_match) + ligne[
-                                                                                   match.end():]  # remplace la match qui vient d'avoir lieu pour ne pas le rematch une seconde fois
+                                                                                    match.end():]  # remplace la match qui vient d'avoir lieu pour ne pas le rematch une seconde fois
 
             tokens_par_ligne.sort(key=lambda
                 token: token.position[1])  # trie la position par rapport aux positions de match des tokens pour les avoir dans l'ordre du code
