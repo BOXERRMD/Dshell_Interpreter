@@ -29,12 +29,12 @@ MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
+    DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
     DTT.LIST: compile(r"\[(.*)\]"),
     DTT.EVAL_GROUP: compile(r"`(.*)`"),
     DTT.PARAMETERS: compile(rf"--\*\s*(\w+)\s*", flags=ASCII),
     DTT.STR_PARAMETER: compile(rf"--\'\s*(\w+)\s*", flags=ASCII),
     DTT.PARAMETER: compile(rf"--\s*(\w+)\s*", flags=ASCII),
-    DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
     DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
     DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
@@ -114,13 +114,13 @@ class DshellTokenizer:
                         for token_in_list in token.value:
                             token_in_list.position = (line_number, token_in_list.position[1])
 
-                        """for token_in_line in range(len(tokens_par_ligne)-1):
+                        for token_in_line in range(len(tokens_par_ligne)-1):
                             if tokens_par_ligne[token_in_line].position[1] > start_match:
                                 str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
                                 tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
                                 token.value.extend(str_tokens_in_list)
                                 token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
-                                break"""
+                                break
 
 
                     len_match = len(match.group(0))  # longueur du match trouvé
