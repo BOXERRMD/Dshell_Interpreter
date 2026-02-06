@@ -7,7 +7,8 @@ __all__ = [
     "utils_replace_string",
     "utils_regex_findall",
     "utils_regex_sub",
-    "utils_regex_search"
+    "utils_regex_search",
+    "utils_regex_group"
 ]
 
 from Dshell.full_import import Message
@@ -105,7 +106,7 @@ async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> 
     Find all occurrences of a regex in a string.
     :param regex:
     :param content:
-    :return:
+    :return: ListNode of ListNode of each group in the regex.
     """
 
     if not isinstance(regex, str):
@@ -114,7 +115,9 @@ async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> 
     if content is not None and not isinstance(content, str):
         raise Exception(f"Content must be a string, not {type(content)}!")
 
-    return ListNode(findall(regex, content if content is not None else ctx.content))
+    result = findall(regex, content if content is not None else ctx.content)
+
+    return ListNode([list(i) for i in result])
 
 
 async def utils_regex_sub(ctx: Message, regex: str, replace: str, content: str = None) -> str:
@@ -154,3 +157,21 @@ async def utils_regex_search(ctx: Message, regex: str, content: str = None) -> s
     result = search(regex, content if content is not None else ctx.content)
 
     return result.group() if result else ''
+
+async def utils_regex_group(ctx: Message, regex:str, content: str = None) -> ListNode:
+    """
+    Search for a regex in a string and return the groups.
+    :param regex:
+    :param content:
+    :return:
+    """
+
+    if not isinstance(regex, str):
+        raise Exception(f"Regex must be a string, not {type(regex)}!")
+
+    if content is not None and not isinstance(content, str):
+        raise Exception(f"Content must be a string, not {type(content)}!")
+
+    result = search(regex, content if content is not None else ctx.content)
+
+    return ListNode(list(result.groups())) if result else ListNode([])

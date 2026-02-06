@@ -58,6 +58,7 @@ dshell_commands: dict[str, Callable] = {
     'regex_findall': utils_regex_findall,
     'regex_sub': utils_regex_sub,
     'regex': utils_regex_search,
+    'regex_group': utils_regex_group,
 
     ## Discord utils
     'name': utils_get_name, # get the name from id (channel, role, member)
