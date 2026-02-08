@@ -142,7 +142,7 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
         if len(label) > 100:
             raise ValueError("Option label must be less than 100 characters !")
 
-        if not isinstance(value, MISSING) and not isinstance(value, str):
+        if value and not isinstance(value, str):
             raise TypeError(f"Option value must be a string, not {type(value)} !")
 
         if len(value) > 100:
