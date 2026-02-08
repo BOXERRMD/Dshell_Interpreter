@@ -2,6 +2,7 @@ from Dshell.full_import import (ButtonStyle,
                            PrivateChannel,
                            Interaction,
                            Button,
+                           MISSING,
                            EasyModifiedViews,
                            CustomIDNotFound,
                            SelectMenu,
@@ -72,7 +73,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
 
     code = args_select.pop('code', None)
     custom_id = args_select.pop('custom_id', 'ui_select_'+str(random()))
-    select_type = args_select.pop('type', None)
+    select_type = args_select.pop('type', 'string').lower()
 
     disabled = args_select.get('disabled', False)
     max_values = args_select.get('max', 1)
@@ -130,7 +131,7 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
         args_option: dict[str, list[Any]] = regrouped_parameters.get_dict_parameters()
 
         label = args_option.pop('label', None)
-        value = args_option.pop('value', None)
+        value = args_option.pop('value', MISSING)
         description = args_option.pop('description', None)
         emoji = args_option.pop('emoji', None)
         default = args_option.pop('default', False)
@@ -141,7 +142,7 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
         if len(label) > 100:
             raise ValueError("Option label must be less than 100 characters !")
 
-        if value is None or not isinstance(value, str):
+        if not isinstance(value, MISSING) and not isinstance(value, str):
             raise TypeError(f"Option value must be a string, not {type(value)} !")
 
         if len(value) > 100:
