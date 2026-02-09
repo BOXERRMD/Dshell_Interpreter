@@ -81,6 +81,7 @@ dshell_commands: dict[str, Callable] = {
     "pm": dshell_purge_message,
     "em": dshell_edit_message,  # edit message
     "pinm": dshell_pin_message,  # pin message
+    "upm": dshell_unpin_message,  # unpin message
     "mh": dshell_get_history_messages,  # get message history
     "gcm": dshell_get_content_message,  # get content of a message
     "gma": dshell_get_author_id_message,  # get author id of a message
@@ -109,6 +110,8 @@ dshell_commands: dict[str, Callable] = {
     "gcsl": dshell_get_channel_slowmode,  # get channel slowmode
     "gct": dshell_get_channel_topic,  # get channel topic
     "gcth": dshell_get_channel_threads,  # get channel threads
+    "gcp": dshell_get_channel_position,  # get channel position
+    "gcurl": dshell_get_channel_url,  # get channel url
     "gvcm": dshell_get_channel_voice_members,  # get voice channel members
 
     "ct": dshell_create_thread_message,  # create thread

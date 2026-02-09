@@ -24,9 +24,9 @@ async def utils_update_permissions(ctx: Message,
                                    permission1: dict[Union[Member, Role, None], PermissionOverwrite],
                                    permission2: dict[Union[Member, Role, None], PermissionOverwrite]) -> dict:
 
-    _validate_required_dict(permission1, "permission1")
+    _validate_required_dict(permission1, "permission1", "update_perms")
 
-    _validate_required_dict(permission2, "permission2")
+    _validate_required_dict(permission2, "permission2", "update_perms")
 
     permission1.update(permission2)
 

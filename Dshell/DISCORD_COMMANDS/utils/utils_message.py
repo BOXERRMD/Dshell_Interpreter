@@ -56,15 +56,15 @@ def utils_autorised_mentions(global_mentions: bool = None,
 
     from discord import AllowedMentions
 
-    _validate_optional_bool(global_mentions, "Mention parameter")
+    _validate_optional_bool(global_mentions, "Mention parameter", "autorised_mentions")
 
-    _validate_required_bool(everyone_mention, "Everyone mention parameter")
+    _validate_required_bool(everyone_mention, "Everyone mention parameter", "autorised_mentions")
 
-    _validate_required_bool(roles_mentions, "Roles mention parameter")
+    _validate_required_bool(roles_mentions, "Roles mention parameter", "autorised_mentions")
 
-    _validate_required_bool(users_mentions, "Users mention parameter")
+    _validate_required_bool(users_mentions, "Users mention parameter", "autorised_mentions")
 
-    _validate_required_bool(reply_mention, "Reply mention parameter")
+    _validate_required_bool(reply_mention, "Reply mention parameter", "autorised_mentions")
 
     if global_mentions is True:
         return AllowedMentions.all()

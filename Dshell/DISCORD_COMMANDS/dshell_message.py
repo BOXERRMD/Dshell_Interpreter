@@ -54,7 +54,7 @@ async def dshell_send_message(ctx: Message,
     Sends a message on Discord
     """
 
-    _validate_optional_number(delete, "Delete")
+    _validate_optional_number(delete, "Delete", "sm")
 
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     allowed_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
@@ -64,7 +64,7 @@ async def dshell_send_message(ctx: Message,
 
 
 
-    _validate_optional_embed(embeds, "Embeds")
+    _validate_optional_embed(embeds, "Embeds", "sm")
 
     if embeds is None:
         embeds = ListNode([])
@@ -72,7 +72,7 @@ async def dshell_send_message(ctx: Message,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    _validate_optional_view(view, "View")
+    _validate_optional_view(view, "View", "sm")
 
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,
@@ -100,13 +100,13 @@ async def dshell_respond_message(ctx: Message,
     """
     Responds to a message on Discord
     """
-    _validate_optional_number(delete, "Delete")
+    _validate_optional_number(delete, "Delete", "srm")
 
     respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
     mention_author = True if reply_mention else False
 
-    _validate_optional_embed(embeds, "Embeds")
+    _validate_optional_embed(embeds, "Embeds", "srm")
 
     if embeds is None:
         embeds = ListNode([])
@@ -167,9 +167,9 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
 
 
 
-    _validate_optional_embed(embeds, "Embeds")
+    _validate_optional_embed(embeds, "Embeds", "em")
 
-    _validate_optional_view(view, "View")
+    _validate_optional_view(view, "View", "em")
 
     if embeds is None:
         embeds = ListNode([])
@@ -255,7 +255,7 @@ async def dshell_unpin_message(ctx: Message, message=None, reason=None):
 
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
-    _validate_optional_string(reason, "Reason")
+    _validate_optional_string(reason, "Reason", "unpin_message")
 
     await target_message.unpin()
 
@@ -271,7 +271,7 @@ async def dshell_get_history_messages(ctx: Message,
     Searches for messages matching a regex in a channel
     """
 
-    _validate_optional_int(limit, "Limit")
+    _validate_optional_int(limit, "Limit", "mh")
 
     search_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -315,7 +315,7 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = No
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter")
+    _validate_optional_int(message, "Message parameter", "gma")
 
     target_message = ctx
     if message is not None:
@@ -350,7 +350,7 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter")
+    _validate_optional_int(message, "Message parameter", "gmc")
 
     target_message = ctx
     if message is not None:
@@ -371,7 +371,7 @@ async def dshell_get_message_attachments(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter")
+    _validate_optional_int(message, "Message parameter", "gmat")
 
     target_message = ctx
     if message is not None:
@@ -399,7 +399,7 @@ async def dshell_get_channel_pined_messages(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gmp] Channel {channel} not found !")
 
     pinned_messages = await channel_to_check.pins()
 
@@ -420,7 +420,7 @@ async def dshell_is_message_system(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter")
+    _validate_optional_int(message, "Message parameter", "ims")
 
     target_message = ctx
     if message is not None:

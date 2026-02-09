@@ -25,16 +25,16 @@ async def dshell_create_role(ctx: Message,
     """
     Creates a role on the server.
     """
-    _validate_missing_or_type(name, "Name", str)
+    _validate_missing_or_type(name, "Name", str, "cr")
 
-    _validate_missing_or_type(permissions, "Permissions", dict)
+    _validate_missing_or_type(permissions, "Permissions", dict, "cr")
 
     if not isinstance(color, _MissingSentinel):
         color = utils_build_colour(color)
 
-    _validate_missing_or_type(hoist, "Hoist", bool)
+    _validate_missing_or_type(hoist, "Hoist", bool, "cr")
 
-    _validate_missing_or_type(mentionable, "Mentionable", bool)
+    _validate_missing_or_type(mentionable, "Mentionable", bool, "cr")
 
     if isinstance(permissions, dict):
         if None in permissions:
