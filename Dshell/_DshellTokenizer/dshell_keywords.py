@@ -81,7 +81,7 @@ dshell_commands: dict[str, Callable] = {
     "pm": dshell_purge_message,
     "em": dshell_edit_message,  # edit message
     "pinm": dshell_pin_message,  # pin message
-    "upm": dshell_unpin_message,  # unpin message
+    "upinm": dshell_unpin_message,  # unpin message
     "mh": dshell_get_history_messages,  # get message history
     "gcm": dshell_get_content_message,  # get content of a message
     "gma": dshell_get_author_id_message,  # get author id of a message

@@ -1,8 +1,6 @@
 from Dshell.full_import import (Message,
                            Embed,
-                           PartialMessage,
-                           EasyModifiedViews,
-                           Interaction)
+                           PartialMessage)
 
 from .._DshellParser.ast_nodes import ListNode
 
@@ -29,6 +27,7 @@ __all__ = [
     'dshell_clear_message_reactions',
     'dshell_clear_one_reactions',
     'dshell_pin_message',
+    'dshell_unpin_message',
     'dshell_get_content_message',
     'dshell_get_author_id_message',
     'dshell_get_message_link',
