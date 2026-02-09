@@ -18,6 +18,11 @@ __all__ = [
     "_validate_required_int",
     "_validate_required_string",
     "_validate_required_dict",
+    "_validate_missing_or_type",
+    "_validate_missing_or_bool",
+    "_validate_missing_or_int",
+    "_validate_missing_or_string",
+    "_validate_missing_or_dict",
 ]
 
 
@@ -242,3 +247,81 @@ def _validate_required_dict(value, param_name: str, command_name: str = None):
             raise TypeError(f"{param_name} must be a permission bloc in {command_name} command, not {type(value)}")
         else:
             raise TypeError(f"{param_name} must be a dict, not {type(value)}")
+
+
+# Validation functions for _MissingSentinel or other types
+
+def _validate_missing_or_type(value, param_name: str, allowed_types: tuple, type_description: str = None):
+    """
+    Validate that a value is either _MissingSentinel or one of the allowed types.
+    This is useful for parameters that can be omitted (using MISSING sentinel) or have a specific type.
+    
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param allowed_types: Tuple of allowed types (e.g., (int,), (str,), (bool,))
+    :param type_description: Human-readable description of allowed types (e.g., "an integer", "a string")
+    :raises Exception: If the value is not _MissingSentinel and not one of the allowed types
+    """
+    from Dshell.full_import import _MissingSentinel
+    
+    if not isinstance(value, (_MissingSentinel,) + allowed_types):
+        if type_description is None:
+            type_names = " or ".join(t.__name__ for t in allowed_types)
+            type_description = type_names
+        raise Exception(f"{param_name} must be {type_description}, not {type(value)} !")
+
+
+def _validate_missing_or_bool(value, param_name: str):
+    """
+    Validate that a value is either _MissingSentinel or a boolean.
+    
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :raises Exception: If the value is not _MissingSentinel and not a boolean
+    """
+    from Dshell.full_import import _MissingSentinel
+    
+    if not isinstance(value, (_MissingSentinel, bool)):
+        raise Exception(f"{param_name} must be a boolean, not {type(value)} !")
+
+
+def _validate_missing_or_int(value, param_name: str):
+    """
+    Validate that a value is either _MissingSentinel or an integer.
+    
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :raises Exception: If the value is not _MissingSentinel and not an integer
+    """
+    from Dshell.full_import import _MissingSentinel
+    
+    if not isinstance(value, (_MissingSentinel, int)):
+        raise Exception(f"{param_name} must be an integer, not {type(value)} !")
+
+
+def _validate_missing_or_string(value, param_name: str):
+    """
+    Validate that a value is either _MissingSentinel or a string.
+    
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :raises Exception: If the value is not _MissingSentinel and not a string
+    """
+    from Dshell.full_import import _MissingSentinel
+    
+    if not isinstance(value, (_MissingSentinel, str)):
+        raise Exception(f"{param_name} must be a string, not {type(value)} !")
+
+
+def _validate_missing_or_dict(value, param_name: str):
+    """
+    Validate that a value is either _MissingSentinel or a dict.
+    
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :raises Exception: If the value is not _MissingSentinel and not a dict
+    """
+    from Dshell.full_import import _MissingSentinel
+    
+    if not isinstance(value, (_MissingSentinel, dict)):
+        raise Exception(f"{param_name} must be a PermissionNode, not {type(value)} !")

@@ -20,7 +20,10 @@ from .utils.utils_message import utils_get_message
 from .utils.utils_thread import utils_get_thread
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
-                                          _validate_optional_bool)
+                                          _validate_optional_bool,
+                                          _validate_missing_or_int,
+                                          _validate_missing_or_string,
+                                          _validate_missing_or_bool)
 
 __all__ = [
     'dshell_get_channel',
@@ -126,17 +129,13 @@ async def dshell_create_text_channel(ctx: Message,
     Creates a text channel on the server
     """
 
-    if not isinstance(position, (_MissingSentinel, int)):
-        raise Exception(f"Position must be an integer, not {type(position)} !")
+    _validate_missing_or_int(position, "Position")
 
-    if not isinstance(slowmode, (_MissingSentinel, int)):
-        raise Exception(f"Slowmode must be an integer, not {type(slowmode)} !")
+    _validate_missing_or_int(slowmode, "Slowmode")
 
-    if not isinstance(topic, (_MissingSentinel, str)):
-        raise Exception(f"Topic must be a string, not {type(topic)} !")
+    _validate_missing_or_string(topic, "Topic")
 
-    if not isinstance(nsfw, (_MissingSentinel, bool)):
-        raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
+    _validate_missing_or_bool(nsfw, "NSFW")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -162,11 +161,9 @@ async def dshell_create_voice_channel(ctx: Message,
     """
     Creates a voice channel on the server
     """
-    if not isinstance(position, (_MissingSentinel, int)):
-        raise Exception(f"Position must be an integer, not {type(position)} !")
+    _validate_missing_or_int(position, "Position")
 
-    if not isinstance(bitrate, (_MissingSentinel, int)):
-        raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
+    _validate_missing_or_int(bitrate, "Bitrate")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -232,20 +229,15 @@ async def dshell_edit_text_channel(ctx: Message,
     """
     _validate_optional_string(name, "Name")
 
-    if not isinstance(position, (_MissingSentinel, int)):
-        raise Exception(f"Position must be an integer, not {type(position)} !")
+    _validate_missing_or_int(position, "Position")
 
-    if not isinstance(category, (_MissingSentinel, int)):
-        raise Exception(f"Category must be an integer, not {type(category)} !")
+    _validate_missing_or_int(category, "Category")
 
-    if not isinstance(slowmode, (_MissingSentinel, int)):
-        raise Exception(f"Slowmode must be an integer, not {type(slowmode)} !")
+    _validate_missing_or_int(slowmode, "Slowmode")
 
-    if not isinstance(topic, (_MissingSentinel, str)):
-        raise Exception(f"Topic must be a string, not {type(topic)} !")
+    _validate_missing_or_string(topic, "Topic")
 
-    if not isinstance(nsfw, (_MissingSentinel, bool)):
-        raise Exception(f"NSFW must be a boolean, not {type(nsfw)} !")
+    _validate_missing_or_bool(nsfw, "NSFW")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
@@ -276,14 +268,11 @@ async def dshell_edit_voice_channel(ctx: Message,
     """
     Edits a voice channel on the server
     """
-    if not isinstance(position, (_MissingSentinel, int)):
-        raise Exception(f"Position must be an integer, not {type(position)} !")
+    _validate_missing_or_int(position, "Position")
 
-    if not isinstance(category, (_MissingSentinel, int)):
-        raise Exception(f"Category must be an integer, not {type(category)} !")
+    _validate_missing_or_int(category, "Category")
 
-    if not isinstance(bitrate, (_MissingSentinel, int)):
-        raise Exception(f"Bitrate must be an integer, not {type(bitrate)} !")
+    _validate_missing_or_int(bitrate, "Bitrate")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
@@ -319,14 +308,12 @@ async def dshell_create_thread_message(ctx: Message,
     if not isinstance(name, str):
         raise Exception(f"Name must be a string, not {type(name)} !")
 
-    if not isinstance(archive, (_MissingSentinel, int)):
-        raise Exception(f"Auto archive duration must be an integer, not {type(archive)} !")
+    _validate_missing_or_int(archive, "Auto archive duration")
 
     if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    if not isinstance(slowmode, (_MissingSentinel, int)):
-        raise Exception(f"Slowmode delay must be an integer, not {type(slowmode)} !")
+    _validate_missing_or_int(slowmode, "Slowmode delay")
 
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
@@ -358,17 +345,14 @@ async def dshell_edit_thread(ctx: Message,
 
     thread = await utils_get_thread(ctx, thread)
 
-    if not isinstance(name, (_MissingSentinel, str)):
-        raise Exception(f"Name must be a string, not {type(name)} !")
+    _validate_missing_or_string(name, "Name")
 
-    if not isinstance(archive, (_MissingSentinel, int)):
-        raise Exception(f"Auto archive duration must be an integer, not {type(archive)} !")
+    _validate_missing_or_int(archive, "Auto archive duration")
 
     if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    if not isinstance(slowmode, (_MissingSentinel, int)):
-        raise Exception(f"Slowmode delay must be an integer, not {type(slowmode)} !")
+    _validate_missing_or_int(slowmode, "Slowmode delay")
 
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
@@ -437,8 +421,7 @@ async def dshell_create_category(ctx: Message,
     Creates a category on the server
     """
 
-    if not isinstance(position, (_MissingSentinel, int)):
-        raise Exception(f"Position must be an integer, not {type(position)} !")
+    _validate_missing_or_int(position, "Position")
 
     created_category = await ctx.guild.create_category(str(name),
                                                       position=position,
@@ -456,8 +439,7 @@ async def dshell_edit_category(ctx: Message,
     """
     Edits a category on the server
     """
-    if not isinstance(position, (_MissingSentinel, int)):
-        raise Exception(f"Position must be an integer, not {type(position)} !")
+    _validate_missing_or_int(position, "Position")
 
     category_to_edit = ctx.channel.guild.get_channel(category)
 

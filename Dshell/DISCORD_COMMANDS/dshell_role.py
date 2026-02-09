@@ -5,7 +5,10 @@ from .utils.utils_global import utils_build_colour
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
                                           _validate_optional_bool,
-                                          _validate_optional_dict)
+                                          _validate_optional_dict,
+                                          _validate_missing_or_string,
+                                          _validate_missing_or_dict,
+                                          _validate_missing_or_bool)
 
 __all__ = [
     'dshell_create_role',
@@ -24,20 +27,16 @@ async def dshell_create_role(ctx: Message,
     """
     Creates a role on the server.
     """
-    if not isinstance(name, (str, _MissingSentinel)):
-        raise Exception(f"Name must be a string, not {type(name)} !")
+    _validate_missing_or_string(name, "Name")
 
-    if not isinstance(permissions, (dict, _MissingSentinel)):
-        raise Exception(f"Permissions must be a PermissionNode, not {type(permissions)} !")
+    _validate_missing_or_dict(permissions, "Permissions")
 
     if not isinstance(color, _MissingSentinel):
         color = utils_build_colour(color)
 
-    if not isinstance(hoist, (bool, _MissingSentinel)):
-        raise Exception(f"Hoist must be a boolean, not {type(permissions)} !")
+    _validate_missing_or_bool(hoist, "Hoist")
 
-    if not isinstance(mentionable, (bool, _MissingSentinel)):
-        raise Exception(f"Mentionable must be a boolean, not {type(permissions)} !")
+    _validate_missing_or_bool(mentionable, "Mentionable")
 
     if isinstance(permissions, dict):
         if None in permissions:
