@@ -15,7 +15,9 @@ from ..DISCORD_COMMANDS.dshell_ui import build_ui, rebuild_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
 from .dshell_scope import Scope, new_scope
 
-from Dshell.full_import import Union
+# Constants for sleep time limits
+MAX_SLEEP_TIME_SECONDS = 3600  # 1 hour
+MIN_SLEEP_TIME_SECONDS = 1
 
 
 
@@ -213,10 +215,10 @@ class DshellInterpreteur:
 
             elif isinstance(node, SleepNode):
                 sleep_time = await eval_expression(node.body, self)
-                if sleep_time > 3600:
-                    raise Exception(f"Sleep time is too long! ({sleep_time} seconds) - maximum is 3600 seconds)")
-                elif sleep_time < 1:
-                    raise Exception(f"Sleep time is too short! ({sleep_time} seconds) - minimum is 1 second)")
+                if sleep_time > MAX_SLEEP_TIME_SECONDS:
+                    raise Exception(f"Sleep time is too long! ({sleep_time} seconds) - maximum is {MAX_SLEEP_TIME_SECONDS} seconds)")
+                elif sleep_time < MIN_SLEEP_TIME_SECONDS:
+                    raise Exception(f"Sleep time is too short! ({sleep_time} seconds) - minimum is {MIN_SLEEP_TIME_SECONDS} second)")
 
                 await sleep(sleep_time)
 
@@ -231,7 +233,7 @@ class DshellInterpreteur:
                 if await self.eval_data_token(node.error_message):
                     raise RuntimeError("Execution stopped - EndNode encountered")
                 else:
-                    raise DshellInterpreterStopExecution()
+                    raise DshellInterpreterStopExecution("Execution stopped without error")
 
     async def eval_data_token(self, token: Token):
         """
