@@ -78,8 +78,8 @@ class DshellArguments:
 
     def add_non_specified_parameters(self, value: Any) -> None:
         """
-        Add a non-specified parameter.
-        :param value: The parameter value to add
+        Add a value to the non-specified parameters list.
+        :param value: The parameter value to add to the list
         """
         self.parameters['*'].value.append(value)
 
