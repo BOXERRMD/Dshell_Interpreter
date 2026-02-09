@@ -12,7 +12,10 @@ from Dshell.full_import import (Interaction,
 from .utils.utils_message import utils_autorised_mentions
 from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_embed,
-                                          _validate_optional_view)
+                                          _validate_optional_view,
+                                          _validate_optional_string,
+                                          _validate_optional_bool,
+                                          _validate_required_bool)
 
 async def dshell_respond_interaction(ctx: Interaction,
                                      content: str = None,
@@ -32,10 +35,14 @@ async def dshell_respond_interaction(ctx: Interaction,
     if not isinstance(ctx, Interaction):
         raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
 
+    _validate_optional_string(content, "Content", "sri")
     _validate_optional_number(delete, "Delete", "sri")
-
-    if not isinstance(hide, bool):
-        raise Exception(f'Hide parameter must be a boolean, not {type(hide)} !')
+    _validate_optional_bool(global_mentions, "Global mentions", "sri")
+    _validate_required_bool(everyone_mention, "Everyone mention", "sri")
+    _validate_required_bool(roles_mentions, "Roles mentions", "sri")
+    _validate_required_bool(users_mentions, "Users mentions", "sri")
+    _validate_required_bool(reply_mention, "Reply mention", "sri")
+    _validate_required_bool(hide, "Hide", "sri")
 
     allowed_mentions = utils_autorised_mentions(global_mentions,
                                                 everyone_mention,

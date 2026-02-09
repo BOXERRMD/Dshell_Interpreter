@@ -10,6 +10,8 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_view,
                                           _validate_optional_string,
                                           _validate_optional_int,
+                                          _validate_optional_bool,
+                                          _validate_required_bool,
                                           _validate_not_none)
 from .._DshellInterpreteur.cached_messages import dshell_cached_messages
 
@@ -54,6 +56,11 @@ async def dshell_send_message(ctx: Message,
     """
 
     _validate_optional_number(delete, "Delete", "sm")
+    _validate_optional_bool(global_mentions, "Global mentions", "sm")
+    _validate_required_bool(everyone_mention, "Everyone mention", "sm")
+    _validate_required_bool(roles_mentions, "Roles mentions", "sm")
+    _validate_required_bool(users_mentions, "Users mentions", "sm")
+    _validate_required_bool(reply_mention, "Reply mention", "sm")
 
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     allowed_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
@@ -99,7 +106,13 @@ async def dshell_respond_message(ctx: Message,
     """
     Responds to a message on Discord
     """
+    _validate_optional_string(content, "Content", "srm")
     _validate_optional_number(delete, "Delete", "srm")
+    _validate_optional_bool(global_mentions, "Global mentions", "srm")
+    _validate_required_bool(everyone_mention, "Everyone mention", "srm")
+    _validate_required_bool(roles_mentions, "Roles mentions", "srm")
+    _validate_required_bool(users_mentions, "Users mentions", "srm")
+    _validate_required_bool(reply_mention, "Reply mention", "srm")
 
     respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
