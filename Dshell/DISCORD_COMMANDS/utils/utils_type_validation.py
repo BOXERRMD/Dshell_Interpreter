@@ -19,10 +19,6 @@ __all__ = [
     "_validate_required_string",
     "_validate_required_dict",
     "_validate_missing_or_type",
-    "_validate_missing_or_bool",
-    "_validate_missing_or_int",
-    "_validate_missing_or_string",
-    "_validate_missing_or_dict",
 ]
 
 
@@ -279,58 +275,3 @@ def _validate_missing_or_type(value, value_name: str, *types):
         type_description = " or ".join(type_names)
         raise Exception(f"{value_name} must be {type_description}, not {type(value)} !")
 
-
-def _validate_missing_or_bool(value, param_name: str):
-    """
-    Validate that a value is either _MissingSentinel or a boolean.
-    
-    .. deprecated::
-        Use _validate_missing_or_type(value, param_name, bool) instead.
-    
-    :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :raises Exception: If the value is not _MissingSentinel and not a boolean
-    """
-    _validate_missing_or_type(value, param_name, bool)
-
-
-def _validate_missing_or_int(value, param_name: str):
-    """
-    Validate that a value is either _MissingSentinel or an integer.
-    
-    .. deprecated::
-        Use _validate_missing_or_type(value, param_name, int) instead.
-    
-    :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :raises Exception: If the value is not _MissingSentinel and not an integer
-    """
-    _validate_missing_or_type(value, param_name, int)
-
-
-def _validate_missing_or_string(value, param_name: str):
-    """
-    Validate that a value is either _MissingSentinel or a string.
-    
-    .. deprecated::
-        Use _validate_missing_or_type(value, param_name, str) instead.
-    
-    :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :raises Exception: If the value is not _MissingSentinel and not a string
-    """
-    _validate_missing_or_type(value, param_name, str)
-
-
-def _validate_missing_or_dict(value, param_name: str):
-    """
-    Validate that a value is either _MissingSentinel or a dict.
-    
-    .. deprecated::
-        Use _validate_missing_or_type(value, param_name, dict) instead.
-    
-    :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :raises Exception: If the value is not _MissingSentinel and not a dict
-    """
-    _validate_missing_or_type(value, param_name, dict)

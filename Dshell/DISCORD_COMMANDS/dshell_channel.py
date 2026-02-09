@@ -237,6 +237,10 @@ async def dshell_edit_text_channel(ctx: Message,
 
     _validate_missing_or_type(nsfw, "NSFW", bool)
 
+    _validate_missing_or_type(permissions, "Permissions", dict)
+
+    _validate_optional_string(reason, "Reason")
+
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
 
@@ -266,11 +270,19 @@ async def dshell_edit_voice_channel(ctx: Message,
     """
     Edits a voice channel on the server
     """
+    _validate_optional_int(channel, "Channel")
+
+    _validate_optional_string(name, "Name")
+
     _validate_missing_or_type(position, "Position", int)
 
     _validate_missing_or_type(category, "Category", int)
 
     _validate_missing_or_type(bitrate, "Bitrate", int)
+
+    _validate_missing_or_type(permissions, "Permissions", dict)
+
+    _validate_optional_string(reason, "Reason")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
