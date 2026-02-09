@@ -21,7 +21,9 @@ from .utils.utils_thread import utils_get_thread
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
                                           _validate_optional_bool,
-                                          _validate_missing_or_type)
+                                          _validate_missing_or_type,
+                                          _validate_not_none,
+                                          _validate_has_attribute)
 
 __all__ = [
     'dshell_get_channel',
@@ -387,6 +389,7 @@ async def dshell_get_thread(ctx: Message, message: Union[int, str] = None):
     else:
         message = target_message
 
+    # Return None if message doesn't have thread attribute (not raising error for this case)
     if not hasattr(message, 'thread'):
         return None
 
@@ -412,8 +415,7 @@ async def dshell_delete_thread(ctx: Message, thread: Union[int, str] = None, rea
     else:
         thread = target_message
 
-    if not hasattr(thread, 'thread'):
-        raise Exception("The specified message does not have a thread !")
+    _validate_has_attribute(thread, 'thread', "The specified message does not have a thread !")
 
     if thread.thread is None:
         raise Exception("The specified message does not have a thread !")
@@ -489,8 +491,7 @@ async def dshell_get_channel_category_id(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
     if channel_to_check.category is None:
         return None
@@ -504,8 +505,7 @@ async def dshell_get_channel_nsfw(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
     return channel_to_check.nsfw
 
@@ -516,11 +516,9 @@ async def dshell_get_channel_slowmode(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
-    if not hasattr(channel_to_check, 'slowmode_delay'):
-        raise Exception(f"Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, 'slowmode_delay', f"Channel {channel} is not a text channel !")
 
     return channel_to_check.slowmode_delay
 
@@ -531,11 +529,9 @@ async def dshell_get_channel_topic(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
-    if not hasattr(channel_to_check, 'topic'):
-        raise Exception(f"Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, 'topic', f"Channel {channel} is not a text channel !")
 
     return channel_to_check.topic
 
@@ -546,11 +542,9 @@ async def dshell_get_channel_threads(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
-    if not hasattr(channel_to_check, 'threads'):
-        raise Exception(f"Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, 'threads', f"Channel {channel} is not a text channel !")
 
 
     threads = ListNode([])
@@ -567,8 +561,7 @@ async def dshell_get_channel_position(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
     return channel_to_check.position
 
@@ -579,8 +572,7 @@ async def dshell_get_channel_url(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
     return channel_to_check.jump_url
 
@@ -591,8 +583,7 @@ async def dshell_get_channel_voice_members(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
     if not isinstance(channel_to_check, VoiceChannel):
         raise Exception(f"Channel {channel} is not a voice channel !")

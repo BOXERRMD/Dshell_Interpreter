@@ -11,7 +11,8 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_embed,
                                           _validate_optional_view,
                                           _validate_optional_string,
-                                          _validate_optional_int)
+                                          _validate_optional_int,
+                                          _validate_not_none)
 from .._DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Optional
@@ -398,8 +399,7 @@ async def dshell_get_channel_pined_messages(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_check is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
 
     pinned_messages = await channel_to_check.pins()
 

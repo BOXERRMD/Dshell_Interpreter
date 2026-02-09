@@ -19,6 +19,8 @@ __all__ = [
     "_validate_required_string",
     "_validate_required_dict",
     "_validate_missing_or_type",
+    "_validate_not_none",
+    "_validate_has_attribute",
 ]
 
 
@@ -274,4 +276,43 @@ def _validate_missing_or_type(value, value_name: str, *types):
         type_names = [_MissingSentinel.__name__] + [t.__name__ for t in types]
         type_description = " or ".join(type_names)
         raise Exception(f"{value_name} must be {type_description}, not {type(value)} !")
+
+
+def _validate_not_none(value, error_message: str):
+    """
+    Validate that a value is not None.
+    
+    This is a generic function to check if a value is None and raise a custom error message.
+    Useful for validating that objects (like channels, messages, etc.) were found/retrieved successfully.
+    
+    :param value: The value to check
+    :param error_message: Custom error message to raise if value is None
+    :raises Exception: If the value is None
+    
+    Example:
+        channel = ctx.channel.guild.get_channel(channel_id)
+        _validate_not_none(channel, f"Channel {channel_id} not found !")
+    """
+    if value is None:
+        raise Exception(error_message)
+
+
+def _validate_has_attribute(obj, attr_name: str, error_message: str):
+    """
+    Validate that an object has a specific attribute.
+    
+    This is a generic function to check if an object has an attribute using hasattr()
+    and raise a custom error message if it doesn't.
+    Useful for checking if objects have expected attributes (e.g., text channel has 'topic').
+    
+    :param obj: The object to check
+    :param attr_name: The name of the attribute to check for
+    :param error_message: Custom error message to raise if attribute is missing
+    :raises Exception: If the object doesn't have the specified attribute
+    
+    Example:
+        _validate_has_attribute(channel, 'topic', f"Channel {channel_id} is not a text channel !")
+    """
+    if not hasattr(obj, attr_name):
+        raise Exception(error_message)
 
