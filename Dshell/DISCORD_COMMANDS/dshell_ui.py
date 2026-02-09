@@ -22,6 +22,8 @@ from .utils.utils_type_validation import (_validate_optional_code_node,
                                           _validate_optional_int,
                                           _validate_optional_string)
 
+from .utils.utils_global import utils_refactor_emoji
+
 if TYPE_CHECKING:
     from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
@@ -48,6 +50,7 @@ async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: 
     style = args_button.pop('style', 'primary').lower()
     custom_id = args_button.pop('custom_id', 'ui_button_'+str(random()))
     row = args_button.pop('row', 0)
+    emoji = utils_refactor_emoji(args_button.pop('emoji', None))
 
     _validate_optional_code_node(code, "Button code", "build_ui_button")
 
@@ -60,6 +63,7 @@ async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: 
     args_button['custom_id'] = custom_id
     args_button['row'] = row
     args_button['style'] = ButtonStyle[style]
+    args_button['emoji'] = emoji
     args = args_button.pop('*', ())
     yield args, args_button, code
 
@@ -134,7 +138,7 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
         label = args_option.pop('label', None)
         value = args_option.pop('value', MISSING)
         description = args_option.pop('description', None)
-        emoji = args_option.pop('emoji', None)
+        emoji = utils_refactor_emoji(args_option.pop('emoji', None))
         default = args_option.pop('default', False)
 
         if label is None or not isinstance(label, str):

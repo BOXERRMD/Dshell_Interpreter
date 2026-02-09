@@ -273,3 +273,11 @@ def utils_build_colour(color: Union[int, "ListNode"]) -> Union[Colour, int]:
             return Colour.from_rgb(*color)
     else:
         raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")
+
+def utils_refactor_emoji(emoji: Union[str, None]) -> Union[str, None]:
+    """
+    Refactorise une chaine de caractère contenant un emoji pour enlever tous les espaces.
+    :param emoji: La chaine de caractère à refactoriser.
+    :return: La chaine de caractère refactorisée, ou None si l'emoji est None.
+    """
+    return emoji.replace(" ", "") if emoji else None
