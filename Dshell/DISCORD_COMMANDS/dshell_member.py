@@ -35,9 +35,34 @@ __all__ = [
 
 async def dshell_send_private_message(ctx: Message, message: str = None, member: int = None, delete: int = None, embeds = None, ):
     """
-    Sends a private message to a member.
-    If member is None, sends the message to the author of the command.
-    If delete is specified, deletes the message after the specified time in seconds.
+    Envoie un message privé à un membre Discord.
+    
+    Cette fonction envoie un message en privé (DM) à un membre du serveur.
+    Si aucun membre n'est spécifié, le message est envoyé à l'auteur de la commande.
+    Supporte les embeds et la suppression automatique après un délai.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param message: Le contenu du message à envoyer (optionnel)
+    :type message: str | None
+    :param member: L'ID du membre destinataire (par défaut: auteur de la commande)
+    :type member: int | None
+    :param delete: Temps en secondes avant suppression automatique du message (optionnel)
+    :type delete: int | None
+    :param embeds: Embed(s) à inclure (Embed unique ou ListNode) (optionnel)
+    :type embeds: Embed | ListNode | None
+    :return: L'ID du message envoyé
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé
+    :raises Exception: Si le format des embeds est invalide
+    
+    Example:
+        >>> # Envoyer un message à un membre
+        >>> await dshell_send_private_message(ctx, "Bonjour!", member=123456789)
+        111222333
+        >>> # Envoyer à l'auteur avec suppression après 10s
+        >>> await dshell_send_private_message(ctx, "Message temporaire", delete=10)
+        444555666
     """
     _CMD = "spm"
 
@@ -69,7 +94,25 @@ async def dshell_send_private_message(ctx: Message, message: str = None, member:
 
 async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     """
-    Bans a member from the server.
+    Bannit un membre du serveur Discord.
+    
+    Cette fonction bannit définitivement un membre du serveur. Le membre
+    ne pourra plus rejoindre le serveur à moins d'être débanni.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param member: L'ID du membre à bannir
+    :type member: int
+    :param reason: Raison du bannissement (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | MISSING
+    :return: L'ID du membre banni
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé dans le serveur
+    :raises TypeError: Si les types des paramètres sont incorrects
+    
+    Example:
+        >>> await dshell_ban_member(ctx, 123456789, reason="Spam")
+        123456789
     """
     _CMD = "bm"
 
@@ -88,7 +131,25 @@ async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
 
 async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
     """
-    Unbans a user from the server.
+    Débannit un utilisateur du serveur Discord.
+    
+    Cette fonction retire le bannissement d'un utilisateur, lui permettant
+    de rejoindre à nouveau le serveur.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param user: L'ID de l'utilisateur à débannir
+    :type user: int
+    :param reason: Raison du débannissement (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | MISSING
+    :return: L'ID de l'utilisateur débanni
+    :rtype: int
+    :raises Exception: Si l'utilisateur n'est pas dans la liste des bannis
+    :raises TypeError: Si les types des paramètres sont incorrects
+    
+    Example:
+        >>> await dshell_unban_member(ctx, 123456789, reason="Appel accepté")
+        123456789
     """
     _CMD = "um"
 
@@ -113,7 +174,25 @@ async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
 
 async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     """
-    Kicks a member from the server.
+    Expulse un membre du serveur Discord.
+    
+    Cette fonction expulse un membre du serveur. Contrairement au bannissement,
+    le membre peut rejoindre à nouveau le serveur avec une nouvelle invitation.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param member: L'ID du membre à expulser
+    :type member: int
+    :param reason: Raison de l'expulsion (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | MISSING
+    :return: L'ID du membre expulsé
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé dans le serveur
+    :raises TypeError: Si les types des paramètres sont incorrects
+    
+    Example:
+        >>> await dshell_kick_member(ctx, 123456789, reason="Comportement inapproprié")
+        123456789
     """
     _CMD = "km"
 
@@ -132,7 +211,29 @@ async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
 
 async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason: str = MISSING):
     """
-    Timeouts a member in the server for a specified duration.
+    Met un membre en timeout (temps mort) pour une durée spécifiée.
+    
+    Cette fonction empêche temporairement un membre d'envoyer des messages,
+    réagir, ou parler dans les canaux vocaux pendant la durée spécifiée.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param duration: Durée du timeout en secondes
+    :type duration: int
+    :param member: L'ID du membre à timeout (par défaut: auteur de la commande)
+    :type member: int | None
+    :param reason: Raison du timeout (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | MISSING
+    :return: L'ID du membre mis en timeout
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé
+    :raises TypeError: Si duration n'est pas un entier
+    :raises ValueError: Si duration est négatif
+    
+    Example:
+        >>> # Timeout de 60 secondes
+        >>> await dshell_timeout_member(ctx, 60, member=123456789, reason="Spam")
+        123456789
     """
     _CMD = "tm"
 
@@ -158,7 +259,25 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
 
 async def dshell_rename_member(ctx: Message, new_name, member=None):
     """
-    Renames a member in the server.
+    Renomme un membre sur le serveur (change son surnom).
+    
+    Cette fonction modifie le surnom (nickname) d'un membre sur le serveur.
+    Le nom d'utilisateur global Discord n'est pas modifié.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param new_name: Le nouveau surnom du membre
+    :type new_name: str
+    :param member: L'ID du membre à renommer (optionnel)
+    :type member: int | None
+    :return: L'ID du membre renommé
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé
+    :raises TypeError: Si new_name n'est pas une chaîne
+    
+    Example:
+        >>> await dshell_rename_member(ctx, "Super Modérateur", member=123456789)
+        123456789
     """
     _CMD = "rm"
 
@@ -177,7 +296,26 @@ async def dshell_rename_member(ctx: Message, new_name, member=None):
 
 async def dshell_check_permissions(ctx: Message, permissions, member=None):
     """
-    Checks if a member has specific permissions in the server.
+    Vérifie si un membre possède des permissions spécifiques sur le serveur.
+    
+    Cette fonction vérifie si un membre possède au moins une des permissions
+    spécifiées par le code de permissions fourni.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param permissions: Code des permissions à vérifier (entier de drapeaux)
+    :type permissions: int
+    :param member: L'ID du membre à vérifier (par défaut: auteur de la commande)
+    :type member: int | None
+    :return: True si le membre a au moins une des permissions, False sinon
+    :rtype: bool
+    :raises Exception: Si le membre n'est pas trouvé
+    :raises TypeError: Si permissions n'est pas un entier
+    
+    Example:
+        >>> # Vérifier permission administrateur (8)
+        >>> await dshell_check_permissions(ctx, 8, member=123456789)
+        True
     """
     _CMD = "cp"
 
@@ -202,8 +340,34 @@ async def dshell_check_permissions(ctx: Message, permissions, member=None):
 
 async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect: bool = False, reason=None):
     """
-    Moves a member to another channel.
-    If channel is None, disconnect the member from their current voice channel.
+    Déplace un membre vers un autre canal vocal ou le déconnecte.
+    
+    Cette fonction permet de déplacer un membre d'un canal vocal à un autre,
+    ou de le déconnecter complètement des canaux vocaux.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param member: L'ID du membre à déplacer (par défaut: auteur de la commande)
+    :type member: int | None
+    :param channel: L'ID du canal vocal de destination (optionnel)
+    :type channel: int | None
+    :param disconnect: Si True, déconnecte le membre au lieu de le déplacer
+    :type disconnect: bool
+    :param reason: Raison du déplacement (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | None
+    :return: L'ID du membre déplacé
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé
+    :raises Exception: Si le membre n'est pas dans un canal vocal
+    :raises Exception: Si le canal de destination n'est pas trouvé
+    
+    Example:
+        >>> # Déplacer vers canal 999888777
+        >>> await dshell_move_member(ctx, member=123456789, channel=999888777)
+        123456789
+        >>> # Déconnecter du vocal
+        >>> await dshell_move_member(ctx, member=123456789, disconnect=True)
+        123456789
     """
     _CMD = "mm"
 
@@ -234,7 +398,31 @@ async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect
 
 async def dshell_give_member_roles(ctx: Message, roles, member=None, reason=None):
     """
-    Give roles to the target member
+    Attribue un ou plusieurs rôles à un membre.
+    
+    Cette fonction ajoute des rôles à un membre sans retirer ses rôles existants.
+    Peut attribuer un seul rôle (int) ou plusieurs rôles (liste/ListNode).
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param roles: L'ID d'un rôle ou une liste d'IDs de rôles à attribuer
+    :type roles: int | ListNode | list
+    :param member: L'ID du membre (par défaut: auteur de la commande)
+    :type member: int | None
+    :param reason: Raison de l'attribution (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | None
+    :return: L'ID du membre modifié
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé
+    :raises Exception: Si un rôle n'est pas trouvé
+    
+    Example:
+        >>> # Attribuer un rôle
+        >>> await dshell_give_member_roles(ctx, 111222333, member=123456789)
+        123456789
+        >>> # Attribuer plusieurs rôles
+        >>> await dshell_give_member_roles(ctx, ListNode([111, 222, 333]))
+        123456789
     """
     # roles peut être int ou list, validation manuelle dans le corps de la fonction
     _CMD = "gmr"
@@ -268,7 +456,31 @@ async def dshell_give_member_roles(ctx: Message, roles, member=None, reason=None
 
 async def dshell_remove_member_roles(ctx: Message, roles, member=None, reason=None):
     """
-    Remove roles to the target member
+    Retire un ou plusieurs rôles d'un membre.
+    
+    Cette fonction retire des rôles spécifiques d'un membre tout en conservant
+    ses autres rôles. Peut retirer un seul rôle (int) ou plusieurs (liste/ListNode).
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param roles: L'ID d'un rôle ou une liste d'IDs de rôles à retirer
+    :type roles: int | ListNode | list
+    :param member: L'ID du membre (par défaut: auteur de la commande)
+    :type member: int | None
+    :param reason: Raison du retrait (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | None
+    :return: L'ID du membre modifié
+    :rtype: int
+    :raises Exception: Si le membre n'est pas trouvé
+    :raises Exception: Si le membre n'a pas un des rôles spécifiés
+    
+    Example:
+        >>> # Retirer un rôle
+        >>> await dshell_remove_member_roles(ctx, 111222333, member=123456789)
+        123456789
+        >>> # Retirer plusieurs rôles
+        >>> await dshell_remove_member_roles(ctx, ListNode([111, 222]))
+        123456789
     """
     # roles peut être int ou list, validation manuelle dans le corps de la fonction
     _CMD = "rmr"
