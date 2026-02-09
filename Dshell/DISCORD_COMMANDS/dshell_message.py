@@ -106,19 +106,21 @@ async def dshell_respond_message(ctx: Message,
     """
     Responds to a message on Discord
     """
-    _validate_optional_string(content, "Content", "srm")
-    _validate_optional_number(delete, "Delete", "srm")
-    _validate_optional_bool(global_mentions, "Global mentions", "srm")
-    _validate_required_bool(everyone_mention, "Everyone mention", "srm")
-    _validate_required_bool(roles_mentions, "Roles mentions", "srm")
-    _validate_required_bool(users_mentions, "Users mentions", "srm")
-    _validate_required_bool(reply_mention, "Reply mention", "srm")
+    _CMD = _CMD
+
+    _validate_optional_string(content, "Content", _CMD)
+    _validate_optional_number(delete, "Delete", _CMD)
+    _validate_optional_bool(global_mentions, "Global mentions", _CMD)
+    _validate_required_bool(everyone_mention, "Everyone mention", _CMD)
+    _validate_required_bool(roles_mentions, "Roles mentions", _CMD)
+    _validate_required_bool(users_mentions, "Users mentions", _CMD)
+    _validate_required_bool(reply_mention, "Reply mention", _CMD)
 
     respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
     mention_author = True if reply_mention else False
 
-    _validate_optional_embed(embeds, "Embeds", "srm")
+    _validate_optional_embed(embeds, "Embeds", _CMD)
 
     if embeds is None:
         embeds = ListNode([])
@@ -265,9 +267,11 @@ async def dshell_unpin_message(ctx: Message, message=None, reason=None):
     Unpin a message
     """
 
+    _CMD = _CMD
+
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
-    _validate_optional_string(reason, "Reason", "upm")
+    _validate_optional_string(reason, "Reason", _CMD)
 
     await target_message.unpin()
 
@@ -327,7 +331,9 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = No
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter", "gma")
+    _CMD = _CMD
+
+    _validate_optional_int(message, "Message parameter", _CMD)
 
     target_message = ctx
     if message is not None:
@@ -362,7 +368,9 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter", "gmc")
+    _CMD = _CMD
+
+    _validate_optional_int(message, "Message parameter", _CMD)
 
     target_message = ctx
     if message is not None:
@@ -383,7 +391,9 @@ async def dshell_get_message_attachments(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter", "gmat")
+    _CMD = _CMD
+
+    _validate_optional_int(message, "Message parameter", _CMD)
 
     target_message = ctx
     if message is not None:
@@ -432,7 +442,9 @@ async def dshell_is_message_system(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _validate_optional_int(message, "Message parameter", "ims")
+    _CMD = _CMD
+
+    _validate_optional_int(message, "Message parameter", _CMD)
 
     target_message = ctx
     if message is not None:

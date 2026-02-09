@@ -26,19 +26,21 @@ async def dshell_create_role(ctx: Message,
     """
     Creates a role on the server.
     """
-    _validate_missing_or_type(name, "Name", str, "cr")
+    _CMD = _CMD
 
-    _validate_missing_or_type(permissions, "Permissions", dict, "cr")
+    _validate_missing_or_type(name, "Name", str, _CMD)
 
-    _validate_missing_or_type(color, "Color", ListNode, int, "cr")
+    _validate_missing_or_type(permissions, "Permissions", dict, _CMD)
+
+    _validate_missing_or_type(color, "Color", ListNode, int, _CMD)
     if not isinstance(color, _MissingSentinel):
         color = utils_build_colour(color)
 
-    _validate_missing_or_type(hoist, "Hoist", bool, "cr")
+    _validate_missing_or_type(hoist, "Hoist", bool, _CMD)
 
-    _validate_missing_or_type(mentionable, "Mentionable", bool, "cr")
+    _validate_missing_or_type(mentionable, "Mentionable", bool, _CMD)
     
-    _validate_optional_string(reason, "Reason", "cr")
+    _validate_optional_string(reason, "Reason", _CMD)
 
     if isinstance(permissions, dict):
         if None in permissions:
@@ -59,7 +61,9 @@ async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reaso
     """
     Delete the role on the server
     """
-    _validate_optional_string(reason, "Reason", "dr")
+    _CMD = _CMD
+
+    _validate_optional_string(reason, "Reason", _CMD)
     
     from Dshell._DshellInterpreteur.dshell_interpreter import ListNode
     roles: Union[int, ListNode]
@@ -92,10 +96,12 @@ async def dshell_edit_role(ctx: Message,
     """
     Edit the current role
     """
-    _validate_required_int(role, "Role", "er")
-    _validate_optional_string(name, "Name", "er")
-    _validate_optional_dict(permissions, "Permissions", "er")
-    _validate_optional_string(reason, "Reason", "er")
+    _CMD = _CMD
+
+    _validate_required_int(role, "Role", _CMD)
+    _validate_optional_string(name, "Name", _CMD)
+    _validate_optional_dict(permissions, "Permissions", _CMD)
+    _validate_optional_string(reason, "Reason", _CMD)
     
     role_to_edit = ctx.guild.get_role(role)
 
@@ -107,11 +113,11 @@ async def dshell_edit_role(ctx: Message,
     if color is not None:
         color = utils_build_colour(color)
 
-    _validate_optional_bool(hoist, "Hoist", "er")
+    _validate_optional_bool(hoist, "Hoist", _CMD)
 
-    _validate_optional_bool(mentionable, "Mentionable", "er")
+    _validate_optional_bool(mentionable, "Mentionable", _CMD)
 
-    _validate_optional_int(position, "Position", "er")
+    _validate_optional_int(position, "Position", _CMD)
 
     await role_to_edit.edit(name=name if name is not None else role_to_edit.name,
                             permissions=permissions if permissions is not None else role_to_edit.permissions,

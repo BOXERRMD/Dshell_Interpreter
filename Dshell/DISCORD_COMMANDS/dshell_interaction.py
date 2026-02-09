@@ -31,18 +31,19 @@ async def dshell_respond_interaction(ctx: Interaction,
     """
     Responds to a message interaction on Discord
     """
+    _CMD = "sri"
 
     if not isinstance(ctx, Interaction):
         raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
 
-    _validate_optional_string(content, "Content", "sri")
-    _validate_optional_number(delete, "Delete", "sri")
-    _validate_optional_bool(global_mentions, "Global mentions", "sri")
-    _validate_required_bool(everyone_mention, "Everyone mention", "sri")
-    _validate_required_bool(roles_mentions, "Roles mentions", "sri")
-    _validate_required_bool(users_mentions, "Users mentions", "sri")
-    _validate_required_bool(reply_mention, "Reply mention", "sri")
-    _validate_required_bool(hide, "Hide", "sri")
+    _validate_optional_string(content, "Content", _CMD)
+    _validate_optional_number(delete, "Delete", _CMD)
+    _validate_optional_bool(global_mentions, "Global mentions", _CMD)
+    _validate_required_bool(everyone_mention, "Everyone mention", _CMD)
+    _validate_required_bool(roles_mentions, "Roles mentions", _CMD)
+    _validate_required_bool(users_mentions, "Users mentions", _CMD)
+    _validate_required_bool(reply_mention, "Reply mention", _CMD)
+    _validate_required_bool(hide, "Hide", _CMD)
 
     allowed_mentions = utils_autorised_mentions(global_mentions,
                                                 everyone_mention,
