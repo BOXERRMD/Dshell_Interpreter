@@ -15,7 +15,10 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_string,
                                           _validate_optional_int,
                                           _validate_required_int,
-                                          _validate_optional_embed)
+                                          _validate_required_string,
+                                          _validate_required_bool,
+                                          _validate_optional_embed,
+                                          _validate_missing_or_type)
 
 __all__ = [
     "dshell_send_private_message",
@@ -68,6 +71,9 @@ async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     """
     Bans a member from the server.
     """
+    _validate_required_int(member, "Member", "bm")
+    _validate_missing_or_type(reason, "Reason", str, "bm")
+    
     banned_member = ctx.channel.guild.get_member(member)
 
     if not banned_member:
@@ -82,6 +88,9 @@ async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
     """
     Unbans a user from the server.
     """
+    _validate_required_int(user, "User", "um")
+    _validate_missing_or_type(reason, "Reason", str, "um")
+    
     banned_users = ctx.channel.guild.bans()
     user_to_unban = None
 
@@ -102,6 +111,9 @@ async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     """
     Kicks a member from the server.
     """
+    _validate_required_int(member, "Member", "km")
+    _validate_missing_or_type(reason, "Reason", str, "km")
+    
     kicked_member = ctx.channel.guild.get_member(member)
 
     if not kicked_member:
@@ -116,6 +128,10 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
     """
     Timeouts a member in the server for a specified duration.
     """
+    _validate_required_int(duration, "Duration", "tm")
+    _validate_optional_int(member, "Member", "tm")
+    _validate_missing_or_type(reason, "Reason", str, "tm")
+    
     target_member = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
     if not target_member:
@@ -136,6 +152,9 @@ async def dshell_rename_member(ctx: Message, new_name, member=None):
     """
     Renames a member in the server.
     """
+    _validate_required_string(new_name, "New name", "rm")
+    _validate_optional_int(member, "Member", "rm")
+    
     renamed_member = ctx.channel.guild.get_member(member)
 
     if not renamed_member:
@@ -150,6 +169,10 @@ async def dshell_add_roles(ctx: Message, roles: list[int] | int, member=None, re
     """
     Adds roles to a member in the server.
     """
+    # roles peut être int ou list[int], on vérifie manuellement
+    _validate_optional_int(member, "Member", "add_roles")
+    _validate_optional_string(reason, "Reason", "add_roles")
+    
     target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
     if not target_member:
@@ -172,6 +195,10 @@ async def dshell_remove_roles(ctx: Message, roles: list[int] | int, member=None,
     """
     Removes roles from a member in the server.
     """
+    # roles peut être int ou list[int], on vérifie manuellement
+    _validate_optional_int(member, "Member", "remove_roles")
+    _validate_optional_string(reason, "Reason", "remove_roles")
+    
     target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
     if not target_member:
@@ -194,6 +221,9 @@ async def dshell_check_permissions(ctx: Message, permissions, member=None):
     """
     Checks if a member has specific permissions in the server.
     """
+    _validate_required_int(permissions, "Permissions", "cp")
+    _validate_optional_int(member, "Member", "cp")
+    
     target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
     if not target_member:
@@ -215,6 +245,11 @@ async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect
     Moves a member to another channel.
     If channel is None, disconnect the member from their current voice channel.
     """
+    _validate_optional_int(member, "Member", "mm")
+    _validate_optional_int(channel, "Channel", "mm")
+    _validate_required_bool(disconnect, "Disconnect", "mm")
+    _validate_optional_string(reason, "Reason", "mm")
+    
     target_member = ctx.author if member is None else ctx.channel.guild.get_member(member)
     target_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -239,6 +274,10 @@ async def dshell_give_member_roles(ctx: Message, roles, member=None, reason=None
     """
     Give roles to the target member
     """
+    # roles peut être int ou list, validation manuelle dans le corps de la fonction
+    _validate_optional_int(member, "Member", "gmr")
+    _validate_optional_string(reason, "Reason", "gmr")
+    
     target_member = ctx.author if member is None else ctx.guild.get_member(member)
 
     if target_member is None:
@@ -267,6 +306,10 @@ async def dshell_remove_member_roles(ctx: Message, roles, member=None, reason=No
     """
     Remove roles to the target member
     """
+    # roles peut être int ou list, validation manuelle dans le corps de la fonction
+    _validate_optional_int(member, "Member", "rmr")
+    _validate_optional_string(reason, "Reason", "rmr")
+    
     target_member = ctx.author if member is None else ctx.guild.get_member(member)
 
     if target_member is None:
