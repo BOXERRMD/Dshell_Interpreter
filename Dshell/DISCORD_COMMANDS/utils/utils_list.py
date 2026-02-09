@@ -10,6 +10,10 @@ __all__ = [
 
 from ..._DshellParser.ast_nodes import ListNode
 
+from .utils_type_validation import (_validate_required_list_node,
+                                    _validate_required_int,
+                                    _validate_required_bool)
+
 async def utils_list_add(ctx, value: ListNode, *elements):
     """
     Add an element to a list
@@ -17,8 +21,7 @@ async def utils_list_add(ctx, value: ListNode, *elements):
     :param elements:
     :return:
     """
-    if not isinstance(value, ListNode):
-        raise TypeError("value must be a list in add command")
+    _validate_required_list_node(value, "value", "add")
 
     for elem in elements:
             value.add(elem)
@@ -33,8 +36,7 @@ async def utils_list_remove(ctx, value: ListNode, element, count: int = 1):
     :param count:
     :return:
     """
-    if not isinstance(value, ListNode):
-        raise TypeError("value must be a list in remove command")
+    _validate_required_list_node(value, "value", "remove")
 
     value.remove(element, count)
     return value
@@ -45,8 +47,7 @@ async def utils_list_clear(ctx, value: ListNode):
     :param value:
     :return:
     """
-    if not isinstance(value, ListNode):
-        raise TypeError("value must be a list in clear command")
+    _validate_required_list_node(value, "value", "clear")
     value.clear()
     return value
 
@@ -57,10 +58,8 @@ async def utils_list_pop(ctx, value: ListNode, index: int = -1):
     :param index:
     :return:
     """
-    if not isinstance(value, ListNode):
-        raise TypeError("value must be a list in pop command")
-    if not isinstance(index, int):
-        raise TypeError("index must be an integer in pop command")
+    _validate_required_list_node(value, "value", "pop")
+    _validate_required_int(index, "index", "pop")
     return value.pop(index)
 
 async def utils_list_sort(ctx, value: ListNode, reverse: bool = False):
@@ -70,10 +69,8 @@ async def utils_list_sort(ctx, value: ListNode, reverse: bool = False):
     :param reverse:
     :return:
     """
-    if not isinstance(value, ListNode):
-        raise TypeError("value must be a list in sort command")
-    if not isinstance(reverse, bool):
-        raise TypeError("reverse must be a boolean in sort command")
+    _validate_required_list_node(value, "value", "sort")
+    _validate_required_bool(reverse, "reverse", "sort")
     value.sort(reverse=reverse)
     return value
 
@@ -83,8 +80,7 @@ async def utils_list_reverse(ctx, value: ListNode):
     :param value:
     :return:
     """
-    if not isinstance(value, ListNode):
-        raise TypeError("value must be a list in reverse command")
+    _validate_required_list_node(value, "value", "reverse")
     value.reverse()
     return value
 
@@ -95,8 +91,6 @@ async def utils_list_get_value(ctx, value: ListNode, index: int = 0):
     :param index:
     :return:
     """
-    if not isinstance(value, ListNode):
-        raise TypeError("value must be a list in get command")
-    if not isinstance(index, int):
-        raise TypeError("index must be an integer in get command")
+    _validate_required_list_node(value, "value", "get")
+    _validate_required_int(index, "index", "get")
     return value[index]

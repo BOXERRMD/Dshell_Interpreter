@@ -31,6 +31,10 @@ from Dshell.full_import import (random,
 
 from ..._DshellParser.ast_nodes import ListNode
 
+from .utils_type_validation import (_validate_optional_list_node,
+                                    _validate_required_int,
+                                    _validate_required_string)
+
 
 class DiscordType(StrEnum):
     MEMBER = "member"
@@ -91,8 +95,7 @@ async def utils_random(ctx: Message, value: Optional["ListNode"] = None):
     :param value:
     :return:
     """
-    if value is not None and not isinstance(value, ListNode):
-        raise TypeError(f"value must be a list in random command, not {type(value)}")
+    _validate_optional_list_node(value, "value", "random")
 
     if value is None:
         return random()
@@ -106,8 +109,7 @@ async def utils_get_name(ctx : Message, value: int) -> Union[str, None]:
     :return:
     """
 
-    if not isinstance(value, int):
-        raise TypeError(f"value must be an int in name command, not {type(value)}")
+    _validate_required_int(value, "value", "name")
 
     guild = ctx.guild
     result = None
@@ -131,8 +133,7 @@ async def utils_get_id(ctx : Message, value: str) -> Union[int, None]:
     :return:
     """
 
-    if not isinstance(value, str):
-        raise TypeError(f"value must be a str in id command, not {type(value)}")
+    _validate_required_string(value, "value", "id")
 
     guild = ctx.guild
     result = None
@@ -155,8 +156,7 @@ async def utils_get_roles(ctx: Message, value: int):
     :return:
     """
 
-    if not isinstance(value, int):
-        raise TypeError(f"value must be an int in roles command, not {type(value)}")
+    _validate_required_int(value, "value", "roles")
 
     guild = ctx.guild
 

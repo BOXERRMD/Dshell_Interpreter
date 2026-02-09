@@ -6,6 +6,8 @@ from Dshell.full_import import (Message,
                             PermissionOverwrite)
 
 from .utils_global import DiscordType, utils_what_discord_type_is
+from .utils_type_validation import (_validate_required_int,
+                                    _validate_required_dict)
 
 async def utils_has_permissions(ctx: Message, member: int, permission: dict[None, PermissionOverwrite]) -> bool:
     """
@@ -15,11 +17,9 @@ async def utils_has_permissions(ctx: Message, member: int, permission: dict[None
     :return:
     """
 
-    if not isinstance(member, int):
-        raise TypeError(f"member must be an int in has_perms command, not {type(member)}")
+    _validate_required_int(member, "member", "has_perms")
 
-    if not isinstance(permission, dict):
-        raise TypeError(f"permissions must be a permission bloc in has_perms command, not {type(permission)}")
+    _validate_required_dict(permission, "permissions", "has_perms")
 
     if None not in permission:
         raise ValueError(f"permissions must have simple 'allow' permission in has_perms command, not {permission.keys()}")

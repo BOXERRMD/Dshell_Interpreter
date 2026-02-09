@@ -7,6 +7,9 @@ from ..._DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Union
 
+from .utils_type_validation import (_validate_optional_bool,
+                                    _validate_required_bool)
+
 def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMessage, Message]:
     """
     Returns the message object of the specified message ID or link.
@@ -53,20 +56,15 @@ def utils_autorised_mentions(global_mentions: bool = None,
 
     from discord import AllowedMentions
 
-    if global_mentions is not None and not isinstance(global_mentions, bool):
-        raise Exception(f'Mention parameter must be a boolean or None, not {type(global_mentions)} !')
+    _validate_optional_bool(global_mentions, "Mention parameter")
 
-    if not isinstance(everyone_mention, bool):
-        raise Exception(f'Everyone mention parameter must be a boolean, not {type(everyone_mention)} !')
+    _validate_required_bool(everyone_mention, "Everyone mention parameter")
 
-    if not isinstance(roles_mentions, bool):
-        raise Exception(f'Roles mention parameter must be a boolean, not {type(roles_mentions)} !')
+    _validate_required_bool(roles_mentions, "Roles mention parameter")
 
-    if not isinstance(users_mentions, bool):
-        raise Exception(f'Users mention parameter must be a boolean, not {type(users_mentions)} !')
+    _validate_required_bool(users_mentions, "Users mention parameter")
 
-    if not isinstance(reply_mention, bool):
-        raise Exception(f'Reply mention parameter must be a boolean, not {type(reply_mention)} !')
+    _validate_required_bool(reply_mention, "Reply mention parameter")
 
     if global_mentions is True:
         return AllowedMentions.all()

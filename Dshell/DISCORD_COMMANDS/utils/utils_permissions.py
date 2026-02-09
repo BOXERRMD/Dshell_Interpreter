@@ -15,6 +15,8 @@ from ..._DshellInterpreteur.utils_interpreter import regroupe_commandes
 
 from .utils_global import utils_what_discord_type_is, DiscordType
 
+from .utils_type_validation import _validate_required_dict
+
 if TYPE_CHECKING:
     from ..._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
@@ -22,11 +24,9 @@ async def utils_update_permissions(ctx: Message,
                                    permission1: dict[Union[Member, Role, None], PermissionOverwrite],
                                    permission2: dict[Union[Member, Role, None], PermissionOverwrite]) -> dict:
 
-    if not isinstance(permission1, dict):
-        raise ValueError(f"permission1 must be a permission block, not {type(permission1).__name__}")
+    _validate_required_dict(permission1, "permission1")
 
-    if not isinstance(permission2, dict):
-        raise ValueError(f"permission2 must be a permission block, not {type(permission2).__name__}")
+    _validate_required_dict(permission2, "permission2")
 
     permission1.update(permission2)
 
