@@ -268,7 +268,7 @@ async def dshell_unpin_message(ctx: Message, message=None, reason=None):
     Unpin a message
     """
 
-    _CMD = _CMD
+    _CMD = "upinm"
 
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
@@ -443,7 +443,7 @@ async def dshell_is_message_system(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _CMD = _CMD
+    _CMD = "ims"
 
     _validate_optional_int(message, "Message parameter", _CMD)
 

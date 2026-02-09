@@ -26,8 +26,6 @@ __all__ = [
     "dshell_unban_member",
     "dshell_kick_member",
     "dshell_rename_member",
-    "dshell_add_roles",
-    "dshell_remove_roles",
     "dshell_check_permissions",
     "dshell_timeout_member",
     "dshell_move_member",
@@ -41,7 +39,7 @@ async def dshell_send_private_message(ctx: Message, message: str = None, member:
     If member is None, sends the message to the author of the command.
     If delete is specified, deletes the message after the specified time in seconds.
     """
-    _CMD = _CMD
+    _CMD = "spm"
 
     _validate_optional_string(message, "Message", _CMD)
     _validate_optional_int(member, "Member", _CMD)
@@ -73,7 +71,7 @@ async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     """
     Bans a member from the server.
     """
-    _CMD = _CMD
+    _CMD = "bm"
 
     _validate_required_int(member, "Member", _CMD)
     _validate_missing_or_type(reason, "Reason", str, _CMD)
@@ -92,7 +90,7 @@ async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
     """
     Unbans a user from the server.
     """
-    _CMD = _CMD
+    _CMD = "um"
 
     _validate_required_int(user, "User", _CMD)
     _validate_missing_or_type(reason, "Reason", str, _CMD)
@@ -117,7 +115,7 @@ async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     """
     Kicks a member from the server.
     """
-    _CMD = _CMD
+    _CMD = "km"
 
     _validate_required_int(member, "Member", _CMD)
     _validate_missing_or_type(reason, "Reason", str, _CMD)
@@ -136,7 +134,7 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
     """
     Timeouts a member in the server for a specified duration.
     """
-    _CMD = _CMD
+    _CMD = "tm"
 
     _validate_required_int(duration, "Duration", _CMD)
     _validate_optional_int(member, "Member", _CMD)
@@ -162,7 +160,7 @@ async def dshell_rename_member(ctx: Message, new_name, member=None):
     """
     Renames a member in the server.
     """
-    _CMD = _CMD
+    _CMD = "rm"
 
     _validate_required_string(new_name, "New name", _CMD)
     _validate_optional_int(member, "Member", _CMD)
@@ -177,67 +175,11 @@ async def dshell_rename_member(ctx: Message, new_name, member=None):
     return renamed_member.id
 
 
-async def dshell_add_roles(ctx: Message, roles: list[int] | int, member=None, reason: str = None):
-    """
-    Adds roles to a member in the server.
-    """
-    # roles peut être int ou list[int], on vérifie manuellement
-    _CMD = _CMD
-
-    _validate_optional_int(member, "Member", _CMD)
-    _validate_optional_string(reason, "Reason", _CMD)
-    
-    target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
-
-    if not target_member:
-        raise Exception(f'Member {member} not found in the server !')
-
-    if isinstance(roles, int):
-        roles = [roles]
-
-    roles_to_add = [ctx.channel.guild.get_role(role_id) for role_id in roles if ctx.channel.guild.get_role(role_id)]
-
-    if not roles_to_add:
-        raise Exception(f'No role found !')
-
-    await target_member.add_roles(*roles_to_add, reason=reason)
-
-    return target_member.id
-
-
-async def dshell_remove_roles(ctx: Message, roles: list[int] | int, member=None, reason: str = None):
-    """
-    Removes roles from a member in the server.
-    """
-    # roles peut être int ou list[int], on vérifie manuellement
-    _CMD = _CMD
-
-    _validate_optional_int(member, "Member", _CMD)
-    _validate_optional_string(reason, "Reason", _CMD)
-    
-    target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
-
-    if not target_member:
-        raise Exception(f'Member {member} not found in the server !')
-
-    if isinstance(roles, int):
-        roles = [roles]
-
-    roles_to_remove = [ctx.channel.guild.get_role(role_id) for role_id in roles if ctx.channel.guild.get_role(role_id)]
-
-    if not roles_to_remove:
-        raise Exception(f'No role found !')
-
-    await target_member.remove_roles(*roles_to_remove, reason=reason)
-
-    return target_member.id
-
-
 async def dshell_check_permissions(ctx: Message, permissions, member=None):
     """
     Checks if a member has specific permissions in the server.
     """
-    _CMD = _CMD
+    _CMD = "cp"
 
     _validate_required_int(permissions, "Permissions", _CMD)
     _validate_optional_int(member, "Member", _CMD)
@@ -263,7 +205,7 @@ async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect
     Moves a member to another channel.
     If channel is None, disconnect the member from their current voice channel.
     """
-    _CMD = _CMD
+    _CMD = "mm"
 
     _validate_optional_int(member, "Member", _CMD)
     _validate_optional_int(channel, "Channel", _CMD)
@@ -295,7 +237,7 @@ async def dshell_give_member_roles(ctx: Message, roles, member=None, reason=None
     Give roles to the target member
     """
     # roles peut être int ou list, validation manuelle dans le corps de la fonction
-    _CMD = _CMD
+    _CMD = "gmr"
 
     _validate_optional_int(member, "Member", _CMD)
     _validate_optional_string(reason, "Reason", _CMD)
@@ -329,7 +271,7 @@ async def dshell_remove_member_roles(ctx: Message, roles, member=None, reason=No
     Remove roles to the target member
     """
     # roles peut être int ou list, validation manuelle dans le corps de la fonction
-    _CMD = _CMD
+    _CMD = "rmr"
 
     _validate_optional_int(member, "Member", _CMD)
     _validate_optional_string(reason, "Reason", _CMD)

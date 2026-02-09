@@ -1,4 +1,5 @@
 from Dshell.full_import import get, Message
+from .utils.utils_type_validation import _validate_required_string
 
 __all__ = [
     'dshell_get_pastbin'
@@ -9,8 +10,9 @@ async def dshell_get_pastbin(ctx: Message, code: str) -> "ListNode":
     """
     Get a pastbin from a code snippet.
     """
-    if not isinstance(code, str):
-        raise Exception(f'Code must be a string, not {type(code)} !')
+    _CMD = "gp"
+
+    _validate_required_string(ctx, code, _CMD)
 
     from .._DshellParser.ast_nodes import ListNode
 

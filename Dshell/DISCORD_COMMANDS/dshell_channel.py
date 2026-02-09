@@ -70,7 +70,7 @@ async def dshell_get_channels(ctx: Message, name=None, regex=None):
     Returns a list of channels with the same name and/or matching the same regex.
     If neither is set, it will return all channels in the server.
     """
-    _CMD = _CMD
+    _CMD = "gcs"
 
     _validate_optional_string(name, "Name", _CMD)
     _validate_optional_string(regex, "Regex", _CMD)
@@ -95,7 +95,7 @@ async def dshell_get_channels_in_category(ctx: Message,
     If neither is set, it will return all channels in the specified category.
     """
 
-    _CMD = _CMD
+    _CMD = "gccs"
 
     _validate_optional_int(category, "Category", _CMD)
 
@@ -135,7 +135,7 @@ async def dshell_create_text_channel(ctx: Message,
     Creates a text channel on the server
     """
 
-    _CMD = _CMD
+    _CMD = "cc"
 
     _validate_required_string(name, "Name", _CMD)
 
@@ -177,7 +177,7 @@ async def dshell_create_voice_channel(ctx: Message,
     """
     Creates a voice channel on the server
     """
-    _CMD = _CMD
+    _CMD = "cvc"
 
     _validate_required_string(name, "Name", _CMD)
 
@@ -211,7 +211,7 @@ async def dshell_delete_channel(ctx: Message,
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
     """
-    _CMD = _CMD
+    _CMD = "dc"
 
     _validate_optional_int(channel, "Channel", _CMD)
     _validate_optional_int(timeout, "Timeout", _CMD)
@@ -233,7 +233,7 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
     Deletes all channels with the same name and/or matching the same regex.
     If neither is set, it will delete all channels with the same name as the one where the command was executed.
     """
-    _CMD = _CMD
+    _CMD = "dcs"
 
     _validate_optional_string(name, "Name", _CMD)
     _validate_optional_string(regex, "Regex", _CMD)
@@ -261,7 +261,7 @@ async def dshell_edit_text_channel(ctx: Message,
     """
     Edits a text channel on the server
     """
-    _CMD = _CMD
+    _CMD = "ec"
 
     _validate_optional_string(name, "Name", _CMD)
 
@@ -308,7 +308,7 @@ async def dshell_edit_voice_channel(ctx: Message,
     """
     Edits a voice channel on the server
     """
-    _CMD = _CMD
+    _CMD = "evc"
 
     _validate_optional_int(channel, "Channel", _CMD)
 
@@ -349,7 +349,7 @@ async def dshell_create_thread_message(ctx: Message,
     Creates a thread from a message.
     """
 
-    _CMD = _CMD
+    _CMD = "ct"
 
     if message is None:
         message = ctx.id
@@ -389,7 +389,7 @@ async def dshell_edit_thread(ctx: Message,
                              reason=None):
     """ Edits a thread.
     """
-    _CMD = _CMD
+    _CMD = "et"
 
     if thread is None:
         thread = ctx.thread
@@ -424,6 +424,8 @@ async def dshell_get_thread(ctx: Message, message: Union[int, str] = None):
     Returns the thread object of the specified thread ID.
     """
 
+    _CMD = "gt"
+
     if message is None:
         message = ctx.id
 
@@ -450,7 +452,7 @@ async def dshell_delete_thread(ctx: Message, thread: Union[int, str] = None, rea
     Deletes a thread.
     """
 
-    _CMD = _CMD
+    _CMD = "dt"
 
     if thread is None:
         thread = ctx.id
@@ -479,7 +481,7 @@ async def dshell_create_category(ctx: Message,
     Creates a category on the server
     """
 
-    _CMD = _CMD
+    _CMD = "cca"
 
     _validate_missing_or_type(position, "Position", int, _CMD)
 
@@ -499,7 +501,7 @@ async def dshell_edit_category(ctx: Message,
     """
     Edits a category on the server
     """
-    _CMD = _CMD
+    _CMD = "eca"
 
     _validate_missing_or_type(position, "Position", int, _CMD)
 
@@ -519,6 +521,7 @@ async def dshell_delete_category(ctx: Message, category=None, reason=None):
     """
     Deletes a category.
     """
+    _CMD = "dca"
 
     if category is None and ctx.channel.category is None:
         raise Exception("Category must be specified !")
@@ -538,7 +541,7 @@ async def dshell_get_channel_category_id(ctx: Message, channel=None):
     """
     Returns the category ID of a channel.
     """
-    _CMD = _CMD
+    _CMD = "gcc"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -554,7 +557,7 @@ async def dshell_get_channel_nsfw(ctx: Message, channel=None):
     """
     Returns if the channel is NSFW.
     """
-    _CMD = _CMD
+    _CMD = "gcnsfw"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -567,7 +570,7 @@ async def dshell_get_channel_slowmode(ctx: Message, channel=None):
     """
     Returns the slowmode delay of a channel.
     """
-    _CMD = _CMD
+    _CMD = "gcsl"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -582,7 +585,7 @@ async def dshell_get_channel_topic(ctx: Message, channel=None):
     """
     Returns the topic of a channel.
     """
-    _CMD = _CMD
+    _CMD = "gct"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -597,7 +600,7 @@ async def dshell_get_channel_threads(ctx: Message, channel=None):
     """
     Returns the list of threads in a channel.
     """
-    _CMD = _CMD
+    _CMD = "gcth"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -618,7 +621,7 @@ async def dshell_get_channel_position(ctx: Message, channel=None):
     """
     Returns the position of a channel.
     """
-    _CMD = _CMD
+    _CMD = "gcp"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -631,7 +634,7 @@ async def dshell_get_channel_url(ctx: Message, channel=None):
     """
     Returns the URL of a channel.
     """
-    _CMD = _CMD
+    _CMD = "gcurl"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
@@ -644,7 +647,7 @@ async def dshell_get_channel_voice_members(ctx: Message, channel=None):
     """
     Returns the list of members in a voice channel.
     """
-    _CMD = _CMD
+    _CMD = "gvcm"
 
     _validate_optional_int(channel, "Channel", _CMD)
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)

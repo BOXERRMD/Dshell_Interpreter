@@ -26,7 +26,7 @@ async def dshell_create_role(ctx: Message,
     """
     Creates a role on the server.
     """
-    _CMD = _CMD
+    _CMD = "cr"
 
     _validate_missing_or_type(name, "Name", str, _CMD)
 
@@ -61,11 +61,13 @@ async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reaso
     """
     Delete the role on the server
     """
-    _CMD = _CMD
+    _CMD = "dr"
+
+    if roles is not None and not isinstance(roles, (int, ListNode)):
+        raise Exception(f"Roles must be a int, role mention or NodeList of both, not {type(roles)} !")
 
     _validate_optional_string(reason, "Reason", _CMD)
-    
-    from Dshell._DshellInterpreteur.dshell_interpreter import ListNode
+
     roles: Union[int, ListNode]
     if not isinstance(roles, (int, ListNode)):
         raise Exception(f"Role must be a int, role mention or NodeList of both, not {type(roles)} !")
@@ -96,7 +98,7 @@ async def dshell_edit_role(ctx: Message,
     """
     Edit the current role
     """
-    _CMD = _CMD
+    _CMD = "er"
 
     _validate_required_int(role, "Role", _CMD)
     _validate_optional_string(name, "Name", _CMD)

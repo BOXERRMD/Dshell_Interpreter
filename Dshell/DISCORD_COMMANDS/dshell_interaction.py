@@ -53,7 +53,7 @@ async def dshell_respond_interaction(ctx: Interaction,
 
     from Dshell._DshellParser.ast_nodes import ListNode
 
-    _validate_optional_embed(embeds, "Embeds", "sri")
+    _validate_optional_embed(embeds, "Embeds", _CMD)
 
     if embeds is None:
         embeds = ListNode([])
@@ -61,7 +61,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    _validate_optional_view(view, "View", "sri")
+    _validate_optional_view(view, "View", _CMD)
 
     sended_message = await ctx.response.send_message(
                                      content=str(content),
