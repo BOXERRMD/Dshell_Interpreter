@@ -54,13 +54,14 @@ async def dshell_send_message(ctx: Message,
     """
     Sends a message on Discord
     """
+    _CMD = "sm"
 
-    _validate_optional_number(delete, "Delete", "sm")
-    _validate_optional_bool(global_mentions, "Global mentions", "sm")
-    _validate_required_bool(everyone_mention, "Everyone mention", "sm")
-    _validate_required_bool(roles_mentions, "Roles mentions", "sm")
-    _validate_required_bool(users_mentions, "Users mentions", "sm")
-    _validate_required_bool(reply_mention, "Reply mention", "sm")
+    _validate_optional_number(delete, "Delete", _CMD)
+    _validate_optional_bool(global_mentions, "Global mentions", _CMD)
+    _validate_required_bool(everyone_mention, "Everyone mention", _CMD)
+    _validate_required_bool(roles_mentions, "Roles mentions", _CMD)
+    _validate_required_bool(users_mentions, "Users mentions", _CMD)
+    _validate_required_bool(reply_mention, "Reply mention", _CMD)
 
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     allowed_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
@@ -70,7 +71,7 @@ async def dshell_send_message(ctx: Message,
 
 
 
-    _validate_optional_embed(embeds, "Embeds", "sm")
+    _validate_optional_embed(embeds, "Embeds", _CMD)
 
     if embeds is None:
         embeds = ListNode([])
@@ -78,7 +79,7 @@ async def dshell_send_message(ctx: Message,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    _validate_optional_view(view, "View", "sm")
+    _validate_optional_view(view, "View", _CMD)
 
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,
@@ -106,8 +107,8 @@ async def dshell_respond_message(ctx: Message,
     """
     Responds to a message on Discord
     """
-    _CMD = _CMD
-
+    _CMD = "srm"
+    
     _validate_optional_string(content, "Content", _CMD)
     _validate_optional_number(delete, "Delete", _CMD)
     _validate_optional_bool(global_mentions, "Global mentions", _CMD)
@@ -331,7 +332,7 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = No
     :param message: message ID
     :return:
     """
-    _CMD = _CMD
+    _CMD = "gma"
 
     _validate_optional_int(message, "Message parameter", _CMD)
 
@@ -368,7 +369,7 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _CMD = _CMD
+    _CMD = "gmc"
 
     _validate_optional_int(message, "Message parameter", _CMD)
 
@@ -391,7 +392,7 @@ async def dshell_get_message_attachments(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    _CMD = _CMD
+    _CMD = "gmat"
 
     _validate_optional_int(message, "Message parameter", _CMD)
 
