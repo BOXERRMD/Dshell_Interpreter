@@ -6,6 +6,7 @@ from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
                                           _validate_optional_bool,
                                           _validate_optional_dict,
+                                          _validate_required_int,
                                           _validate_missing_or_type)
 
 __all__ = [
@@ -29,12 +30,15 @@ async def dshell_create_role(ctx: Message,
 
     _validate_missing_or_type(permissions, "Permissions", dict, "cr")
 
+    _validate_missing_or_type(color, "Color", ListNode, int, "cr")
     if not isinstance(color, _MissingSentinel):
         color = utils_build_colour(color)
 
     _validate_missing_or_type(hoist, "Hoist", bool, "cr")
 
     _validate_missing_or_type(mentionable, "Mentionable", bool, "cr")
+    
+    _validate_optional_string(reason, "Reason", "cr")
 
     if isinstance(permissions, dict):
         if None in permissions:
@@ -55,6 +59,8 @@ async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reaso
     """
     Delete the role on the server
     """
+    _validate_optional_string(reason, "Reason", "dr")
+    
     from Dshell._DshellInterpreteur.dshell_interpreter import ListNode
     roles: Union[int, ListNode]
     if not isinstance(roles, (int, ListNode)):
@@ -86,14 +92,12 @@ async def dshell_edit_role(ctx: Message,
     """
     Edit the current role
     """
-    if not isinstance(role, int):
-        raise Exception(f"Role must be a int or role mention not {type(role)} !")
-
-    role_to_edit = ctx.guild.get_role(role)
-
+    _validate_required_int(role, "Role", "er")
     _validate_optional_string(name, "Name", "er")
-
     _validate_optional_dict(permissions, "Permissions", "er")
+    _validate_optional_string(reason, "Reason", "er")
+    
+    role_to_edit = ctx.guild.get_role(role)
 
     if isinstance(permissions, dict):
         if None in permissions:
