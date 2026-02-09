@@ -49,7 +49,7 @@ async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: 
     custom_id = args_button.pop('custom_id', 'ui_button_'+str(random()))
     row = args_button.pop('row', 0)
 
-    _validate_optional_code_node(code, "Button code")
+    _validate_optional_code_node(code, "Button code", "build_ui_button")
 
     if not isinstance(custom_id, str):
         raise TypeError(f"Button custom_id must be a string, not {type(custom_id)} !")
@@ -84,7 +84,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     placeholder = args_select.get('placeholder', "")
     row = args_select.pop('row', 0)
 
-    _validate_optional_code_node(code, "Select code")
+    _validate_optional_code_node(code, "Select code", "build_ui_select")
 
     if not isinstance(custom_id, str):
         raise TypeError(f"Select custom_id must be a string, not {type(custom_id)} !")
@@ -104,7 +104,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     if not isinstance(placeholder, str):
         raise TypeError(f"Select placeholder must be a string, not {type(placeholder)} !")
 
-    _validate_optional_int(row, "Select row")
+    _validate_optional_int(row, "Select row", "build_ui_select")
 
     args_select["disabled"] = disabled
     args_select["max_values"] = max_values
@@ -149,12 +149,12 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
         if value and len(value) > 100:
             raise ValueError("Option value must be less than 100 characters !")
 
-        _validate_optional_string(description, "Option description")
+        _validate_optional_string(description, "Option description", "build_ui_option")
 
         if description is not None and len(description) > 100:
             raise ValueError("Option description must be less than 100 characters !")
 
-        _validate_optional_string(emoji, "Option emoji")
+        _validate_optional_string(emoji, "Option emoji", "build_ui_option")
 
         if not isinstance(default, bool):
             raise TypeError(f"Option default must be a bool, not {type(default)} !")

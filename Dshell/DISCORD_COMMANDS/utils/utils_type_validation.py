@@ -207,7 +207,7 @@ def _validate_required_dict(value, param_name: str, command_name: str):
 
 # Validation functions for _MissingSentinel or other types
 
-def _validate_missing_or_type(value, value_name: str, *types):
+def _validate_missing_or_type(value, value_name: str, *types_and_command):
     """
     Validate that a value is either _MissingSentinel or one of the specified types.
     This is useful for parameters that can be omitted (using MISSING sentinel) or have a specific type.
@@ -217,14 +217,23 @@ def _validate_missing_or_type(value, value_name: str, *types):
     
     :param value: The value to validate
     :param value_name: The parameter name for error messages
-    :param types: Variable number of allowed types (e.g., int, str, bool)
+    :param types_and_command: Variable number of allowed types (e.g., int, str, bool) followed optionally by command_name (str) as last parameter
     :raises Exception: If the value is not _MissingSentinel and not one of the specified types
     
     Example:
-        _validate_missing_or_type(position, "Position", int)
-        _validate_missing_or_type(value, "Value", int, str, float)
+        _validate_missing_or_type(position, "Position", int, "command_name")
+        _validate_missing_or_type(value, "Value", int, str, float, "command_name")
     """
     from Dshell.full_import import _MissingSentinel
+    
+    # Check if last parameter is a string (command_name), otherwise it's a type
+    types = types_and_command
+    command_name = ""
+    
+    if types_and_command and isinstance(types_and_command[-1], str):
+        # Last argument is command_name
+        types = types_and_command[:-1]
+        command_name = f"[{types_and_command[-1]}] -> "
     
     # Include _MissingSentinel in the allowed types
     allowed_types = (_MissingSentinel,) + types
@@ -233,7 +242,7 @@ def _validate_missing_or_type(value, value_name: str, *types):
         # Build error message dynamically
         type_names = [_MissingSentinel.__name__] + [t.__name__ for t in types]
         type_description = " or ".join(type_names)
-        raise Exception(f"{value_name} must be {type_description}, not {type(value)} !")
+        raise Exception(f"{command_name}{value_name} must be {type_description}, not {type(value)} !")
 
 
 def _validate_not_none(value, error_message: str):

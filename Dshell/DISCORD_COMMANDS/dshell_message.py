@@ -255,7 +255,7 @@ async def dshell_unpin_message(ctx: Message, message=None, reason=None):
 
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
-    _validate_optional_string(reason, "Reason", "unpin_message")
+    _validate_optional_string(reason, "Reason", "upm")
 
     await target_message.unpin()
 

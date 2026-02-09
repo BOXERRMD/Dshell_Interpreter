@@ -91,9 +91,9 @@ async def dshell_edit_role(ctx: Message,
 
     role_to_edit = ctx.guild.get_role(role)
 
-    _validate_optional_string(name, "Name")
+    _validate_optional_string(name, "Name", "er")
 
-    _validate_optional_dict(permissions, "Permissions")
+    _validate_optional_dict(permissions, "Permissions", "er")
 
     if isinstance(permissions, dict):
         if None in permissions:
@@ -103,11 +103,11 @@ async def dshell_edit_role(ctx: Message,
     if color is not None:
         color = utils_build_colour(color)
 
-    _validate_optional_bool(hoist, "Hoist")
+    _validate_optional_bool(hoist, "Hoist", "er")
 
-    _validate_optional_bool(mentionable, "Mentionable")
+    _validate_optional_bool(mentionable, "Mentionable", "er")
 
-    _validate_optional_int(position, "Position")
+    _validate_optional_int(position, "Position", "er")
 
     await role_to_edit.edit(name=name if name is not None else role_to_edit.name,
                             permissions=permissions if permissions is not None else role_to_edit.permissions,

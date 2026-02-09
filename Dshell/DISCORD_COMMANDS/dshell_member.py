@@ -34,7 +34,7 @@ async def dshell_send_private_message(ctx: Message, message: str = None, member:
     If member is None, sends the message to the author of the command.
     If delete is specified, deletes the message after the specified time in seconds.
     """
-    _validate_optional_number(delete, "Delete")
+    _validate_optional_number(delete, "Delete", "spm")
 
     member_to_send = ctx.author if member is None else ctx.channel.guild.get_member(member)
 

@@ -32,7 +32,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     if not isinstance(ctx, Interaction):
         raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
 
-    _validate_optional_number(delete, "Delete")
+    _validate_optional_number(delete, "Delete", "sri")
 
     if not isinstance(hide, bool):
         raise Exception(f'Hide parameter must be a boolean, not {type(hide)} !')
@@ -45,7 +45,7 @@ async def dshell_respond_interaction(ctx: Interaction,
 
     from Dshell._DshellParser.ast_nodes import ListNode
 
-    _validate_optional_embed(embeds, "Embeds")
+    _validate_optional_embed(embeds, "Embeds", "sri")
 
     if embeds is None:
         embeds = ListNode([])
@@ -53,7 +53,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    _validate_optional_view(view, "View")
+    _validate_optional_view(view, "View", "sri")
 
     sended_message = await ctx.response.send_message(
                                      content=str(content),

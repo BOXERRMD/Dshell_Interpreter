@@ -70,8 +70,8 @@ async def dshell_get_channels(ctx: Message, name=None, regex=None):
     Returns a list of channels with the same name and/or matching the same regex.
     If neither is set, it will return all channels in the server.
     """
-    _validate_optional_string(name, "Name")
-    _validate_optional_string(regex, "Regex")
+    _validate_optional_string(name, "Name", "gcs")
+    _validate_optional_string(regex, "Regex", "gcs")
 
     channels = ListNode([])
 
@@ -93,15 +93,15 @@ async def dshell_get_channels_in_category(ctx: Message,
     If neither is set, it will return all channels in the specified category.
     """
 
-    _validate_optional_int(category, "Category")
+    _validate_optional_int(category, "Category", "gccs")
 
     if category is None and ctx.channel.category is not None:
         category = ctx.channel.category.id
 
-    _validate_not_none(category, "The current channel has no category, you must specify a category ID !")
+    _validate_not_none(category, "[gccs] The current channel has no category, you must specify a category ID !")
 
-    _validate_optional_string(name, "Name")
-    _validate_optional_string(regex, "Regex")
+    _validate_optional_string(name, "Name", "gccs")
+    _validate_optional_string(regex, "Regex", "gccs")
 
     channels = ListNode([])
 
@@ -131,21 +131,21 @@ async def dshell_create_text_channel(ctx: Message,
     Creates a text channel on the server
     """
 
-    _validate_required_string(name, "Name")
+    _validate_required_string(name, "Name", "cc")
 
-    _validate_optional_int(category, "Category")
+    _validate_optional_int(category, "Category", "cc")
 
-    _validate_missing_or_type(position, "Position", int)
+    _validate_missing_or_type(position, "Position", int, "cc")
 
-    _validate_missing_or_type(slowmode, "Slowmode", int)
+    _validate_missing_or_type(slowmode, "Slowmode", int, "cc")
 
-    _validate_missing_or_type(topic, "Topic", str)
+    _validate_missing_or_type(topic, "Topic", str, "cc")
 
-    _validate_missing_or_type(nsfw, "NSFW", bool)
+    _validate_missing_or_type(nsfw, "NSFW", bool, "cc")
 
-    _validate_missing_or_type(permissions, "Permissions", dict)
+    _validate_missing_or_type(permissions, "Permissions", dict, "cc")
     
-    _validate_optional_string(reason, "Reason")
+    _validate_optional_string(reason, "Reason", "cc")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -171,15 +171,15 @@ async def dshell_create_voice_channel(ctx: Message,
     """
     Creates a voice channel on the server
     """
-    _validate_required_string(name, "Name")
+    _validate_required_string(name, "Name", "cvc")
 
-    _validate_optional_int(category, "Category")
+    _validate_optional_int(category, "Category", "cvc")
 
-    _validate_missing_or_type(position, "Position", int)
+    _validate_missing_or_type(position, "Position", int, "cvc")
 
-    _validate_missing_or_type(bitrate, "Bitrate", int)
+    _validate_missing_or_type(bitrate, "Bitrate", int, "cvc")
     
-    _validate_optional_string(reason, "Reason")
+    _validate_optional_string(reason, "Reason", "cvc")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -201,12 +201,12 @@ async def dshell_delete_channel(ctx: Message,
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
     """
-    _validate_optional_int(timeout, "Timeout")
-    _validate_optional_string(reason, "Reason")
+    _validate_optional_int(timeout, "Timeout", "dc")
+    _validate_optional_string(reason, "Reason", "dc")
 
     channel_to_delete = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_delete, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_delete, f"[dc] Channel {channel} not found !")
 
     await sleep(timeout)
 
@@ -220,9 +220,9 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
     Deletes all channels with the same name and/or matching the same regex.
     If neither is set, it will delete all channels with the same name as the one where the command was executed.
     """
-    _validate_optional_string(name, "Name")
-    _validate_optional_string(regex, "Regex")
-    _validate_optional_string(reason, "Reason")
+    _validate_optional_string(name, "Name", "dcs")
+    _validate_optional_string(regex, "Regex", "dcs")
+    _validate_optional_string(reason, "Reason", "dcs")
 
     for channel in ctx.channel.guild.channels:
 
@@ -246,21 +246,21 @@ async def dshell_edit_text_channel(ctx: Message,
     """
     Edits a text channel on the server
     """
-    _validate_optional_string(name, "Name")
+    _validate_optional_string(name, "Name", "ec")
 
-    _validate_missing_or_type(position, "Position", int)
+    _validate_missing_or_type(position, "Position", int, "ec")
 
-    _validate_missing_or_type(category, "Category", int)
+    _validate_missing_or_type(category, "Category", int, "ec")
 
-    _validate_missing_or_type(slowmode, "Slowmode", int)
+    _validate_missing_or_type(slowmode, "Slowmode", int, "ec")
 
-    _validate_missing_or_type(topic, "Topic", str)
+    _validate_missing_or_type(topic, "Topic", str, "ec")
 
-    _validate_missing_or_type(nsfw, "NSFW", bool)
+    _validate_missing_or_type(nsfw, "NSFW", bool, "ec")
 
-    _validate_missing_or_type(permissions, "Permissions", dict)
+    _validate_missing_or_type(permissions, "Permissions", dict, "ec")
 
-    _validate_optional_string(reason, "Reason")
+    _validate_optional_string(reason, "Reason", "ec")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
@@ -291,19 +291,19 @@ async def dshell_edit_voice_channel(ctx: Message,
     """
     Edits a voice channel on the server
     """
-    _validate_optional_int(channel, "Channel")
+    _validate_optional_int(channel, "Channel", "evc")
 
-    _validate_optional_string(name, "Name")
+    _validate_optional_string(name, "Name", "evc")
 
-    _validate_missing_or_type(position, "Position", int)
+    _validate_missing_or_type(position, "Position", int, "evc")
 
-    _validate_missing_or_type(category, "Category", int)
+    _validate_missing_or_type(category, "Category", int, "evc")
 
-    _validate_missing_or_type(bitrate, "Bitrate", int)
+    _validate_missing_or_type(bitrate, "Bitrate", int, "evc")
 
-    _validate_missing_or_type(permissions, "Permissions", dict)
+    _validate_missing_or_type(permissions, "Permissions", dict, "evc")
 
-    _validate_optional_string(reason, "Reason")
+    _validate_optional_string(reason, "Reason", "evc")
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
@@ -335,16 +335,16 @@ async def dshell_create_thread_message(ctx: Message,
 
     message = utils_get_message(ctx, message)
 
-    _validate_required_string(name, "Name")
+    _validate_required_string(name, "Name", "ct")
 
-    _validate_missing_or_type(archive, "Auto archive duration", int)
+    _validate_missing_or_type(archive, "Auto archive duration", int, "ct")
 
     if isinstance(archive, int) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int)
+    _validate_missing_or_type(slowmode, "Slowmode delay", int, "ct")
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int)
+    _validate_missing_or_type(slowmode, "Slowmode delay", int, "ct")
 
     if isinstance(slowmode, int) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
@@ -376,16 +376,16 @@ async def dshell_edit_thread(ctx: Message,
 
     thread = await utils_get_thread(ctx, thread)
 
-    _validate_missing_or_type(name, "Name", str)
+    _validate_missing_or_type(name, "Name", str, "et")
 
-    _validate_missing_or_type(archive, "Auto archive duration", int)
+    _validate_missing_or_type(archive, "Auto archive duration", int, "et")
 
     if isinstance(archive, int) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int)
+    _validate_missing_or_type(slowmode, "Slowmode delay", int, "et")
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int)
+    _validate_missing_or_type(slowmode, "Slowmode delay", int, "et")
 
     if isinstance(slowmode, int) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
@@ -454,7 +454,7 @@ async def dshell_create_category(ctx: Message,
     Creates a category on the server
     """
 
-    _validate_missing_or_type(position, "Position", int)
+    _validate_missing_or_type(position, "Position", int, "cca")
 
     created_category = await ctx.guild.create_category(str(name),
                                                       position=position,
@@ -472,7 +472,7 @@ async def dshell_edit_category(ctx: Message,
     """
     Edits a category on the server
     """
-    _validate_missing_or_type(position, "Position", int)
+    _validate_missing_or_type(position, "Position", int, "eca")
 
     category_to_edit = ctx.channel.guild.get_channel(category)
 
@@ -512,7 +512,7 @@ async def dshell_get_channel_category_id(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gcc] Channel {channel} not found !")
 
     if channel_to_check.category is None:
         return None
@@ -526,7 +526,7 @@ async def dshell_get_channel_nsfw(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gcnsfw] Channel {channel} not found !")
 
     return channel_to_check.nsfw
 
@@ -537,9 +537,9 @@ async def dshell_get_channel_slowmode(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gcsl] Channel {channel} not found !")
 
-    _validate_has_attribute(channel_to_check, 'slowmode_delay', f"Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, \'slowmode_delay\', f"[gcsl] Channel {channel} is not a text channel !")
 
     return channel_to_check.slowmode_delay
 
@@ -550,9 +550,9 @@ async def dshell_get_channel_topic(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gct] Channel {channel} not found !")
 
-    _validate_has_attribute(channel_to_check, 'topic', f"Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, \'topic\', f"[gct] Channel {channel} is not a text channel !")
 
     return channel_to_check.topic
 
@@ -563,9 +563,9 @@ async def dshell_get_channel_threads(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gcth] Channel {channel} not found !")
 
-    _validate_has_attribute(channel_to_check, 'threads', f"Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, \'threads\', f"[gcth] Channel {channel} is not a text channel !")
 
 
     threads = ListNode([])
@@ -582,7 +582,7 @@ async def dshell_get_channel_position(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gcp] Channel {channel} not found !")
 
     return channel_to_check.position
 
@@ -593,7 +593,7 @@ async def dshell_get_channel_url(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gcurl] Channel {channel} not found !")
 
     return channel_to_check.jump_url
 
@@ -604,7 +604,7 @@ async def dshell_get_channel_voice_members(ctx: Message, channel=None):
 
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    _validate_not_none(channel_to_check, f"Channel {channel} not found !")
+    _validate_not_none(channel_to_check, f"[gvcm] Channel {channel} not found !")
 
     if not isinstance(channel_to_check, VoiceChannel):
         raise Exception(f"Channel {channel} is not a voice channel !")
