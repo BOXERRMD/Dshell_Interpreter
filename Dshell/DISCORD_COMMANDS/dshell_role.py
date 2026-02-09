@@ -24,7 +24,37 @@ async def dshell_create_role(ctx: Message,
                              mentionable: bool = MISSING,
                              reason: str = None):
     """
-    Creates a role on the server.
+    Crée un nouveau rôle sur le serveur Discord.
+    
+    Cette fonction permet de créer un rôle avec des paramètres personnalisés
+    incluant le nom, les permissions, la couleur, et d'autres propriétés.
+    Tous les paramètres sont optionnels sauf le contexte.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param name: Le nom du rôle (optionnel)
+    :type name: str | MISSING
+    :param permissions: Dictionnaire de permissions du rôle (optionnel)
+    :type permissions: dict[None, PermissionOverwrite] | MISSING
+    :param color: Couleur du rôle (entier RGB ou ListNode[r,g,b]) (optionnel)
+    :type color: Union[ListNode, int] | MISSING
+    :param hoist: Si True, affiche les membres de ce rôle séparément dans la liste (optionnel)
+    :type hoist: bool | MISSING
+    :param mentionable: Si True, permet de mentionner le rôle (optionnel)
+    :type mentionable: bool | MISSING
+    :param reason: Raison de la création (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | None
+    :return: L'ID du rôle créé
+    :rtype: int
+    :raises TypeError: Si les types des paramètres sont incorrects
+    
+    Example:
+        >>> # Créer un rôle simple
+        >>> await dshell_create_role(ctx, name="Modérateur")
+        123456789
+        >>> # Créer un rôle avec couleur RGB
+        >>> await dshell_create_role(ctx, name="VIP", color=ListNode([255, 0, 0]), hoist=True)
+        987654321
     """
     _CMD = "cr"
 
@@ -59,7 +89,30 @@ async def dshell_create_role(ctx: Message,
 
 async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reason: str=None):
     """
-    Delete the role on the server
+    Supprime un ou plusieurs rôles du serveur Discord.
+    
+    Cette fonction permet de supprimer des rôles en fournissant soit un ID unique,
+    soit une liste (ListNode) d'IDs de rôles. Tous les rôles spécifiés seront
+    supprimés du serveur.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param roles: L'ID d'un rôle unique ou une ListNode d'IDs de rôles
+    :type roles: Union[ListNode, int]
+    :param reason: Raison de la suppression (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | None
+    :return: L'ID du dernier rôle supprimé
+    :rtype: int
+    :raises Exception: Si un rôle n'est pas trouvé dans le serveur
+    :raises Exception: Si le type de roles est invalide
+    
+    Example:
+        >>> # Supprimer un rôle unique
+        >>> await dshell_delete_roles(ctx, 123456789, reason="Rôle obsolète")
+        123456789
+        >>> # Supprimer plusieurs rôles
+        >>> await dshell_delete_roles(ctx, ListNode([111, 222, 333]))
+        333
     """
     _CMD = "dr"
 
@@ -96,7 +149,41 @@ async def dshell_edit_role(ctx: Message,
                            position: int=None,
                            reason: str=None,):
     """
-    Edit the current role
+    Modifie les propriétés d'un rôle existant sur le serveur Discord.
+    
+    Cette fonction permet de modifier un ou plusieurs attributs d'un rôle.
+    Seuls les paramètres fournis (non None) seront modifiés, les autres
+    conserveront leurs valeurs actuelles.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param role: L'ID du rôle à modifier
+    :type role: int
+    :param name: Nouveau nom du rôle (optionnel)
+    :type name: str | None
+    :param permissions: Nouvelles permissions du rôle (optionnel)
+    :type permissions: dict[None, PermissionOverwrite] | None
+    :param color: Nouvelle couleur du rôle (entier RGB ou ListNode[r,g,b]) (optionnel)
+    :type color: Union[ListNode, int] | None
+    :param hoist: Afficher les membres séparément (optionnel)
+    :type hoist: bool | None
+    :param mentionable: Autoriser les mentions (optionnel)
+    :type mentionable: bool | None
+    :param position: Nouvelle position dans la hiérarchie des rôles (optionnel)
+    :type position: int | None
+    :param reason: Raison de la modification (apparaît dans les logs Discord) (optionnel)
+    :type reason: str | None
+    :return: L'ID du rôle modifié
+    :rtype: int
+    :raises TypeError: Si les types des paramètres sont incorrects
+    
+    Example:
+        >>> # Renommer un rôle
+        >>> await dshell_edit_role(ctx, 123456789, name="Super Modérateur")
+        123456789
+        >>> # Changer la couleur en rouge
+        >>> await dshell_edit_role(ctx, 123456789, color=ListNode([255, 0, 0]))
+        123456789
     """
     _CMD = "er"
 
