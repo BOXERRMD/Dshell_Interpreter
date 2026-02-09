@@ -55,7 +55,10 @@ def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMe
         if guild_id != ctx.guild.id:
             raise Exception("The message must be from the same server as the command !")
 
-        cached_messages[message_id] = ctx.guild.get_channel(channel_id).get_partial_message(message_id)
+        channel = ctx.guild.get_channel(channel_id)
+        if channel is None:
+            raise Exception(f"Channel with ID {channel_id} not found in guild {ctx.guild.name}.")
+        cached_messages[message_id] = channel.get_partial_message(message_id)
         dshell_cached_messages.set(cached_messages)
         return cached_messages[message_id]
 

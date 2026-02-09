@@ -2,7 +2,7 @@ from Dshell.full_import import (Message,
                            Embed,
                            PartialMessage)
 
-from .._DshellParser.ast_nodes import ListNode
+from .._DshellParser.ast_nodes import ListNode, EvalNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .utils.utils_type_validation import (_validate_optional_number,
@@ -12,7 +12,9 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_int,
                                           _validate_optional_bool,
                                           _validate_required_bool,
-                                          _validate_not_none)
+                                          _validate_required_int,
+                                          _validate_not_none,
+                                          _validate_missing_or_type)
 from .._DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Optional
@@ -149,8 +151,7 @@ async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0
 
     delete_message = ctx if message is None else utils_get_message(ctx, message)
 
-    if not isinstance(delay, int):
-        raise Exception(f'Delete delay must be an integer, not {type(delay)} !')
+    _validate_optional_int(delay, "Delay", "dm")
 
     if delay > 3600:
         raise Exception(f'The message deletion delay is too long! ({delay} seconds)')
@@ -158,13 +159,13 @@ async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0
     await delete_message.delete(delay=delay, reason=reason)
 
 
-async def dshell_purge_message(ctx: Message, message_number: int, channel=None, reason=None):
+async def dshell_purge_message(ctx: Message, message_number: int, channel: Optional[int]=None, reason: Optional[str]=None, check: Optional[str] = None):
     """
     Purges messages from a channel
     """
 
-    if not isinstance(message_number, int):
-        raise Exception(f'Message number must be an integer, not {type(message_number)} !')
+    _validate_required_int(message_number, "Message number", "pm")
+    _validate_missing_or_type(check, "check", EvalNode, "pm")
 
     purge_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
