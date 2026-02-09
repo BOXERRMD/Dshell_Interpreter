@@ -98,9 +98,9 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
     :param interpreter: The Dshell interpreter instance.
     :return: A dictionary of parameters.
     """
-    def remplacer(match) -> str:
-        spacial_char = match.group(1)
-        if spacial_char:
+    def replace_match(match) -> str:
+        special_char = match.group(1)
+        if special_char:
             return ''
         return match.group(4)
 
@@ -116,7 +116,7 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
 
     for param_name, param_data in regrouped_variables.parameters.items():
         regrouped_parameters.update_parameter(param_name, param_data)
-        variables = sub(rf"--([*']?)({escape(param_name)})\s+(.*)\s*?(.*)$", remplacer, variables, count=1)
+        variables = sub(rf"--([*']?)({escape(param_name)})\s+(.*)\s*?(.*)$", replace_match, variables, count=1)
         already_modified.add(param_name)
 
     index_variable = 0
@@ -126,13 +126,13 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
             parameter_type = regrouped_parameters.get_parameter(var).type
 
             if parameter_type == DTT.PARAMETER and index_variable < len(variables_non_specified_parameters):
-                regrouped_parameters.set_parameter(var, variables_non_specified_parameters[index_variable], parameter_type)  # variables_post_regrouped[index_variable] n'est pas un token donc impossible de l'évaluer ! pose problème dans les commandes qui requière autre chose que des str
+                regrouped_parameters.set_parameter(var, variables_non_specified_parameters[index_variable], parameter_type)  # variables_post_regrouped[index_variable] is not a token so cannot be evaluated! causes problems in commands that require something other than str
                 index_variable += 1
 
             elif parameter_type == DTT.STR_PARAMETER:
-                variables_post_regrouped: list[str] = variables.strip().split(' ') if variables else []  # set uniquement pour les paramètres full str
+                variables_post_regrouped: list[str] = variables.strip().split(' ') if variables else []  # set only for full str parameters
                 str_parameters_set_for_variables = variables_post_regrouped[index_variable:]
-                # la ligne dessous permet de set un paramètre full str avec plusieurs mots. Si les variables restantes sont vides, on met la valeur par défaut (obligé de passer la fonction str car sinon ça met un DshellArgumentsData)
+                # the line below allows setting a full str parameter with multiple words. If the remaining variables are empty, we use the default value (must use str function because otherwise it puts a DshellArgumentsData)
                 regrouped_parameters.set_parameter(var, ' '.join(str_parameters_set_for_variables if str_parameters_set_for_variables else [str(regrouped_parameters.parameters.get(var, ''))]), parameter_type)
                 break
 

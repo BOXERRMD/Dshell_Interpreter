@@ -15,7 +15,9 @@ from ..DISCORD_COMMANDS.dshell_ui import build_ui, rebuild_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
 from .dshell_scope import Scope, new_scope
 
-from Dshell.full_import import Union
+# Constants for sleep time limits
+MAX_SLEEP_TIME_SECONDS = 3600  # 1 hour
+MIN_SLEEP_TIME_SECONDS = 1
 
 
 
@@ -120,6 +122,81 @@ class DshellInterpreteur:
         if debug:
             print_ast(self.ast)
 
+    async def _execute_command_node(self, node: CommandNode):
+        """Execute a command node."""
+        result = await call_function(dshell_commands[node.name], node.body, self)
+        self.env.set(f'__{node.name}__', result)  # return value of the command
+        self.env.set('__ret__', result)  # global return variable for all commands
+
+    async def _execute_if_node(self, node: IfNode):
+        """Execute an if/elif/else conditional node."""
+        elif_valid = False
+        if await eval_expression(node.condition, self):
+            await self.execute(node.body)
+            return
+        elif node.elif_nodes:
+            for elif_node in node.elif_nodes:
+                if await eval_expression(elif_node.condition, self):
+                    await self.execute(elif_node.body)
+                    elif_valid = True
+                    break
+
+        if not elif_valid and node.else_body is not None:
+            await self.execute(node.else_body.body)
+
+    async def _execute_loop_node(self, node: LoopNode):
+        """Execute a loop node."""
+        self.env.set(node.variable.name.value, 0)
+        for i in DshellIterator(await eval_expression(node.variable.body, self)):
+            self.env.set(node.variable.name.value, i)
+            await self.execute(node.body)
+
+    async def _execute_var_node(self, node: VarNode):
+        """Execute a variable assignment node."""
+        first_node = node.body[0]
+        if isinstance(first_node, IfNode):
+            self.env.set(node.name.value, await eval_expression_inline(first_node, self))
+
+        elif isinstance(first_node, EmbedNode):
+            # rebuild the embed if it already exists
+            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), Embed):
+                self.env.set(node.name.value, await rebuild_embed(self.env.get(node.name.value), first_node.body, first_node.fields, self))
+            else:
+                self.env.set(node.name.value, await build_embed(first_node.body, first_node.fields, self))
+
+        elif isinstance(first_node, PermissionNode):
+            # rebuild the permissions if it already exists
+            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), dict):
+                self.env.get(node.name.value).update(await build_permission(first_node.body, self))
+            else:
+                self.env.set(node.name.value, await build_permission(first_node.body, self))
+
+        elif isinstance(first_node, (UiButtonNode, UiSelectNode)):
+            # rebuild the UI if it already exists
+            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), ListNode):
+                self.env.get(node.name.value).add(await build_ui(first_node, self))
+            else:
+                self.env.set(node.name.value, ListNode([await build_ui(first_node, self)]))  # store UIs in a list
+
+        elif isinstance(first_node, CodeNode):
+            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), first_node):
+                self.env.get(node.name.value).update(first_node)
+            else:
+                self.env.set(node.name.value, first_node)
+
+        else:
+            self.env.set(node.name.value, await eval_expression(node.body, self))
+
+    async def _execute_sleep_node(self, node: SleepNode):
+        """Execute a sleep node."""
+        sleep_time = await eval_expression(node.body, self)
+        if sleep_time > MAX_SLEEP_TIME_SECONDS:
+            raise Exception(f"Sleep time is too long! ({sleep_time} seconds) - maximum is {MAX_SLEEP_TIME_SECONDS} seconds)")
+        elif sleep_time < MIN_SLEEP_TIME_SECONDS:
+            raise Exception(f"Sleep time is too short! ({sleep_time} seconds) - minimum is {MIN_SLEEP_TIME_SECONDS} second)")
+
+        await sleep(sleep_time)
+
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """
         Executes the abstract syntax tree (AST) generated from the Dshell code.
@@ -142,83 +219,23 @@ class DshellInterpreteur:
                 await self.execute(node.body)
 
             if isinstance(node, CommandNode):
-                result = await call_function(dshell_commands[node.name], node.body, self)
-                self.env.set(f'__{node.name}__', result) # return value of the command
-                self.env.set('__ret__', result)  # global return variable for all commands
+                await self._execute_command_node(node)
 
             elif isinstance(node, ParamNode):
                 params = await get_params(node, self)
                 self.env.update(params)  # update the environment
 
             elif isinstance(node, IfNode):
-                elif_valid = False
-                if await eval_expression(node.condition, self):
-                    await self.execute(node.body)
-                    continue
-                elif node.elif_nodes:
-
-                    for i in node.elif_nodes:
-                        if await eval_expression(i.condition, self):
-                            await self.execute(i.body)
-                            elif_valid = True
-                            break
-
-                if not elif_valid and node.else_body is not None:
-                    await self.execute(node.else_body.body)
+                await self._execute_if_node(node)
 
             elif isinstance(node, LoopNode):
-                self.env.set(node.variable.name.value, 0)
-                for i in DshellIterator(await eval_expression(node.variable.body, self)):
-                    self.env.set(node.variable.name.value, i)
-                    await self.execute(node.body)
+                await self._execute_loop_node(node)
 
             elif isinstance(node, VarNode):
-
-                first_node = node.body[0]
-                if isinstance(first_node, IfNode):
-                    self.env.set(node.name.value, await eval_expression_inline(first_node, self))
-
-                elif isinstance(first_node, EmbedNode):
-                    # rebuild the embed if it already exists
-                    if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), Embed):
-                        self.env.set(node.name.value, await rebuild_embed(self.env.get(node.name.value), first_node.body, first_node.fields, self))
-                    else:
-                        self.env.set(node.name.value, await build_embed(first_node.body, first_node.fields, self))
-
-                elif isinstance(first_node, PermissionNode):
-                    # rebuild the permissions if it already exists
-                    if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), dict):
-                        self.env.get(node.name.value).update(await build_permission(first_node.body, self))
-                    else:
-                        self.env.set(node.name.value, await build_permission(first_node.body, self))
-
-                elif isinstance(first_node, (UiButtonNode, UiSelectNode)):
-                    # rebuild the UI if it already exists
-                    #if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), EasyModifiedViews):
-                        #self.env.set(node.name.value, await rebuild_ui(first_node, self.env.get(node.name.value), self))
-                    #else:
-                    if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), ListNode):
-                        self.env.get(node.name.value).add(await build_ui(first_node, self))
-                    else:
-                        self.env.set(node.name.value, ListNode([await build_ui(first_node, self)])) # store UIs in a list
-
-                elif isinstance(first_node, CodeNode):
-                    if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), first_node):
-                        self.env.get(node.name.value).update(first_node)
-                    else:
-                        self.env.set(node.name.value, first_node)
-
-                else:
-                    self.env.set(node.name.value, await eval_expression(node.body, self))
+                await self._execute_var_node(node)
 
             elif isinstance(node, SleepNode):
-                sleep_time = await eval_expression(node.body, self)
-                if sleep_time > 3600:
-                    raise Exception(f"Sleep time is too long! ({sleep_time} seconds) - maximum is 3600 seconds)")
-                elif sleep_time < 1:
-                    raise Exception(f"Sleep time is too short! ({sleep_time} seconds) - minimum is 1 second)")
-
-                await sleep(sleep_time)
+                await self._execute_sleep_node(node)
 
             elif isinstance(node, EvalNode):
 
@@ -231,11 +248,11 @@ class DshellInterpreteur:
                 if await self.eval_data_token(node.error_message):
                     raise RuntimeError("Execution stopped - EndNode encountered")
                 else:
-                    raise DshellInterpreterStopExecution()
+                    raise DshellInterpreterStopExecution("Execution stopped without error")
 
     async def eval_data_token(self, token: Token):
         """
-        Eval a data token and returns its value in Python.
+        Evaluate a data token and return its value in Python.
         :param token: The token to evaluate.
         """
 
@@ -252,14 +269,14 @@ class DshellInterpreteur:
             return None
         elif token.type == DTT.LIST:
             return ListNode(
-                [await self.eval_data_token(tok) for tok in token.value])  # token.value contient déjà une liste de Token
+                [await self.eval_data_token(tok) for tok in token.value])  # token.value already contains a list of Tokens
         elif token.type == DTT.IDENT:
             try:
                 return self.env.get(token.value)
             except KeyError:
                 return token.value
         elif token.type == DTT.EVAL_GROUP:
-            await self.execute(parse([token.value], StartNode([]))[0]) # obliger de parser car ce il n'est pas dejà un AST
+            await self.execute(parse([token.value], StartNode([]))[0])  # must parse because it's not already an AST
             return self.env.get('__ret__')
         elif token.type == DTT.STR:
             temp = token.value
