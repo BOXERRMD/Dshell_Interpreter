@@ -6,9 +6,7 @@ from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
                                           _validate_optional_bool,
                                           _validate_optional_dict,
-                                          _validate_missing_or_string,
-                                          _validate_missing_or_dict,
-                                          _validate_missing_or_bool)
+                                          _validate_missing_or_type)
 
 __all__ = [
     'dshell_create_role',
@@ -27,16 +25,16 @@ async def dshell_create_role(ctx: Message,
     """
     Creates a role on the server.
     """
-    _validate_missing_or_string(name, "Name")
+    _validate_missing_or_type(name, "Name", str)
 
-    _validate_missing_or_dict(permissions, "Permissions")
+    _validate_missing_or_type(permissions, "Permissions", dict)
 
     if not isinstance(color, _MissingSentinel):
         color = utils_build_colour(color)
 
-    _validate_missing_or_bool(hoist, "Hoist")
+    _validate_missing_or_type(hoist, "Hoist", bool)
 
-    _validate_missing_or_bool(mentionable, "Mentionable")
+    _validate_missing_or_type(mentionable, "Mentionable", bool)
 
     if isinstance(permissions, dict):
         if None in permissions:

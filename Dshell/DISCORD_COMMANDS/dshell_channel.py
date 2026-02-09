@@ -21,9 +21,7 @@ from .utils.utils_thread import utils_get_thread
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
                                           _validate_optional_bool,
-                                          _validate_missing_or_int,
-                                          _validate_missing_or_string,
-                                          _validate_missing_or_bool)
+                                          _validate_missing_or_type)
 
 __all__ = [
     'dshell_get_channel',
@@ -129,13 +127,13 @@ async def dshell_create_text_channel(ctx: Message,
     Creates a text channel on the server
     """
 
-    _validate_missing_or_int(position, "Position")
+    _validate_missing_or_type(position, "Position", int)
 
-    _validate_missing_or_int(slowmode, "Slowmode")
+    _validate_missing_or_type(slowmode, "Slowmode", int)
 
-    _validate_missing_or_string(topic, "Topic")
+    _validate_missing_or_type(topic, "Topic", str)
 
-    _validate_missing_or_bool(nsfw, "NSFW")
+    _validate_missing_or_type(nsfw, "NSFW", bool)
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -161,9 +159,9 @@ async def dshell_create_voice_channel(ctx: Message,
     """
     Creates a voice channel on the server
     """
-    _validate_missing_or_int(position, "Position")
+    _validate_missing_or_type(position, "Position", int)
 
-    _validate_missing_or_int(bitrate, "Bitrate")
+    _validate_missing_or_type(bitrate, "Bitrate", int)
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -229,15 +227,15 @@ async def dshell_edit_text_channel(ctx: Message,
     """
     _validate_optional_string(name, "Name")
 
-    _validate_missing_or_int(position, "Position")
+    _validate_missing_or_type(position, "Position", int)
 
-    _validate_missing_or_int(category, "Category")
+    _validate_missing_or_type(category, "Category", int)
 
-    _validate_missing_or_int(slowmode, "Slowmode")
+    _validate_missing_or_type(slowmode, "Slowmode", int)
 
-    _validate_missing_or_string(topic, "Topic")
+    _validate_missing_or_type(topic, "Topic", str)
 
-    _validate_missing_or_bool(nsfw, "NSFW")
+    _validate_missing_or_type(nsfw, "NSFW", bool)
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
@@ -268,11 +266,11 @@ async def dshell_edit_voice_channel(ctx: Message,
     """
     Edits a voice channel on the server
     """
-    _validate_missing_or_int(position, "Position")
+    _validate_missing_or_type(position, "Position", int)
 
-    _validate_missing_or_int(category, "Category")
+    _validate_missing_or_type(category, "Category", int)
 
-    _validate_missing_or_int(bitrate, "Bitrate")
+    _validate_missing_or_type(bitrate, "Bitrate", int)
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
@@ -308,12 +306,12 @@ async def dshell_create_thread_message(ctx: Message,
     if not isinstance(name, str):
         raise Exception(f"Name must be a string, not {type(name)} !")
 
-    _validate_missing_or_int(archive, "Auto archive duration")
+    _validate_missing_or_type(archive, "Auto archive duration", int)
 
     if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    _validate_missing_or_int(slowmode, "Slowmode delay")
+    _validate_missing_or_type(slowmode, "Slowmode delay", int)
 
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
@@ -345,14 +343,14 @@ async def dshell_edit_thread(ctx: Message,
 
     thread = await utils_get_thread(ctx, thread)
 
-    _validate_missing_or_string(name, "Name")
+    _validate_missing_or_type(name, "Name", str)
 
-    _validate_missing_or_int(archive, "Auto archive duration")
+    _validate_missing_or_type(archive, "Auto archive duration", int)
 
     if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    _validate_missing_or_int(slowmode, "Slowmode delay")
+    _validate_missing_or_type(slowmode, "Slowmode delay", int)
 
     if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
@@ -421,7 +419,7 @@ async def dshell_create_category(ctx: Message,
     Creates a category on the server
     """
 
-    _validate_missing_or_int(position, "Position")
+    _validate_missing_or_type(position, "Position", int)
 
     created_category = await ctx.guild.create_category(str(name),
                                                       position=position,
@@ -439,7 +437,7 @@ async def dshell_edit_category(ctx: Message,
     """
     Edits a category on the server
     """
-    _validate_missing_or_int(position, "Position")
+    _validate_missing_or_type(position, "Position", int)
 
     category_to_edit = ctx.channel.guild.get_channel(category)
 
