@@ -48,10 +48,23 @@ class DiscordType(StrEnum):
 
 def utils_what_discord_type_is(ctx: Union[Message, Guild], value: int) -> tuple[str, Union[Member, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, None]]:
     """
-    Return an enum of what the value is (str, int, list, Member, Role, Channel, etc.)
-    :param ctx:
-    :param value:
-    :return:
+    Identifie le type Discord d'un ID et retourne l'objet correspondant.
+    
+    Cette fonction utilitaire détermine si un ID correspond à un membre, un rôle,
+    un canal (textuel, vocal, catégorie, forum) ou un thread, et retourne
+    l'objet Discord correspondant avec son type.
+    
+    :param ctx: Le contexte (Message ou Guild)
+    :type ctx: Union[Message, Guild]
+    :param value: L'ID Discord à identifier
+    :type value: int
+    :return: Tuple (type_discord, objet) où type_discord est une valeur DiscordType et objet est l'instance Discord ou None
+    :rtype: tuple[str, Union[Member, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, None]]
+    
+    Example:
+        >>> discord_type, obj = utils_what_discord_type_is(ctx, 123456789)
+        >>> if discord_type == DiscordType.MEMBER:
+        ...     print(f"C'est un membre: {obj.name}")
     """
     guild = ctx if isinstance(ctx, Guild) else ctx.guild
 
@@ -80,9 +93,24 @@ def utils_what_discord_type_is(ctx: Union[Message, Guild], value: int) -> tuple[
 
 async def utils_len(ctx: Message, value):
     """
-    Return the length of a list, or a string
-    :param value:
-    :return:
+    Retourne la longueur d'une liste ou d'une chaîne de caractères.
+    
+    Fonction utilitaire équivalente à len() de Python mais compatible avec
+    les objets Dshell (ListNode) et les chaînes de caractères.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param value: La liste (ListNode) ou chaîne dont calculer la longueur
+    :type value: Union[str, ListNode]
+    :return: Le nombre d'éléments ou de caractères
+    :rtype: int
+    :raises TypeError: Si value n'est ni une chaîne ni une ListNode
+    
+    Example:
+        >>> await utils_len(ctx, "Bonjour")
+        7
+        >>> await utils_len(ctx, ListNode([1, 2, 3]))
+        3
     """
     if not isinstance(value, (str, ListNode)):
         raise TypeError(f"value must be a list or a string in len command, not {type(value)}")
@@ -91,9 +119,23 @@ async def utils_len(ctx: Message, value):
 
 async def utils_random(ctx: Message, value: Optional["ListNode"] = None):
     """
-    Return a random element from a list, or a random integer between 0 and value
-    :param value:
-    :return:
+    Retourne un élément aléatoire d'une liste ou un nombre aléatoire.
+    
+    Si une liste est fournie, retourne un élément aléatoire de cette liste.
+    Si aucune valeur n'est fournie, retourne un nombre aléatoire entre 0 et 1.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param value: Liste optionnelle dont extraire un élément aléatoire
+    :type value: Optional[ListNode]
+    :return: Un élément aléatoire de la liste ou un nombre aléatoire
+    :raises TypeError: Si value n'est pas None ou ListNode
+    
+    Example:
+        >>> await utils_random(ctx, ListNode([1, 2, 3, 4, 5]))
+        3  # Un élément aléatoire
+        >>> await utils_random(ctx)
+        0.742  # Nombre aléatoire entre 0 et 1
     """
     _CMD = "random"
     _validate_optional_list_node(value, "value", _CMD)
@@ -104,10 +146,22 @@ async def utils_random(ctx: Message, value: Optional["ListNode"] = None):
 
 async def utils_get_name(ctx : Message, value: int) -> Union[str, None]:
     """
-    Return the name of a role, member, or channel.
-    If not found, return None.
-    :param value:
-    :return:
+    Récupère le nom d'un rôle, membre ou canal à partir de son ID.
+    
+    Recherche dans le serveur Discord l'élément correspondant à l'ID fourni
+    et retourne son nom. Vérifie dans l'ordre: rôles, membres, puis canaux.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param value: L'ID Discord de l'élément
+    :type value: int
+    :return: Le nom de l'élément, ou None si non trouvé
+    :rtype: Union[str, None]
+    :raises TypeError: Si value n'est pas un entier
+    
+    Example:
+        >>> await utils_get_name(ctx, 123456789)
+        "Modérateur"  # Si c'est un rôle
     """
     _CMD = "name"
     _validate_required_int(value, "value", _CMD)
@@ -128,10 +182,22 @@ async def utils_get_name(ctx : Message, value: int) -> Union[str, None]:
 
 async def utils_get_id(ctx : Message, value: str) -> Union[int, None]:
     """
-    Return the id of a role, member, or channel.
-    If not found, return None.
-    :param value:
-    :return:
+    Récupère l'ID d'un rôle, membre ou canal à partir de son nom.
+    
+    Recherche dans le serveur Discord l'élément correspondant au nom fourni
+    et retourne son ID. Vérifie dans l'ordre: rôles, membres, puis canaux.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param value: Le nom de l'élément à rechercher
+    :type value: str
+    :return: L'ID Discord de l'élément, ou None si non trouvé
+    :rtype: Union[int, None]
+    :raises TypeError: Si value n'est pas une chaîne
+    
+    Example:
+        >>> await utils_get_id(ctx, "Modérateur")
+        123456789  # L'ID du rôle "Modérateur"
     """
     _CMD = "id"
     _validate_required_string(value, "value", _CMD)
@@ -152,9 +218,23 @@ async def utils_get_id(ctx : Message, value: str) -> Union[int, None]:
 
 async def utils_get_roles(ctx: Message, value: int):
     """
-    Return the roles of a member.
-    :param value:
-    :return:
+    Récupère la liste des rôles d'un membre.
+    
+    Retourne tous les rôles attribués à un membre du serveur Discord,
+    sous forme de ListNode contenant les IDs des rôles.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param value: L'ID du membre dont récupérer les rôles
+    :type value: int
+    :return: Liste (ListNode) des IDs de rôles du membre
+    :rtype: ListNode
+    :raises ValueError: Si le membre n'est pas trouvé
+    :raises TypeError: Si value n'est pas un ID de membre valide
+    
+    Example:
+        >>> await utils_get_roles(ctx, 123456789)
+        ListNode([111, 222, 333])  # IDs des rôles du membre
     """
     _CMD = "roles"
     _validate_required_int(value, "value", _CMD)

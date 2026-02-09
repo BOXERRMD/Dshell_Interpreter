@@ -12,9 +12,27 @@ from .utils_type_validation import (_validate_optional_bool,
 
 def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMessage, Message]:
     """
-    Returns the message object of the specified message ID or link.
-    Message is only available in the same server as the command and in the same channel.
-    If the message is a link, it must be in the format: https://discord.com/channels/{guild_id}/{channel_id}/{message_id}
+    Récupère l'objet message Discord à partir d'un ID ou d'un lien.
+    
+    Cette fonction permet de récupérer un message Discord soit par son ID numérique,
+    soit par son lien URL complet. Les messages sont mis en cache pour améliorer
+    les performances. Le message doit être dans le même serveur que la commande.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param message: L'ID du message (int) ou le lien Discord complet (str)
+    :type message: Union[int, str]
+    :return: L'objet message (PartialMessage si non en cache, Message sinon)
+    :rtype: Union[PartialMessage, Message]
+    :raises Exception: Si le format du lien est invalide
+    :raises Exception: Si le message n'est pas du même serveur
+    :raises Exception: Si le type du paramètre est invalide
+    
+    Example:
+        >>> # Par ID
+        >>> msg = utils_get_message(ctx, 123456789)
+        >>> # Par lien
+        >>> msg = utils_get_message(ctx, "https://discord.com/channels/111/222/333")
     """
     cached_messages = dshell_cached_messages.get()
 
@@ -50,8 +68,35 @@ def utils_autorised_mentions(global_mentions: bool = None,
                             users_mentions: bool = True,
                             reply_mention: bool = False) -> Union[bool, 'AllowedMentions']:
     """
-    Returns the AllowedMentions object based on the provided parameters.
-    If global_mentions is set to True or False, it overrides all other parameters.
+    Crée un objet AllowedMentions pour contrôler les mentions Discord autorisées.
+    
+    Cette fonction configure les types de mentions autorisées dans un message Discord.
+    Si global_mentions est défini (True/False), il surcharge tous les autres paramètres.
+    Sinon, chaque type de mention peut être contrôlé individuellement.
+    
+    :param global_mentions: Active (True) ou désactive (False) toutes les mentions, surcharge les autres paramètres si défini
+    :type global_mentions: bool | None
+    :param everyone_mention: Autorise les mentions @everyone et @here
+    :type everyone_mention: bool
+    :param roles_mentions: Autorise les mentions de rôles
+    :type roles_mentions: bool
+    :param users_mentions: Autorise les mentions d'utilisateurs
+    :type users_mentions: bool
+    :param reply_mention: Mentionne l'auteur du message auquel on répond
+    :type reply_mention: bool
+    :return: Objet AllowedMentions configuré
+    :rtype: AllowedMentions
+    :raises TypeError: Si les types des paramètres sont incorrects
+    
+    Example:
+        >>> # Autoriser uniquement les mentions d'utilisateurs
+        >>> mentions = utils_autorised_mentions(
+        ...     everyone_mention=False,
+        ...     roles_mentions=False,
+        ...     users_mentions=True
+        ... )
+        >>> # Désactiver toutes les mentions
+        >>> mentions = utils_autorised_mentions(global_mentions=False)
     """
     _CMD = "autorised_mentions"
     
