@@ -95,7 +95,8 @@ async def utils_random(ctx: Message, value: Optional["ListNode"] = None):
     :param value:
     :return:
     """
-    _validate_optional_list_node(value, "value", "random")
+    _CMD = "random"
+    _validate_optional_list_node(value, "value", _CMD)
 
     if value is None:
         return random()
@@ -108,8 +109,8 @@ async def utils_get_name(ctx : Message, value: int) -> Union[str, None]:
     :param value:
     :return:
     """
-
-    _validate_required_int(value, "value", "name")
+    _CMD = "name"
+    _validate_required_int(value, "value", _CMD)
 
     guild = ctx.guild
     result = None
@@ -132,8 +133,8 @@ async def utils_get_id(ctx : Message, value: str) -> Union[int, None]:
     :param value:
     :return:
     """
-
-    _validate_required_string(value, "value", "id")
+    _CMD = "id"
+    _validate_required_string(value, "value", _CMD)
 
     guild = ctx.guild
     result = None
@@ -155,8 +156,8 @@ async def utils_get_roles(ctx: Message, value: int):
     :param value:
     :return:
     """
-
-    _validate_required_int(value, "value", "roles")
+    _CMD = "roles"
+    _validate_required_int(value, "value", _CMD)
 
     guild = ctx.guild
 

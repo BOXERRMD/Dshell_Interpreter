@@ -16,10 +16,10 @@ async def utils_has_permissions(ctx: Message, member: int, permission: dict[None
     :param permission:
     :return:
     """
+    _CMD = "has_perms"
+    _validate_required_int(member, "member", _CMD)
 
-    _validate_required_int(member, "member", "has_perms")
-
-    _validate_required_dict(permission, "permissions", "has_perms")
+    _validate_required_dict(permission, "permissions", _CMD)
 
     if None not in permission:
         raise ValueError(f"permissions must have simple 'allow' permission in has_perms command, not {permission.keys()}")

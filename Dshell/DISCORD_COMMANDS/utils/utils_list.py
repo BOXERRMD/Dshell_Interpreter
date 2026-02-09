@@ -21,7 +21,8 @@ async def utils_list_add(ctx, value: ListNode, *elements):
     :param elements:
     :return:
     """
-    _validate_required_list_node(value, "value", "add")
+    _CMD = "add"
+    _validate_required_list_node(value, "value", _CMD)
 
     for elem in elements:
             value.add(elem)
@@ -36,7 +37,8 @@ async def utils_list_remove(ctx, value: ListNode, element, count: int = 1):
     :param count:
     :return:
     """
-    _validate_required_list_node(value, "value", "remove")
+    _CMD = "remove"
+    _validate_required_list_node(value, "value", _CMD)
 
     value.remove(element, count)
     return value
@@ -47,7 +49,8 @@ async def utils_list_clear(ctx, value: ListNode):
     :param value:
     :return:
     """
-    _validate_required_list_node(value, "value", "clear")
+    _CMD = "clear"
+    _validate_required_list_node(value, "value", _CMD)
     value.clear()
     return value
 
@@ -58,8 +61,9 @@ async def utils_list_pop(ctx, value: ListNode, index: int = -1):
     :param index:
     :return:
     """
-    _validate_required_list_node(value, "value", "pop")
-    _validate_required_int(index, "index", "pop")
+    _CMD = "pop"
+    _validate_required_list_node(value, "value", _CMD)
+    _validate_required_int(index, "index", _CMD)
     return value.pop(index)
 
 async def utils_list_sort(ctx, value: ListNode, reverse: bool = False):
@@ -69,8 +73,9 @@ async def utils_list_sort(ctx, value: ListNode, reverse: bool = False):
     :param reverse:
     :return:
     """
-    _validate_required_list_node(value, "value", "sort")
-    _validate_required_bool(reverse, "reverse", "sort")
+    _CMD = "sort"
+    _validate_required_list_node(value, "value", _CMD)
+    _validate_required_bool(reverse, "reverse", _CMD)
     value.sort(reverse=reverse)
     return value
 
@@ -80,7 +85,8 @@ async def utils_list_reverse(ctx, value: ListNode):
     :param value:
     :return:
     """
-    _validate_required_list_node(value, "value", "reverse")
+    _CMD = "reverse"
+    _validate_required_list_node(value, "value", _CMD)
     value.reverse()
     return value
 
@@ -91,6 +97,7 @@ async def utils_list_get_value(ctx, value: ListNode, index: int = 0):
     :param index:
     :return:
     """
-    _validate_required_list_node(value, "value", "get")
-    _validate_required_int(index, "index", "get")
+    _CMD = "get"
+    _validate_required_list_node(value, "value", _CMD)
+    _validate_required_int(index, "index", _CMD)
     return value[index]
