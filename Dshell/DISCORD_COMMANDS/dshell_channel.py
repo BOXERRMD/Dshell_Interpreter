@@ -58,7 +58,7 @@ async def dshell_get_channel(ctx: Message, name):
     """
     Returns the channel object of the channel where the command was executed or the specified channel.
     """
-
+    # name peut être str ou int, validation manuelle dans le corps
     if isinstance(name, str):
         return next((c.id for c in ctx.channel.guild.channels if c.name == name), None)
 
@@ -179,6 +179,8 @@ async def dshell_create_voice_channel(ctx: Message,
 
     _validate_missing_or_type(bitrate, "Bitrate", int, "cvc")
     
+    _validate_missing_or_type(permissions, "Permissions", dict, "cvc")
+    
     _validate_optional_string(reason, "Reason", "cvc")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
@@ -201,6 +203,7 @@ async def dshell_delete_channel(ctx: Message,
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
     """
+    _validate_optional_int(channel, "Channel", "dc")
     _validate_optional_int(timeout, "Timeout", "dc")
     _validate_optional_string(reason, "Reason", "dc")
 
@@ -509,7 +512,7 @@ async def dshell_get_channel_category_id(ctx: Message, channel=None):
     """
     Returns the category ID of a channel.
     """
-
+    _validate_optional_int(channel, "Channel", "gcc")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gcc] Channel {channel} not found !")
@@ -523,7 +526,7 @@ async def dshell_get_channel_nsfw(ctx: Message, channel=None):
     """
     Returns if the channel is NSFW.
     """
-
+    _validate_optional_int(channel, "Channel", "gcnsfw")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gcnsfw] Channel {channel} not found !")
@@ -534,7 +537,7 @@ async def dshell_get_channel_slowmode(ctx: Message, channel=None):
     """
     Returns the slowmode delay of a channel.
     """
-
+    _validate_optional_int(channel, "Channel", "gcsl")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gcsl] Channel {channel} not found !")
@@ -547,7 +550,7 @@ async def dshell_get_channel_topic(ctx: Message, channel=None):
     """
     Returns the topic of a channel.
     """
-
+    _validate_optional_int(channel, "Channel", "gct")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gct] Channel {channel} not found !")
@@ -560,7 +563,7 @@ async def dshell_get_channel_threads(ctx: Message, channel=None):
     """
     Returns the list of threads in a channel.
     """
-
+    _validate_optional_int(channel, "Channel", "gcth")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gcth] Channel {channel} not found !")
@@ -579,7 +582,7 @@ async def dshell_get_channel_position(ctx: Message, channel=None):
     """
     Returns the position of a channel.
     """
-
+    _validate_optional_int(channel, "Channel", "gcp")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gcp] Channel {channel} not found !")
@@ -590,7 +593,7 @@ async def dshell_get_channel_url(ctx: Message, channel=None):
     """
     Returns the URL of a channel.
     """
-
+    _validate_optional_int(channel, "Channel", "gcurl")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gcurl] Channel {channel} not found !")
@@ -601,7 +604,7 @@ async def dshell_get_channel_voice_members(ctx: Message, channel=None):
     """
     Returns the list of members in a voice channel.
     """
-
+    _validate_optional_int(channel, "Channel", "gvcm")
     channel_to_check = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
     _validate_not_none(channel_to_check, f"[gvcm] Channel {channel} not found !")
