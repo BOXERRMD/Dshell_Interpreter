@@ -420,8 +420,7 @@ async def dshell_is_message_system(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    if message is not None and not isinstance(message, int):
-        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
+    _validate_optional_int(message, "Message parameter")
 
     target_message = ctx
     if message is not None:

@@ -18,7 +18,9 @@ from .._DshellInterpreteur.dshell_scope import new_scope
 
 from Dshell.full_import import Any, TYPE_CHECKING, Union
 
-from .utils.utils_type_validation import _validate_optional_code_node
+from .utils.utils_type_validation import (_validate_optional_code_node,
+                                          _validate_optional_int,
+                                          _validate_optional_string)
 
 if TYPE_CHECKING:
     from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
@@ -102,8 +104,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     if not isinstance(placeholder, str):
         raise TypeError(f"Select placeholder must be a string, not {type(placeholder)} !")
 
-    if row is not None and not isinstance(row, int):
-        raise TypeError(f"Select row must be an int or None, not {type(row)} !")
+    _validate_optional_int(row, "Select row")
 
     args_select["disabled"] = disabled
     args_select["max_values"] = max_values
@@ -148,14 +149,12 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
         if value and len(value) > 100:
             raise ValueError("Option value must be less than 100 characters !")
 
-        if description is not None and not isinstance(description, str):
-            raise TypeError(f"Option description must be a string or None, not {type(description)} !")
+        _validate_optional_string(description, "Option description")
 
         if description is not None and len(description) > 100:
             raise ValueError("Option description must be less than 100 characters !")
 
-        if emoji is not None and not isinstance(emoji, str):
-            raise TypeError(f"Option emoji must be a string or None, not {type(emoji)} !")
+        _validate_optional_string(emoji, "Option emoji")
 
         if not isinstance(default, bool):
             raise TypeError(f"Option default must be a bool, not {type(default)} !")
