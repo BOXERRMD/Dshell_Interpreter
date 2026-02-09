@@ -136,6 +136,8 @@ async def dshell_create_text_channel(ctx: Message,
     _validate_missing_or_type(topic, "Topic", str)
 
     _validate_missing_or_type(nsfw, "NSFW", bool)
+    
+    _validate_optional_string(reason, "Reason")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -164,6 +166,8 @@ async def dshell_create_voice_channel(ctx: Message,
     _validate_missing_or_type(position, "Position", int)
 
     _validate_missing_or_type(bitrate, "Bitrate", int)
+    
+    _validate_optional_string(reason, "Reason")
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
@@ -182,13 +186,12 @@ async def dshell_delete_channel(ctx: Message, channel=None, reason=None, timeout
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
     """
-    if not isinstance(timeout, int):
-        raise Exception(f'Timeout must be an integer, not {type(timeout)} !')
+    _validate_optional_int(timeout, "Timeout")
+    _validate_optional_string(reason, "Reason")
 
     channel_to_delete = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
-    if channel_to_delete is None:
-        raise Exception(f"Channel {channel} not found !")
+    _validate_not_none(channel_to_delete, f"Channel {channel} not found !")
 
     await sleep(timeout)
 
@@ -204,6 +207,7 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
     """
     _validate_optional_string(name, "Name")
     _validate_optional_string(regex, "Regex")
+    _validate_optional_string(reason, "Reason")
 
     for channel in ctx.channel.guild.channels:
 
