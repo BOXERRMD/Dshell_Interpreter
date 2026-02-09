@@ -18,6 +18,8 @@ from .._DshellInterpreteur.dshell_scope import new_scope
 
 from Dshell.full_import import Any, TYPE_CHECKING, Union
 
+from .utils.utils_type_validation import _validate_optional_code_node
+
 if TYPE_CHECKING:
     from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
@@ -45,8 +47,7 @@ async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: 
     custom_id = args_button.pop('custom_id', 'ui_button_'+str(random()))
     row = args_button.pop('row', 0)
 
-    if code is not None and not isinstance(code, CodeNode):
-        raise TypeError(f"Button code muste be a CodeNode or None, not {type(code)}")
+    _validate_optional_code_node(code, "Button code")
 
     if not isinstance(custom_id, str):
         raise TypeError(f"Button custom_id must be a string, not {type(custom_id)} !")
@@ -81,8 +82,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     placeholder = args_select.get('placeholder', "")
     row = args_select.pop('row', 0)
 
-    if code is not None and not isinstance(code, CodeNode):
-        raise TypeError(f"Select code muste be a CodeNode or None, not {type(code)}")
+    _validate_optional_code_node(code, "Select code")
 
     if not isinstance(custom_id, str):
         raise TypeError(f"Select custom_id must be a string, not {type(custom_id)} !")

@@ -10,6 +10,9 @@ from Dshell.full_import import (Interaction,
                            EasyModifiedViews)
 
 from .utils.utils_message import utils_autorised_mentions
+from .utils.utils_type_validation import (_validate_optional_number,
+                                          _validate_optional_embed,
+                                          _validate_optional_view)
 
 async def dshell_respond_interaction(ctx: Interaction,
                                      content: str = None,
@@ -29,8 +32,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     if not isinstance(ctx, Interaction):
         raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
 
-    if delete is not None and not isinstance(delete, (int, float)):
-        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+    _validate_optional_number(delete, "Delete")
 
     if not isinstance(hide, bool):
         raise Exception(f'Hide parameter must be a boolean, not {type(hide)} !')
@@ -43,8 +45,7 @@ async def dshell_respond_interaction(ctx: Interaction,
 
     from Dshell._DshellParser.ast_nodes import ListNode
 
-    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+    _validate_optional_embed(embeds, "Embeds")
 
     if embeds is None:
         embeds = ListNode([])
@@ -52,8 +53,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    if view is not None and not isinstance(view, EasyModifiedViews):
-        raise Exception(f'View must be an UI bloc or None, not {type(view)} !')
+    _validate_optional_view(view, "View")
 
     sended_message = await ctx.response.send_message(
                                      content=str(content),

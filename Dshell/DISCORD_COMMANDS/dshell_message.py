@@ -7,6 +7,11 @@ from Dshell.full_import import (Message,
 from .._DshellParser.ast_nodes import ListNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
+from .utils.utils_type_validation import (_validate_optional_number,
+                                          _validate_optional_embed,
+                                          _validate_optional_view,
+                                          _validate_optional_string,
+                                          _validate_optional_int)
 from .._DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Optional
@@ -48,8 +53,7 @@ async def dshell_send_message(ctx: Message,
     Sends a message on Discord
     """
 
-    if delete is not None and not isinstance(delete, (int, float)):
-        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+    _validate_optional_number(delete, "Delete")
 
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     allowed_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
@@ -59,8 +63,7 @@ async def dshell_send_message(ctx: Message,
 
 
 
-    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+    _validate_optional_embed(embeds, "Embeds")
 
     if embeds is None:
         embeds = ListNode([])
@@ -68,8 +71,7 @@ async def dshell_send_message(ctx: Message,
     elif isinstance(embeds, Embed):
         embeds = ListNode([embeds])
 
-    if view is not None and not isinstance(view, EasyModifiedViews):
-        raise Exception(f'View must be an UI or None, not {type(channel_to_send)} !')
+    _validate_optional_view(view, "View")
 
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,
@@ -97,15 +99,13 @@ async def dshell_respond_message(ctx: Message,
     """
     Responds to a message on Discord
     """
-    if delete is not None and not isinstance(delete, (int, float)):
-        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+    _validate_optional_number(delete, "Delete")
 
     respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
     mention_author = True if reply_mention else False
 
-    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+    _validate_optional_embed(embeds, "Embeds")
 
     if embeds is None:
         embeds = ListNode([])
@@ -166,11 +166,9 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
 
 
 
-    if embeds is not None and not isinstance(embeds, (ListNode, Embed)):
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+    _validate_optional_embed(embeds, "Embeds")
 
-    if view is not None and not isinstance(view, EasyModifiedViews):
-        raise Exception(f'View must be an UI bloc or None, not {type(view)} !')
+    _validate_optional_view(view, "View")
 
     if embeds is None:
         embeds = ListNode([])
@@ -256,8 +254,7 @@ async def dshell_unpin_message(ctx: Message, message=None, reason=None):
 
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
-    if reason is not None and not isinstance(reason, str):
-        raise Exception(f'Reason must be a string or None, not {type(reason)} !')
+    _validate_optional_string(reason, "Reason")
 
     await target_message.unpin()
 
@@ -273,8 +270,7 @@ async def dshell_get_history_messages(ctx: Message,
     Searches for messages matching a regex in a channel
     """
 
-    if limit is not None and not isinstance(limit, int):
-        raise Exception(f"Limit must be an integer or None, not {type(limit)}!")
+    _validate_optional_int(limit, "Limit")
 
     search_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -318,8 +314,7 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = No
     :param message: message ID
     :return:
     """
-    if message is not None and not isinstance(message, int):
-        raise Exception(f'Message parameter must be an integer or None, not {type(message)} !')
+    _validate_optional_int(message, "Message parameter")
 
     target_message = ctx
     if message is not None:
@@ -354,8 +349,7 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    if message is not None and not isinstance(message, int):
-        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
+    _validate_optional_int(message, "Message parameter")
 
     target_message = ctx
     if message is not None:
@@ -376,8 +370,7 @@ async def dshell_get_message_attachments(ctx: Message, message: int = None):
     :param message: message ID
     :return:
     """
-    if message is not None and not isinstance(message, int):
-        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
+    _validate_optional_int(message, "Message parameter")
 
     target_message = ctx
     if message is not None:

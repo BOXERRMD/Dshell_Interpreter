@@ -18,6 +18,9 @@ from Dshell.full_import import Union
 
 from .utils.utils_message import utils_get_message
 from .utils.utils_thread import utils_get_thread
+from .utils.utils_type_validation import (_validate_optional_string,
+                                          _validate_optional_int,
+                                          _validate_optional_bool)
 
 __all__ = [
     'dshell_get_channel',
@@ -63,12 +66,8 @@ async def dshell_get_channels(ctx: Message, name=None, regex=None):
     Returns a list of channels with the same name and/or matching the same regex.
     If neither is set, it will return all channels in the server.
     """
-    if name is not None and not isinstance(name, str):
-        raise Exception(f"Name must be a string, not {type(name)} !")
-
-    if regex is not None and not isinstance(regex, str):
-        raise Exception(f"Regex must be a string, not {type(regex)} !")
-
+    _validate_optional_string(name, "Name")
+    _validate_optional_string(regex, "Regex")
 
     channels = ListNode([])
 
@@ -96,12 +95,8 @@ async def dshell_get_channels_in_category(ctx: Message, category=None, name=None
     if not isinstance(category, int):
         raise Exception(f"Category must be an integer, not {type(category)} !")
 
-    if name is not None and not isinstance(name, str):
-        raise Exception(f"Name must be a string, not {type(name)} !")
-
-    if regex is not None and not isinstance(regex, str):
-        raise Exception(f"Regex must be a string, not {type(regex)} !")
-
+    _validate_optional_string(name, "Name")
+    _validate_optional_string(regex, "Regex")
 
     channels = ListNode([])
 
@@ -210,11 +205,8 @@ async def dshell_delete_channels(ctx: Message, name=None, regex=None, reason=Non
     Deletes all channels with the same name and/or matching the same regex.
     If neither is set, it will delete all channels with the same name as the one where the command was executed.
     """
-    if name is not None and not isinstance(name, str):
-        raise Exception(f"Name must be a string, not {type(name)} !")
-
-    if regex is not None and not isinstance(regex, str):
-        raise Exception(f"Regex must be a string, not {type(regex)} !")
+    _validate_optional_string(name, "Name")
+    _validate_optional_string(regex, "Regex")
 
     for channel in ctx.channel.guild.channels:
 
@@ -238,8 +230,7 @@ async def dshell_edit_text_channel(ctx: Message,
     """
     Edits a text channel on the server
     """
-    if name is not None and not isinstance(name, str):
-        raise Exception(f"Name must be a string, not {type(name)} !")
+    _validate_optional_string(name, "Name")
 
     if not isinstance(position, (_MissingSentinel, int)):
         raise Exception(f"Position must be an integer, not {type(position)} !")

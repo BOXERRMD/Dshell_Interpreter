@@ -2,6 +2,10 @@ from Dshell.full_import import (Message, MISSING, PermissionOverwrite, _MissingS
 
 from .._DshellParser.ast_nodes import ListNode
 from .utils.utils_global import utils_build_colour
+from .utils.utils_type_validation import (_validate_optional_string,
+                                          _validate_optional_int,
+                                          _validate_optional_bool,
+                                          _validate_optional_dict)
 
 __all__ = [
     'dshell_create_role',
@@ -90,11 +94,9 @@ async def dshell_edit_role(ctx: Message,
 
     role_to_edit = ctx.guild.get_role(role)
 
-    if name is not None and not isinstance(name, str):
-        raise Exception(f"Name must be a string, not {type(name)} !")
+    _validate_optional_string(name, "Name")
 
-    if permissions is not None and not isinstance(permissions, dict):
-        raise Exception(f"Permissions must be a PermissionNode, not {type(permissions)} !")
+    _validate_optional_dict(permissions, "Permissions")
 
     if isinstance(permissions, dict):
         if None in permissions:
@@ -104,14 +106,11 @@ async def dshell_edit_role(ctx: Message,
     if color is not None:
         color = utils_build_colour(color)
 
-    if hoist is not None and not isinstance(hoist, bool):
-        raise Exception(f"Hoist must be a boolean, not {type(permissions)} !")
+    _validate_optional_bool(hoist, "Hoist")
 
-    if mentionable is not None and not isinstance(mentionable, bool):
-        raise Exception(f"Mentionable must be a boolean, not {type(permissions)} !")
+    _validate_optional_bool(mentionable, "Mentionable")
 
-    if position is not None and not isinstance(position, int):
-        raise Exception(f"Position must be an integer, not {type(permissions)} !")
+    _validate_optional_int(position, "Position")
 
     await role_to_edit.edit(name=name if name is not None else role_to_edit.name,
                             permissions=permissions if permissions is not None else role_to_edit.permissions,

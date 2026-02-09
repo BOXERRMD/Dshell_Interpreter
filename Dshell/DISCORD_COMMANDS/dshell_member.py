@@ -11,6 +11,8 @@ from Dshell.full_import import (datetime,
                            timedelta,
                            UTC)
 
+from .utils.utils_type_validation import _validate_optional_number
+
 __all__ = [
     "dshell_send_private_message",
     "dshell_ban_member",
@@ -32,8 +34,7 @@ async def dshell_send_private_message(ctx: Message, message: str = None, member:
     If member is None, sends the message to the author of the command.
     If delete is specified, deletes the message after the specified time in seconds.
     """
-    if delete is not None and not isinstance(delete, (int, float)):
-        raise Exception(f'Delete parameter must be a number (seconds) or None, not {type(delete)} !')
+    _validate_optional_number(delete, "Delete")
 
     member_to_send = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
