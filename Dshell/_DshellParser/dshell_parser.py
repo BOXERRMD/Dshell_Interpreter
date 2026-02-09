@@ -17,35 +17,35 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
     :param token_lines: table of tokens
     :param start_node: the node where to start the parsing
     """
-    pointeur = 0  # pointeur sur les listes de tokens pour savoir ou parser
-    blocks = [start_node]  # liste d'imbrication des blocks pour gérer l'imbrication
+    pointer = 0  # pointer on token lists to track where to parse
+    blocks = [start_node]  # list of block nesting to manage indentation
     len_token_lines = len(token_lines)
 
-    while pointeur < len_token_lines:
+    while pointer < len_token_lines:
 
-        tokens_by_line = token_lines[pointeur]  # on récupère la liste de token par rapport au pointeur
-        first_token_line = tokens_by_line[0]  # on récupère le premier token de la ligne
+        tokens_by_line = token_lines[pointer]  # get the token list based on the pointer
+        first_token_line = tokens_by_line[0]  # get the first token of the line
         last_block = blocks[-1]
 
-        if first_token_line.type == DTT.COMMAND:  # si le token est une comande
-            body = tokens_by_line[1:]  # on récupère ses arguments
+        if first_token_line.type == DTT.COMMAND:  # if the token is a command
+            body = tokens_by_line[1:]  # get its arguments
             last_block.body.append(CommandNode(first_token_line.value,
-                                               ArgsCommandNode(body)))  # on ajoute la commande au body du dernier bloc
+                                               ArgsCommandNode(body)))  # add the command to the last block's body
 
         ############################## DSHELL KEYWORDS ##############################
 
-        elif first_token_line.type == DTT.KEYWORD:  # si c'est un mot clé
+        elif first_token_line.type == DTT.KEYWORD:  # if it's a keyword
 
-            if first_token_line.value == 'if':  # si c'est une condition
+            if first_token_line.value == 'if':  # if it's a condition
                 if len(tokens_by_line) <= 1:
                     raise SyntaxError(f'[IF] Take one or more arguments on line {first_token_line.position} !')
 
                 if_node = IfNode(condition=tokens_by_line[1:],
-                                 body=[])  # on crée la node avec les arguments de condition du if
+                                 body=[])  # create the node with the if condition arguments
                 last_block.body.append(if_node)
-                _, p = parse(token_lines[pointeur + 1:],
-                             if_node)  # on parse le reste du code avec la node if_node comme commancement du nouveau parsing
-                pointeur += p + 1  # essentielle pour ne pas parser les lignes déjà faite
+                _, p = parse(token_lines[pointer + 1:],
+                             if_node)  # parse the rest of the code with if_node as the start of the new parsing
+                pointer += p + 1  # essential to not parse already processed lines
 
             elif first_token_line.value == '#if':
                 if not isinstance(last_block, (IfNode, ElseNode, ElifNode)):
@@ -57,7 +57,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                         blocks.pop()
                         last_block = blocks[-1]
                 blocks.pop()
-                return blocks, pointeur
+                return blocks, pointer
 
             elif first_token_line.value == 'elif':
                 if not isinstance(last_block, (IfNode, ElifNode)):
@@ -84,10 +84,10 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise SyntaxError(f'[ELSE] already define !')
 
                 else_node = ElseNode(body=[])
-                if isinstance(last_block, ElifNode):  # si le dernier bloc est un elif
-                    last_block.parent.else_body = else_node  # on ajoute le bloc else à son parent (qui est le dernier if)
+                if isinstance(last_block, ElifNode):  # if the last block is an elif
+                    last_block.parent.else_body = else_node  # add the else block to its parent (which is the last if)
                 else:
-                    last_block.else_body = else_node  # une fois le parsing fini, on l'ajoute au dernier bloc
+                    last_block.else_body = else_node  # once parsing is done, add it to the last block
                 blocks.append(else_node)
 
             elif first_token_line.value == 'loop':
@@ -102,16 +102,16 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
                 loop_node = LoopNode(VarNode(tokens_by_line[1], to_postfix(tokens_by_line[2:])), body=[])
                 last_block.body.append(loop_node)
-                _, p = parse(token_lines[pointeur + 1:],
-                             loop_node)  # on parse tous ce qu'il y a après l'instruction loop
-                pointeur += p + 1
+                _, p = parse(token_lines[pointer + 1:],
+                             loop_node)  # parse everything after the loop instruction
+                pointer += p + 1
 
-            elif first_token_line.value == '#loop':  # si rencontré
+            elif first_token_line.value == '#loop':  # if encountered
                 if not isinstance(last_block, LoopNode):
                     raise SyntaxError(f'[#LOOP] No loop open on line {first_token_line.position} !')
 
                 blocks.pop()
-                return blocks, pointeur  # on renvoie les informations parsé à la dernière loop ouverte
+                return blocks, pointer  # return the parsed information to the last opened loop
 
             elif first_token_line.value == 'var':
                 if len(tokens_by_line) <= 2:
@@ -123,9 +123,9 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 var_node = VarNode(name=tokens_by_line[1], body=[])
                 last_block.body.append(var_node)
                 result, status = parser_inline(tokens_by_line[
-                                               2:])  # on fait en sorte de mettre les tokens de la ligne séparé par des retour à la ligne à chaque condition/else
+                                               2:])  # separate tokens on the line by newlines at each condition/else
                 if status:
-                    parse(result, var_node)  # on parse le tout dans la variable
+                    parse(result, var_node)  # parse everything in the variable
                 else:
                     # var_node.body = parse(result, StartNode([]))[0][0].body
                     var_node.body = result[0]
@@ -144,15 +144,15 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
                 param_node = ParamNode(body=[])
                 last_block.body.append(param_node)
-                _, p = parse(token_lines[pointeur + 1:], param_node)
-                pointeur += p + 1  # on avance le pointeur de la ligne suivante
+                _, p = parse(token_lines[pointer + 1:], param_node)
+                pointer += p + 1  # advance the pointer to the next line
 
             elif first_token_line.value == '#param':
                 if not isinstance(last_block, ParamNode):
                     raise SyntaxError(f'[#PARAM] No parameters open on line {first_token_line.position} !')
 
-                blocks.pop()  # on supprime le dernier bloc (le paramètre)
-                return blocks, pointeur  # on renvoie les informations parsé à la dernière paramètre ouverte
+                blocks.pop()  # remove the last block (the parameter)
+                return blocks, pointer  # return the parsed information to the last opened parameter
 
             elif first_token_line.value == 'code':
 
@@ -166,15 +166,15 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 code_node = CodeNode(body=[])
                 var_node = VarNode(tokens_by_line[1], [code_node])
                 last_block.body.append(var_node)
-                _, p = parse(token_lines[pointeur + 1:], code_node)
-                pointeur += p + 1
+                _, p = parse(token_lines[pointer + 1:], code_node)
+                pointer += p + 1
 
             elif first_token_line.value == '#code':
                 if not isinstance(last_block, CodeNode):
                     raise SyntaxError(f"[#CODE] No code open on line {first_token_line.position}")
 
                 blocks.pop()
-                return blocks, pointeur
+                return blocks, pointer
 
             elif first_token_line.value == 'eval':
                 if len(tokens_by_line) < 2:
@@ -218,14 +218,14 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 embed_node = EmbedNode(body=[], fields=[])
                 var_node = VarNode(tokens_by_line[1], body=[embed_node])
                 last_block.body.append(var_node)
-                _, p = parse(token_lines[pointeur + 1:], embed_node)
-                pointeur += p + 1
+                _, p = parse(token_lines[pointer + 1:], embed_node)
+                pointer += p + 1
 
             elif first_token_line.value == '#embed':
                 if not isinstance(last_block, EmbedNode):
                     raise SyntaxError(f'[#EMBED] No embed open on line {first_token_line.position} !')
                 blocks.pop()
-                return blocks, pointeur
+                return blocks, pointer
 
             elif first_token_line.value == 'field':
                 if len(tokens_by_line) <= 1:
@@ -245,14 +245,14 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 perm_node = PermissionNode(body=[])
                 var_node = VarNode(tokens_by_line[1], body=[perm_node])
                 last_block.body.append(var_node)
-                _, p = parse(token_lines[pointeur + 1:], perm_node)
-                pointeur += p + 1
+                _, p = parse(token_lines[pointer + 1:], perm_node)
+                pointer += p + 1
 
             elif first_token_line.value in ('#perm', '#permission'):
                 if not isinstance(last_block, PermissionNode):
                     raise SyntaxError(f'[#PERM] No permission open on line {first_token_line.position} !')
                 blocks.pop()
-                return blocks, pointeur
+                return blocks, pointer
 
             elif first_token_line.value == 'button':
                 if len(tokens_by_line) <= 1:
@@ -264,14 +264,14 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 button_node = UiButtonNode([])
                 var_node = VarNode(tokens_by_line[1], body=[button_node])
                 last_block.body.append(var_node)
-                _, p = parse(token_lines[pointeur + 1:], button_node)
-                pointeur += p + 1
+                _, p = parse(token_lines[pointer + 1:], button_node)
+                pointer += p + 1
 
             elif first_token_line.value == '#button':
                 if not isinstance(last_block, UiButtonNode):
                     raise SyntaxError(f'[#BUTTON] No UIButton open on line {first_token_line.position} !')
                 blocks.pop()
-                return blocks, pointeur
+                return blocks, pointer
 
             elif first_token_line.value == 'select':
                 if len(tokens_by_line) <= 1:
@@ -283,14 +283,14 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 select_node = UiSelectNode([])
                 var_node = VarNode(tokens_by_line[1], body=[select_node])
                 last_block.body.append(var_node)
-                _, p = parse(token_lines[pointeur + 1:], select_node)
-                pointeur += p + 1
+                _, p = parse(token_lines[pointer + 1:], select_node)
+                pointer += p + 1
 
             elif first_token_line.value == '#select':
                 if not isinstance(last_block, UiSelectNode):
                     raise SyntaxError(f'[#SELECT] No UISelect open on line {first_token_line.position} !')
                 blocks.pop()
-                return blocks, pointeur
+                return blocks, pointer
 
             elif first_token_line.value == 'option':
                 if len(tokens_by_line) <= 1:
@@ -315,9 +315,9 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
         else:
             last_block.body += tokens_by_line
 
-        pointeur += 1
+        pointer += 1
 
-    return blocks, pointeur
+    return blocks, pointer
 
 
 def ast_to_dict(obj):
@@ -343,7 +343,7 @@ def dict_to_ast(data):
 
 def parser_inline(tokens: list[Token]) -> tuple[list[list[Token]], bool]:
     """
-    Transforme une ligne avec un if/else inline en structure multilignes
+    Transform a line with an inline if/else into a multi-line structure
     """
     result: list[list[Token]] = []
 
@@ -351,25 +351,26 @@ def parser_inline(tokens: list[Token]) -> tuple[list[list[Token]], bool]:
         if_index = next(i for i, tok in enumerate(tokens) if tok.value == 'if')
         else_index = next(i for i, tok in enumerate(tokens) if tok.value == 'else')
     except StopIteration:
-        return [tokens], False  # ligne normale
+        return [tokens], False  # normal line
 
     value_tokens = tokens[:if_index]
     condition_tokens = tokens[if_index + 1:else_index]
     else_tokens = tokens[else_index + 1:]
 
-    # On génère :
-    result.append([tokens[if_index]] + condition_tokens)  # ligne "if cond"
-    result.append(value_tokens)  # body du if
-    result.append([tokens[else_index]])  # ligne "else"
-    result.append(else_tokens)  # body du else
+    # Generate:
+    result.append([tokens[if_index]] + condition_tokens)  # "if cond" line
+    result.append(value_tokens)  # if body
+    result.append([tokens[else_index]])  # "else" line
+    result.append(else_tokens)  # else body
     return result, True
 
 
 def to_postfix(expression, interpreter=None):
     """
-    Transforme l'expression en notation postfixée (RPN)
-    :param expression: l'expression donné par le tokenizer
-    :return: l'expression en notation postfixée
+    Transform the expression into postfix notation (RPN)
+    :param expression: the expression given by the tokenizer
+    :param interpreter: optional interpreter instance
+    :return: the expression in postfix notation
     """
     from Dshell._DshellTokenizer import dshell_operators
 
@@ -377,7 +378,7 @@ def to_postfix(expression, interpreter=None):
     operators: list[Token] = []
 
     for token in expression:
-        if token.type in (DTT.IDENT, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL, DTT.EVAL_GROUP):  # Si c'est un ident
+        if token.type in (DTT.IDENT, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL, DTT.EVAL_GROUP):  # If it's an ident
             output.append(token)
         elif token.value in dshell_operators:
             while (operators and operators[-1].value in dshell_operators and
@@ -385,7 +386,7 @@ def to_postfix(expression, interpreter=None):
                 output.append(operators.pop())
             operators.append(token)
         else:
-            raise ValueError(f"Token inconnu : {token}")
+            raise ValueError(f"Unknown token: {token}")
 
     while operators:
         output.append(operators.pop())

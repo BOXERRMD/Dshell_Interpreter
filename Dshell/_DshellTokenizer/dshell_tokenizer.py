@@ -55,33 +55,34 @@ class DshellTokenizer:
 
     def __init__(self, code: str, math_any_character: bool = False):
         """
-        Init le tokenizer.
-        :param code: Le code à tokenizer
+        Initialize the tokenizer.
+        :param code: The code to tokenize
+        :param math_any_character: Whether to match any character
         """
         self.code: str = code
         self.match_any_character: bool = math_any_character
 
     def start(self):
         """
-        Démarre le tokenizer pour qu'il traîte le code actuel.
-        Renvoie un tableau de tokens par ligne (séparé normalement pas des \n)
+        Start the tokenizer to process the current code.
+        Returns an array of tokens per line (normally separated by \\n)
         """
-        splited_commandes = self.split(self.code)
-        return self.tokenizer(splited_commandes)
+        split_commands = self.split(self.code)
+        return self.tokenizer(split_commands)
 
-    def tokenizer(self, commandes_lines: list[str]) -> list[list[Token]]:
+    def tokenizer(self, command_lines: list[str]) -> list[list[Token]]:
         """
-        Tokenize chaque ligne de code
-        :param commandes_lines: Le code séparé en plusieurs lignes par la méthode split
+        Tokenize each line of code
+        :param command_lines: The code separated into multiple lines by the split method
         """
         tokens: list[list[Token]] = []
 
         line_number = 1
-        for ligne in commandes_lines:  # iter chaque ligne du code
-            tokens_par_ligne: list[Token] = []
+        for line in command_lines:  # iterate each line of code
+            tokens_per_line: list[Token] = []
             is_comment: bool = False
 
-            for token_type, pattern in table_regex.items():  # iter la table de régex pour tous les tester sur la ligne
+            for token_type, pattern in table_regex.items():  # iterate the regex table to test all patterns on the line
 
                 if not self.match_any_character and token_type == DTT.ANY_CHARACTER:
                     continue
@@ -90,84 +91,84 @@ class DshellTokenizer:
                     is_comment = False
                     break
 
-                for match in finditer(pattern, ligne):  # iter les résultat du match pour avoir leur position
+                for match in finditer(pattern, line):  # iterate the match results to get their positions
 
-                    if token_type == DTT.COMMENT:  # si on tombe sur un commentaire, on arrête le tokenizage de la ligne
+                    if token_type == DTT.COMMENT:  # if we encounter a comment, stop tokenizing the line
                         is_comment = True
                         break
 
-                    start_match = match.start()  # position de début du match
+                    start_match = match.start()  # start position of the match
 
-                    token = Token(token_type, match.group(1), (line_number, start_match))  # on enregistre son token
-                    tokens_par_ligne.append(token)
+                    token = Token(token_type, match.group(1), (line_number, start_match))  # record its token
+                    tokens_per_line.append(token)
 
                     if token_type == DTT.STR:
                         token.value = token.value.replace(r'\"', '"')
 
                     if token_type in (
                             DTT.LIST,
-                            DTT.EVAL_GROUP):  # si c'est un regroupement de donnée, on tokenize ce qu'il contient
+                            DTT.EVAL_GROUP):  # if it's a data grouping, tokenize its contents
                         result = self.tokenizer([token.value])
                         token.value = result[0] if len(
-                            result) > 0 else result  # gère si la structure de donnée est vide ou non
+                            result) > 0 else result  # handle whether the data structure is empty or not
 
                         for token_in_list in token.value:
                             token_in_list.position = (line_number, token_in_list.position[1])
 
-                        for token_in_line in range(len(tokens_par_ligne)-1):
-                            if tokens_par_ligne[token_in_line].position[1] > start_match:
-                                str_tokens_in_list = tokens_par_ligne[token_in_line:-1]
-                                tokens_par_ligne = tokens_par_ligne[:token_in_line] + [tokens_par_ligne[-1]]
+                        for token_in_line in range(len(tokens_per_line)-1):
+                            if tokens_per_line[token_in_line].position[1] > start_match:
+                                str_tokens_in_list = tokens_per_line[token_in_line:-1]
+                                tokens_per_line = tokens_per_line[:token_in_line] + [tokens_per_line[-1]]
                                 token.value.extend(str_tokens_in_list)
-                                token.value.sort(key=lambda t: t.position[1])  # trie les tokens par rapport à leur position
+                                token.value.sort(key=lambda t: t.position[1])  # sort tokens by their position
                                 break
 
 
-                    len_match = len(match.group(0))  # longueur du match trouvé
-                    ligne = ligne[:start_match] + (MASK_CHARACTER * len_match) + ligne[
-                                                                                    match.end():]  # remplace la match qui vient d'avoir lieu pour ne pas le rematch une seconde fois
+                    len_match = len(match.group(0))  # length of the match found
+                    line = line[:start_match] + (MASK_CHARACTER * len_match) + line[
+                                                                                    match.end():]  # replace the match to avoid matching it a second time
 
-            tokens_par_ligne.sort(key=lambda
-                token: token.position[1])  # trie la position par rapport aux positions de match des tokens pour les avoir dans l'ordre du code
-            if tokens_par_ligne:
-                tokens.append(tokens_par_ligne)
+            tokens_per_line.sort(key=lambda
+                token: token.position[1])  # sort the position based on token match positions to have them in code order
+            if tokens_per_line:
+                tokens.append(tokens_per_line)
 
-            line_number += 1  # incrémente le numéro de ligne pour la prochaine ligne
+            line_number += 1  # increment the line number for the next line
 
         return tokens
 
     @staticmethod
-    def split(commande: str, global_split='\n', garder_carractere_regroupant=True, carractere_regroupant='"') -> list[
+    def split(command: str, global_split='\n', keep_grouping_character=True, grouping_character='"') -> list[
         str]:
         """
-        Sépare les commandes en une liste en respectant les chaînes entre guillemets.
-        Echapper les caractères regroupants avec un antislash (\) pour les inclure dans la chaîne.
-        :param commande: La chaîne de caractères à découper.
-        :param global_split: Le séparateur utilisé (par défaut '\n').
-        :param garder_carractere_regroupant: Si False, enlève les guillemets autour des chaînes.
-        :param caractere_regroupant: Le caractère utilisé pour regrouper une chaîne (par défaut '"').
-        :return: Une liste des commandes découpées avec les chaînes restaurées.
+        Separate commands into a list while respecting strings between quotes.
+        Escape grouping characters with a backslash (\\) to include them in the string.
+        :param command: The string to split.
+        :param global_split: The separator used (default '\\n').
+        :param keep_grouping_character: If False, remove quotes around strings.
+        :param grouping_character: The character used to group a string (default '"').
+        :return: A list of split commands with restored strings.
         """
 
-        commandes: str = commande.strip()
-        remplacement_temporaire = '[REMPLACER]'
-        pattern_find_regrouped_part = compile(fr'({carractere_regroupant}(?:[^\\{carractere_regroupant}]|\\.)*{carractere_regroupant})', flags=DOTALL)
-        entre_caractere_regroupant = findall(pattern_find_regrouped_part, commandes)  # repère les parties entre guillemets et les save
+        commands: str = command.strip()
+        temporary_replacement = '[REPLACE]'
+        pattern_find_regrouped_part = compile(fr'({grouping_character}(?:[^\\{grouping_character}]|\\.)*{grouping_character})', flags=DOTALL)
+        between_grouping_character = findall(pattern_find_regrouped_part, commands)  # find parts between quotes and save them
 
         res = sub(pattern_find_regrouped_part,
-                  remplacement_temporaire,
-                  commandes,
-                  )  # remplace les parties entre guillemets
+                  temporary_replacement,
+                  commands,
+                  )  # replace parts between quotes
 
-        res = res.split(global_split)  # split les commandes sans les guillemets
+        res = res.split(global_split)  # split commands without quotes
 
-        # remet les guillemets à leurs place
+        # restore quotes to their place
         result = []
         for i in res:
-            while remplacement_temporaire in i:
-                i = i.replace(remplacement_temporaire,
-                              entre_caractere_regroupant[0][1: -1] if not garder_carractere_regroupant else
-                              entre_caractere_regroupant[0], 1)
-                entre_caractere_regroupant.pop(0)
+            while temporary_replacement in i:
+                i = i.replace(temporary_replacement,
+                              between_grouping_character[0][1: -1] if not keep_grouping_character else
+                              between_grouping_character[0], 1)
+                between_grouping_character.pop(0)
             result.append(i)
         return result

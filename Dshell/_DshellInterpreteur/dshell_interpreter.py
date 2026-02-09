@@ -235,7 +235,7 @@ class DshellInterpreteur:
 
     async def eval_data_token(self, token: Token):
         """
-        Eval a data token and returns its value in Python.
+        Evaluate a data token and return its value in Python.
         :param token: The token to evaluate.
         """
 
@@ -252,14 +252,14 @@ class DshellInterpreteur:
             return None
         elif token.type == DTT.LIST:
             return ListNode(
-                [await self.eval_data_token(tok) for tok in token.value])  # token.value contient déjà une liste de Token
+                [await self.eval_data_token(tok) for tok in token.value])  # token.value already contains a list of Tokens
         elif token.type == DTT.IDENT:
             try:
                 return self.env.get(token.value)
             except KeyError:
                 return token.value
         elif token.type == DTT.EVAL_GROUP:
-            await self.execute(parse([token.value], StartNode([]))[0]) # obliger de parser car ce il n'est pas dejà un AST
+            await self.execute(parse([token.value], StartNode([]))[0])  # must parse because it's not already an AST
             return self.env.get('__ret__')
         elif token.type == DTT.STR:
             temp = token.value
