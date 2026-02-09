@@ -29,7 +29,42 @@ async def dshell_respond_interaction(ctx: Interaction,
                                      embeds=None,
                                      view=None) -> int:
     """
-    Responds to a message interaction on Discord
+    Répond à une interaction Discord avec un message.
+    
+    Cette fonction permet de répondre à une interaction Discord (comme un slash command)
+    avec un message personnalisé. Elle supporte les mentions, les embeds, les vues (boutons/menus)
+    et peut rendre la réponse éphémère (visible uniquement par l'utilisateur).
+    
+    :param ctx: Le contexte de l'interaction Discord
+    :type ctx: Interaction
+    :param content: Le contenu textuel du message (optionnel)
+    :type content: str | None
+    :param delete: Temps en secondes avant suppression automatique du message (optionnel)
+    :type delete: int | float | None
+    :param global_mentions: Active/désactive toutes les mentions (override les autres paramètres si défini)
+    :type global_mentions: bool | None
+    :param everyone_mention: Autorise la mention @everyone et @here
+    :type everyone_mention: bool
+    :param roles_mentions: Autorise les mentions de rôles
+    :type roles_mentions: bool
+    :param users_mentions: Autorise les mentions d'utilisateurs
+    :type users_mentions: bool
+    :param reply_mention: Mentionne l'auteur de l'interaction dans la réponse
+    :type reply_mention: bool
+    :param hide: Rend le message éphémère (visible uniquement par l'utilisateur qui a déclenché l'interaction)
+    :type hide: bool
+    :param embeds: Embed(s) à inclure dans le message (Embed unique ou ListNode d'Embeds)
+    :type embeds: Embed | ListNode | None
+    :param view: Vue interactive (boutons, menus) à attacher au message
+    :type view: View | None
+    :return: L'ID du message envoyé
+    :rtype: int
+    :raises Exception: Si le contexte n'est pas une Interaction
+    :raises TypeError: Si les types des paramètres sont invalides
+    
+    Example:
+        >>> await dshell_respond_interaction(ctx, content="Bonjour!", hide=True)
+        123456789
     """
     _CMD = "sri"
 
@@ -75,7 +110,21 @@ async def dshell_respond_interaction(ctx: Interaction,
 
 async def dshell_defer_interaction(ctx: Interaction) -> bool:
     """
-    Defer a message interaction on Discord
+    Diffère la réponse d'une interaction Discord.
+    
+    Cette fonction indique à Discord que le bot traite l'interaction et répondra plus tard.
+    Cela empêche l'interaction d'expirer (timeout de 3 secondes par défaut).
+    Utile pour les opérations longues qui nécessitent plus de temps de traitement.
+    
+    :param ctx: Le contexte de l'interaction Discord
+    :type ctx: Interaction
+    :return: True si le defer a réussi
+    :rtype: bool
+    :raises Exception: Si le contexte n'est pas une Interaction
+    
+    Example:
+        >>> await dshell_defer_interaction(ctx)
+        True
     """
 
     if not isinstance(ctx, Interaction):
@@ -87,7 +136,20 @@ async def dshell_defer_interaction(ctx: Interaction) -> bool:
 
 async def dshell_delete_original_message(ctx: Interaction) -> int:
     """
-    Delete the original message of an interaction on Discord
+    Supprime le message original d'une interaction Discord.
+    
+    Cette fonction supprime le message qui a déclenché l'interaction.
+    Fonctionne uniquement avec les interactions qui ont un message associé.
+    
+    :param ctx: Le contexte de l'interaction Discord
+    :type ctx: Interaction
+    :return: L'ID du message supprimé
+    :rtype: int
+    :raises Exception: Si le contexte n'est pas une Interaction
+    
+    Example:
+        >>> await dshell_delete_original_message(ctx)
+        987654321
     """
 
     if not isinstance(ctx, Interaction):

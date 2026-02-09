@@ -16,10 +16,23 @@ from .utils_type_validation import (_validate_required_list_node,
 
 async def utils_list_add(ctx, value: ListNode, *elements):
     """
-    Add an element to a list
-    :param value:
-    :param elements:
-    :return:
+    Ajoute un ou plusieurs éléments à une liste Dshell.
+    
+    Cette fonction modifie la liste en place en ajoutant tous les éléments fournis
+    à la fin de la liste.
+    
+    :param ctx: Le contexte du message Discord
+    :param value: La liste à laquelle ajouter des éléments
+    :type value: ListNode
+    :param elements: Un ou plusieurs éléments à ajouter
+    :return: La liste modifiée
+    :rtype: ListNode
+    :raises TypeError: Si value n'est pas un ListNode
+    
+    Example:
+        >>> my_list = ListNode([1, 2, 3])
+        >>> await utils_list_add(ctx, my_list, 4, 5)
+        ListNode([1, 2, 3, 4, 5])
     """
     _CMD = "add"
     _validate_required_list_node(value, "value", _CMD)
@@ -31,11 +44,16 @@ async def utils_list_add(ctx, value: ListNode, *elements):
 
 async def utils_list_remove(ctx, value: ListNode, element, count: int = 1):
     """
-    Remove an element from a list
-    :param value:
-    :param element:
-    :param count:
-    :return:
+    Retire une ou plusieurs occurrences d'un élément d'une liste Dshell.
+    
+    :param ctx: Le contexte du message Discord
+    :param value: La liste dont retirer l'élément
+    :type value: ListNode
+    :param element: L'élément à retirer
+    :param count: Nombre d'occurrences à retirer (par défaut: 1)
+    :type count: int
+    :return: La liste modifiée
+    :rtype: ListNode
     """
     _CMD = "remove"
     _validate_required_list_node(value, "value", _CMD)
@@ -45,9 +63,13 @@ async def utils_list_remove(ctx, value: ListNode, element, count: int = 1):
 
 async def utils_list_clear(ctx, value: ListNode):
     """
-    Clear a list
-    :param value:
-    :return:
+    Vide complètement une liste Dshell.
+    
+    :param ctx: Le contexte du message Discord
+    :param value: La liste à vider
+    :type value: ListNode
+    :return: La liste vide
+    :rtype: ListNode
     """
     _CMD = "clear"
     _validate_required_list_node(value, "value", _CMD)
@@ -56,10 +78,14 @@ async def utils_list_clear(ctx, value: ListNode):
 
 async def utils_list_pop(ctx, value: ListNode, index: int = -1):
     """
-    Pop an element from a list
-    :param value:
-    :param index:
-    :return:
+    Retire et retourne un élément d'une liste à l'index spécifié.
+    
+    :param ctx: Le contexte du message Discord
+    :param value: La liste dont retirer l'élément
+    :type value: ListNode
+    :param index: Index de l'élément à retirer (par défaut: -1 pour le dernier)
+    :type index: int
+    :return: L'élément retiré
     """
     _CMD = "pop"
     _validate_required_list_node(value, "value", _CMD)
@@ -68,10 +94,15 @@ async def utils_list_pop(ctx, value: ListNode, index: int = -1):
 
 async def utils_list_sort(ctx, value: ListNode, reverse: bool = False):
     """
-    Sort a list
-    :param value:
-    :param reverse:
-    :return:
+    Trie une liste Dshell en place.
+    
+    :param ctx: Le contexte du message Discord
+    :param value: La liste à trier
+    :type value: ListNode
+    :param reverse: Si True, trie en ordre décroissant (par défaut: False)
+    :type reverse: bool
+    :return: La liste triée
+    :rtype: ListNode
     """
     _CMD = "sort"
     _validate_required_list_node(value, "value", _CMD)
@@ -81,9 +112,13 @@ async def utils_list_sort(ctx, value: ListNode, reverse: bool = False):
 
 async def utils_list_reverse(ctx, value: ListNode):
     """
-    Reverse a list
-    :param value:
-    :return:
+    Inverse l'ordre des éléments d'une liste Dshell en place.
+    
+    :param ctx: Le contexte du message Discord
+    :param value: La liste à inverser
+    :type value: ListNode
+    :return: La liste inversée
+    :rtype: ListNode
     """
     _CMD = "reverse"
     _validate_required_list_node(value, "value", _CMD)
@@ -92,10 +127,15 @@ async def utils_list_reverse(ctx, value: ListNode):
 
 async def utils_list_get_value(ctx, value: ListNode, index: int = 0):
     """
-    Get a value from a list
-    :param value:
-    :param index:
-    :return:
+    Récupère un élément d'une liste Dshell à l'index spécifié.
+    
+    :param ctx: Le contexte du message Discord
+    :param value: La liste dont récupérer l'élément
+    :type value: ListNode
+    :param index: Index de l'élément à récupérer (par défaut: 0)
+    :type index: int
+    :return: L'élément à l'index spécifié
+    :raises IndexError: Si l'index est hors limites
     """
     _CMD = "get"
     _validate_required_list_node(value, "value", _CMD)

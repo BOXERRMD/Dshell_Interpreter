@@ -23,6 +23,28 @@ if TYPE_CHECKING:
 async def utils_update_permissions(ctx: Message,
                                    permission1: dict[Union[Member, Role, None], PermissionOverwrite],
                                    permission2: dict[Union[Member, Role, None], PermissionOverwrite]) -> dict:
+    """
+    Fusionne deux dictionnaires de permissions Discord.
+    
+    Cette fonction met à jour le premier dictionnaire de permissions avec les valeurs
+    du second, permettant de combiner facilement plusieurs ensembles de permissions.
+    
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param permission1: Le dictionnaire de permissions de base
+    :type permission1: dict[Union[Member, Role, None], PermissionOverwrite]
+    :param permission2: Le dictionnaire de permissions à ajouter
+    :type permission2: dict[Union[Member, Role, None], PermissionOverwrite]
+    :return: Le dictionnaire de permissions fusionné
+    :rtype: dict
+    :raises TypeError: Si les paramètres ne sont pas des dictionnaires
+    
+    Example:
+        >>> perms1 = {member1: PermissionOverwrite(send_messages=True)}
+        >>> perms2 = {member2: PermissionOverwrite(read_messages=True)}
+        >>> await utils_update_permissions(ctx, perms1, perms2)
+        {member1: ..., member2: ...}
+    """
     _CMD = "update_perms"
     _validate_required_dict(permission1, "permission1", _CMD)
 
