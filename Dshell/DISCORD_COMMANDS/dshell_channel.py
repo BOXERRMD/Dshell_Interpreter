@@ -23,7 +23,8 @@ from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_bool,
                                           _validate_missing_or_type,
                                           _validate_not_none,
-                                          _validate_has_attribute)
+                                          _validate_has_attribute,
+                                          _validate_required_string)
 
 __all__ = [
     'dshell_get_channel',
@@ -83,20 +84,21 @@ async def dshell_get_channels(ctx: Message, name=None, regex=None):
 
     return channels
 
-async def dshell_get_channels_in_category(ctx: Message, category=None, name=None, regex=None):
+async def dshell_get_channels_in_category(ctx: Message,
+                                          category=None,
+                                          name=None,
+                                          regex=None):
     """
     Returns a list of channels in a specific category with the same name and/or matching the same regex.
     If neither is set, it will return all channels in the specified category.
     """
 
+    _validate_optional_int(category, "Category")
+
     if category is None and ctx.channel.category is not None:
         category = ctx.channel.category.id
 
-    if category is None:
-        raise Exception("Category must be specified !")
-
-    if not isinstance(category, int):
-        raise Exception(f"Category must be an integer, not {type(category)} !")
+    _validate_not_none(category, "The current channel has no category, you must specify a category ID !")
 
     _validate_optional_string(name, "Name")
     _validate_optional_string(regex, "Regex")
@@ -129,6 +131,10 @@ async def dshell_create_text_channel(ctx: Message,
     Creates a text channel on the server
     """
 
+    _validate_required_string(name, "Name")
+
+    _validate_optional_int(category, "Category")
+
     _validate_missing_or_type(position, "Position", int)
 
     _validate_missing_or_type(slowmode, "Slowmode", int)
@@ -136,6 +142,8 @@ async def dshell_create_text_channel(ctx: Message,
     _validate_missing_or_type(topic, "Topic", str)
 
     _validate_missing_or_type(nsfw, "NSFW", bool)
+
+    _validate_missing_or_type(permissions, "Permissions", dict)
     
     _validate_optional_string(reason, "Reason")
 
@@ -163,6 +171,10 @@ async def dshell_create_voice_channel(ctx: Message,
     """
     Creates a voice channel on the server
     """
+    _validate_required_string(name, "Name")
+
+    _validate_optional_int(category, "Category")
+
     _validate_missing_or_type(position, "Position", int)
 
     _validate_missing_or_type(bitrate, "Bitrate", int)
@@ -181,7 +193,10 @@ async def dshell_create_voice_channel(ctx: Message,
     return created_channel.id
 
 
-async def dshell_delete_channel(ctx: Message, channel=None, reason=None, timeout=0):
+async def dshell_delete_channel(ctx: Message,
+                                channel=None,
+                                reason=None,
+                                timeout=0):
     """
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
@@ -320,18 +335,18 @@ async def dshell_create_thread_message(ctx: Message,
 
     message = utils_get_message(ctx, message)
 
-
-    if not isinstance(name, str):
-        raise Exception(f"Name must be a string, not {type(name)} !")
+    _validate_required_string(name, "Name")
 
     _validate_missing_or_type(archive, "Auto archive duration", int)
 
-    if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
+    if isinstance(archive, int) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
     _validate_missing_or_type(slowmode, "Slowmode delay", int)
 
-    if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
+    _validate_missing_or_type(slowmode, "Slowmode delay", int)
+
+    if isinstance(slowmode, int) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
     if isinstance(message, PartialMessage):
@@ -365,12 +380,14 @@ async def dshell_edit_thread(ctx: Message,
 
     _validate_missing_or_type(archive, "Auto archive duration", int)
 
-    if not isinstance(archive, _MissingSentinel) and archive not in (60, 1440, 4320, 10080):
+    if isinstance(archive, int) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
     _validate_missing_or_type(slowmode, "Slowmode delay", int)
 
-    if not isinstance(slowmode, _MissingSentinel) and slowmode < 0:
+    _validate_missing_or_type(slowmode, "Slowmode delay", int)
+
+    if isinstance(slowmode, int) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
     await thread.edit(name=name if name is not None else thread.name,
