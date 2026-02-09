@@ -436,7 +436,7 @@ async def dshell_delete_thread(ctx: Message, thread: Union[int, str] = None, rea
     else:
         thread = target_message
 
-    _validate_has_attribute(thread, 'thread', "The specified message does not have a thread !")
+    _validate_has_attribute(thread, 'thread', "[dt] The specified message does not have a thread !")
 
     if thread.thread is None:
         raise Exception("The specified message does not have a thread !")
@@ -539,7 +539,7 @@ async def dshell_get_channel_slowmode(ctx: Message, channel=None):
 
     _validate_not_none(channel_to_check, f"[gcsl] Channel {channel} not found !")
 
-    _validate_has_attribute(channel_to_check, \'slowmode_delay\', f"[gcsl] Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, 'slowmode_delay', f"[gcsl] Channel {channel} is not a text channel !")
 
     return channel_to_check.slowmode_delay
 
@@ -552,7 +552,7 @@ async def dshell_get_channel_topic(ctx: Message, channel=None):
 
     _validate_not_none(channel_to_check, f"[gct] Channel {channel} not found !")
 
-    _validate_has_attribute(channel_to_check, \'topic\', f"[gct] Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, 'topic', f"[gct] Channel {channel} is not a text channel !")
 
     return channel_to_check.topic
 
@@ -565,7 +565,7 @@ async def dshell_get_channel_threads(ctx: Message, channel=None):
 
     _validate_not_none(channel_to_check, f"[gcth] Channel {channel} not found !")
 
-    _validate_has_attribute(channel_to_check, \'threads\', f"[gcth] Channel {channel} is not a text channel !")
+    _validate_has_attribute(channel_to_check, 'threads', f"[gcth] Channel {channel} is not a text channel !")
 
 
     threads = ListNode([])
