@@ -251,24 +251,33 @@ def _validate_required_dict(value, param_name: str, command_name: str = None):
 
 # Validation functions for _MissingSentinel or other types
 
-def _validate_missing_or_type(value, param_name: str, allowed_types: tuple, type_description: str = None):
+def _validate_missing_or_type(value, value_name: str, *types):
     """
-    Validate that a value is either _MissingSentinel or one of the allowed types.
+    Validate that a value is either _MissingSentinel or one of the specified types.
     This is useful for parameters that can be omitted (using MISSING sentinel) or have a specific type.
     
+    The _MissingSentinel is automatically included in the validation, so you only need to pass
+    the other allowed types.
+    
     :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :param allowed_types: Tuple of allowed types (e.g., (int,), (str,), (bool,))
-    :param type_description: Human-readable description of allowed types (e.g., "an integer", "a string")
-    :raises Exception: If the value is not _MissingSentinel and not one of the allowed types
+    :param value_name: The parameter name for error messages
+    :param types: Variable number of allowed types (e.g., int, str, bool)
+    :raises Exception: If the value is not _MissingSentinel and not one of the specified types
+    
+    Example:
+        _validate_missing_or_type(position, "Position", int)
+        _validate_missing_or_type(value, "Value", int, str, float)
     """
     from Dshell.full_import import _MissingSentinel
     
-    if not isinstance(value, (_MissingSentinel,) + allowed_types):
-        if type_description is None:
-            type_names = " or ".join(t.__name__ for t in allowed_types)
-            type_description = type_names
-        raise Exception(f"{param_name} must be {type_description}, not {type(value)} !")
+    # Include _MissingSentinel in the allowed types
+    allowed_types = (_MissingSentinel,) + types
+    
+    if not isinstance(value, allowed_types):
+        # Build error message dynamically
+        type_names = [_MissingSentinel.__name__] + [t.__name__ for t in types]
+        type_description = " or ".join(type_names)
+        raise Exception(f"{value_name} must be {type_description}, not {type(value)} !")
 
 
 def _validate_missing_or_bool(value, param_name: str):
