@@ -24,6 +24,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
     while pointer < len_token_lines:
 
         tokens_by_line = token_lines[pointer]  # get the token list based on the pointer
+        len_tokens_by_line = len(tokens_by_line)
+        len_tokens_by_line_since_command_name = len_tokens_by_line - 1
         first_token_line = tokens_by_line[0]  # get the first token of the line
         last_block = blocks[-1]
 
@@ -91,20 +93,35 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 blocks.append(else_node)
 
             elif first_token_line.value == 'loop':
-                if len(tokens_by_line) <= 2:
-                    raise SyntaxError(f'[LOOP] Take two arguments on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[LOOP] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-                if tokens_by_line[2].type not in (DTT.IDENT, DTT.STR, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.EVAL_GROUP):
-                    raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
-                                    f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
 
-                loop_node = LoopNode(VarNode(tokens_by_line[1], to_postfix(tokens_by_line[2:])), body=[])
-                last_block.body.append(loop_node)
-                _, p = parse(token_lines[pointer + 1:],
-                             loop_node)  # parse everything after the loop instruction
-                pointer += p + 1
+                if len_tokens_by_line <= 1:
+                    raise SyntaxError(f'[LOOP] Take one (or two) argument(s) on line {first_token_line.position} !')
+
+                if len_tokens_by_line_since_command_name >= 2: # if the loop has two arguments : an ident and an iterator
+
+                    if tokens_by_line[1].type != DTT.IDENT:
+                        raise TypeError(f'[LOOP] the variable given must be a ident, '
+                                        f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+                    if tokens_by_line[2].type not in (DTT.IDENT, DTT.STR, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.EVAL_GROUP):
+                        raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
+                                        f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
+
+                    loop_node = LoopNode(VarNode(tokens_by_line[1], to_postfix(tokens_by_line[2:])), body=[])
+                    last_block.body.append(loop_node)
+                    _, p = parse(token_lines[pointer + 1:],
+                                 loop_node)  # parse everything after the loop instruction
+                    pointer += p + 1
+
+                else:
+                    if tokens_by_line[1].type not in (DTT.IDENT, DTT.STR, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.EVAL_GROUP):
+                        raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
+                                        f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+
+                    loop_node = LoopNode(VarNode(Token(DTT.IDENT, "__loop__", tokens_by_line[1].position), to_postfix(tokens_by_line[1:])), body=[])
+                    last_block.body.append(loop_node)
+                    _, p = parse(token_lines[pointer + 1:],
+                                 loop_node)  # parse everything after the loop instruction
+                    pointer += p + 1
 
             elif first_token_line.value == '#loop':  # if encountered
                 if not isinstance(last_block, LoopNode):
@@ -188,6 +205,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 last_block.body.append(eval_node)
 
             elif first_token_line.value == 'return':
+                if not isinstance(last_block, CodeNode):
+                    raise SyntaxError(f"[RETURN] No code open on line {first_token_line.position} !")
                 if len(tokens_by_line) < 2:
                     raise SyntaxError(f"[RETURN] take one or more arguments on line {first_token_line.position}")
 
