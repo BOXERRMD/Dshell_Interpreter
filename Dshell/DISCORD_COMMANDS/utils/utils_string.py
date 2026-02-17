@@ -187,7 +187,7 @@ async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> 
         _validate_string_type(content, 'content', 'regex_findall')
 
     result = findall(regex, content if content is not None else ctx.content)
-    return ListNode([list(i) for i in result])
+    return ListNode([ListNode(list(i)) for i in result])
 
 
 async def utils_regex_sub(ctx: Message, regex: str, replace: str, content: str = None) -> str:

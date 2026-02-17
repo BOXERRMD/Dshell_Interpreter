@@ -1,4 +1,5 @@
 __all__ = [
+    "utils_make_mention",
     "utils_len",
     "utils_random",
     "utils_get_name",
@@ -68,28 +69,61 @@ def utils_what_discord_type_is(ctx: Union[Message, Guild], value: int) -> tuple[
     """
     guild = ctx if isinstance(ctx, Guild) else ctx.guild
 
+    _validate_required_int(value, "value", "what_discord_type_is")
+
     if member := guild.get_member(value):
         return DiscordType.MEMBER, member
 
-    elif role := guild.get_role(value):
+    if role := guild.get_role(value):
         return DiscordType.ROLE, role
 
-    elif (channel := guild.get_channel(value)) and isinstance(channel, TextChannel):
-        return DiscordType.TEXT_CHANNEL, channel
+    channel = guild.get_channel(value)
 
-    elif (channel := guild.get_channel(value)) and isinstance(channel, VoiceChannel):
-        return DiscordType.VOICE_CHANNEL, channel
+    if channel is not None:
 
-    elif (channel := guild.get_channel(value)) and isinstance(channel, CategoryChannel):
-        return DiscordType.CATEGORY_CHANNEL, channel
+         if isinstance(channel, TextChannel):
+            return DiscordType.TEXT_CHANNEL, channel
 
-    elif (channel := guild.get_channel(value)) and isinstance(channel, ForumChannel):
-        return DiscordType.FORUM_CHANNEL, channel
+         elif isinstance(channel, VoiceChannel):
+            return DiscordType.VOICE_CHANNEL, channel
 
-    elif (channel := guild.get_channel(value)) and isinstance(channel, Thread):
-        return DiscordType.THREAD, channel
+         elif isinstance(channel, CategoryChannel):
+            return DiscordType.CATEGORY_CHANNEL, channel
+
+         elif isinstance(channel, ForumChannel):
+            return DiscordType.FORUM_CHANNEL, channel
+
+         elif isinstance(channel, Thread):
+            return DiscordType.THREAD, channel
+
+    return DiscordType.UNKNOWN, None
+
+async def utils_make_mention(ctx: Message, value: int) -> str:
+    """
+    Crée une mention Discord à partir d'un ID.
+
+    Génère une chaîne de caractères de mention pour un membre, un rôle ou un canal
+    en fonction de l'ID fourni. Vérifie dans l'ordre: membres, rôles, puis canaux.
+
+    :param ctx: Le contexte du message Discord
+    :type ctx: Message
+    :param value: L'ID Discord de l'élément à mentionner
+    :type value: int
+    :return: La chaîne de mention Discord correspondante, ou une chaîne vide si non trouvé
+    :rtype: str
+
+    Example:
+        >>> await utils_make_mention(ctx, 123456789)
+        "<@123456789>"  # Si c'est un membre
+        "<@&123456789>"  # Si c'est un rôle
+        "<#123456789>"  # Si c'est un canal
+    """
+    _validate_required_int(value, "value", "make_mention")
+
+    if (target := utils_what_discord_type_is(ctx, value)) != DiscordType.UNKNOWN:
+        return target[1].mention
     else:
-        return DiscordType.UNKNOWN, None
+        return ""
 
 async def utils_len(ctx: Message, value):
     """

@@ -63,6 +63,7 @@ dshell_commands: dict[str, Callable] = {
     ## Discord utils
     'name': utils_get_name, # get the name from id (channel, role, member)
     'id': utils_get_id, # get the id from name (channel, role, member)
+    'mention': utils_make_mention, # make a mention from id (channel, role, member)
 
     ## Member utils
     'has_perms': utils_has_permissions, # check if a member has the specified permissions

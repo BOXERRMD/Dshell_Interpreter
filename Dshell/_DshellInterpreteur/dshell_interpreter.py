@@ -56,6 +56,7 @@ class DshellInterpreteur:
         self.env: Scope = Scope()
         self.env.update({
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
+            '__loop__': None,  # used to store the current loop variable in loop nodes if the loop identifier is not specified
 
             '__author__': message.author.id,
             '__author_name__': message.author.name,
