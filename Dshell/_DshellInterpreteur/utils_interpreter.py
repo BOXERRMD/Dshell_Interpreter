@@ -3,7 +3,6 @@ from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 
 from .._DshellParser.ast_nodes import IfNode, ParamNode, ListNode
-
 from .._DshellParser.dshell_parser import to_postfix
 
 from Dshell.full_import import sub, escape
@@ -179,23 +178,20 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
         elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR, DTT.LOGIC_WORD_OPERATOR):
             op = token.value
 
-            if op == "not":
-                a = stack.pop()
-                result = dshell_operators[op][0](a)
+            if op in dshell_operators:
 
-            else:
-                b = stack.pop()
-                try:
-                    a = stack.pop()
-                except IndexError:
-                    if op == "-":
-                        a = 0
-                    else:
-                        raise SyntaxError(f"Invalid expression: {op} operator requires two operands, but only one was found.")
+                if len(stack) == 0:
+                    raise SyntaxError(f"Not enough operands for operator '{op}'")
 
-                result = dshell_operators[op][0](a, b)
+                operands: dict = {'a': stack.pop()}  # pop the last operand and store it as 'a'
+                if len(stack) > 0:
+                    operands['b'] = operands['a']
+                    b = stack.pop()
+                    operands['a'] = b  # if there is another operand, pop it and store it as 'b'
 
-            stack.append(result)
+                result = dshell_operators[op][0](**operands)  # call the operator function with the operands
+
+                stack.append(result)
 
         else:
             raise SyntaxError(f"Unexpected token type: {token.type} - {token.value}")
