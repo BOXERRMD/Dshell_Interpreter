@@ -325,7 +325,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
         for token in tokens_by_line:
 
             if token.type in DTT_DATA:
-                last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([first_token_line])))
+                last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([token])))
 
         else:
             last_block.body += tokens_by_line
