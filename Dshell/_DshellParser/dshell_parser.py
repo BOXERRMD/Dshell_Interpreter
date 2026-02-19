@@ -322,10 +322,12 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
         ############################## AUTRE ##############################
 
-        for token in tokens_by_line:
+        elif first_token_line.type in DTT_DATA:  # if the line starts with a data token, we consider it as a command with an implicit "sm" name
+            for token in tokens_by_line:
 
-            if token.type in DTT_DATA:
-                last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([token])))
+                if token.type in DTT_DATA:
+                    print(token.value)
+                    last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([token])))
 
         else:
             last_block.body += tokens_by_line
