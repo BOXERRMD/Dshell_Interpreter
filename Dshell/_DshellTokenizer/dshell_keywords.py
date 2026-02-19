@@ -148,7 +148,9 @@ dshell_commands: dict[str, Callable] = {
 
 dshell_mathematical_operators: dict[str, tuple[Callable, int]] = {
 
+    r"++": (lambda a: a + 1, 6),
     r"+": (lambda a, b: a + b, 6),
+    r"--": (lambda a: a - 1, 6),
     r"-": (lambda a, b=None: a - b if b is not None else -a, 6),
     # warning: ambiguity between unary and binary to be handled in your parser
     r"**": (lambda a, b: a ** b, 8),
