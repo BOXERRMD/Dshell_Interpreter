@@ -29,16 +29,16 @@ MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
+    DTT.EVAL_GROUP: compile(r"`(.*)`"),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
     DTT.LIST: compile(r"\[(.*)]"),
-    DTT.EVAL_GROUP: compile(r"`(.*)`"),
     DTT.PARAMETERS: compile(rf"--?\*\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.STR_PARAMETER: compile(rf"--?\'\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.PARAMETER: compile(rf"--?\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
     DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
-    DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)"),
-    DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b"),
+    DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)", flags=IGNORECASE),
+    DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b", flags=IGNORECASE),
     DTT.MATHS_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_mathematical_operators.keys()])})"),
     DTT.LOGIC_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_logical_operators.keys()])})"),
     DTT.LOGIC_WORD_OPERATOR: compile(rf"(?:^|\s)({'|'.join([escape(i) for i in dshell_logical_word_operators.keys()])})(?:$|\s)"),
@@ -47,7 +47,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.BOOL: compile(r"(True|False)", flags=IGNORECASE),
     DTT.NONE: compile(r"(None)", flags=IGNORECASE),
     DTT.IDENT: compile(rf"([A-Za-z0-9_]+)"),
-    DTT.ANY_CHARACTER: compile(rf"([^{MASK_CHARACTER}\n\s]+)"),
+    DTT.ANY_CHARACTER: compile(rf"([^{MASK_CHARACTER}\n]+)"),
 }
 
 
