@@ -30,6 +30,7 @@ MASK_CHARACTER = '§'
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
     DTT.EVAL_GROUP: compile(r"`(.*)`"),
+    DTT.EVAL_EXPRESSION: compile(r"\{(.*)}"),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
     DTT.LIST: compile(r"\[(.*)]"),
     DTT.PARAMETERS: compile(rf"--?\*\s*([A-Za-z_]+)\s*", flags=ASCII),
@@ -107,7 +108,8 @@ class DshellTokenizer:
 
                     if token_type in (
                             DTT.LIST,
-                            DTT.EVAL_GROUP):  # if it's a data grouping, tokenize its contents
+                            DTT.EVAL_GROUP,
+                            DTT.EVAL_EXPRESSION):  # if it's a data grouping, tokenize its contents
                         result = self.tokenizer([token.value])
                         token.value = result[0] if len(
                             result) > 0 else result  # handle whether the data structure is empty or not

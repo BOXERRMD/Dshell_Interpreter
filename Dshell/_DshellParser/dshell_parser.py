@@ -8,6 +8,7 @@ __all__ = [
 
 from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from .._DshellTokenizer.dshell_token_type import DTT_DATA
 from .ast_nodes import *
 
 
@@ -102,7 +103,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     if tokens_by_line[1].type != DTT.IDENT:
                         raise TypeError(f'[LOOP] the variable given must be a ident, '
                                         f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-                    if tokens_by_line[2].type not in (DTT.IDENT, DTT.STR, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.EVAL_GROUP):
+                    if tokens_by_line[2].type not in DTT_DATA:
                         raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
                                         f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
 
@@ -113,7 +114,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     pointer += p + 1
 
                 else:
-                    if tokens_by_line[1].type not in (DTT.IDENT, DTT.STR, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.EVAL_GROUP):
+                    if tokens_by_line[1].type not in DTT_DATA:
                         raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
                                         f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
@@ -321,15 +322,10 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
         ############################## AUTRE ##############################
 
-        elif first_token_line.type == DTT.IDENT:
-            if len(tokens_by_line) == 1:
+        for token in tokens_by_line:
+
+            if token.type in DTT_DATA:
                 last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([first_token_line])))
-
-        elif first_token_line.type == DTT.STR:
-            last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([first_token_line])))
-
-        elif first_token_line.type == DTT.EVAL_GROUP:
-            parse([first_token_line.value], last_block)
 
         else:
             last_block.body += tokens_by_line
@@ -397,7 +393,7 @@ def to_postfix(expression, interpreter=None):
     operators: list[Token] = []
 
     for token in expression:
-        if token.type in (DTT.IDENT, DTT.INT, DTT.FLOAT, DTT.LIST, DTT.STR, DTT.BOOL, DTT.EVAL_GROUP):  # If it's an ident
+        if token.type in DTT_DATA:  # If it's an ident
             output.append(token)
         elif token.value in dshell_operators:
             while (operators and operators[-1].value in dshell_operators and

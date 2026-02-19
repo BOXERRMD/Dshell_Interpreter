@@ -279,6 +279,8 @@ class DshellInterpreteur:
         elif token.type == DTT.EVAL_GROUP:
             await self.execute(parse([token.value], StartNode([]))[0])  # must parse because it's not already an AST
             return self.env.get('__ret__')
+        elif token.type == DTT.EVAL_EXPRESSION:
+            return await eval_expression(token.value, self)
         elif token.type == DTT.STR:
             temp = token.value
             for match in findall(rf"\$({'|'.join(self.env.keys())})", temp):

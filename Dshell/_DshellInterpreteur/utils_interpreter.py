@@ -1,6 +1,7 @@
 from .dshell_arguments import DshellArguments
 from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from .._DshellTokenizer.dshell_token_type import DTT_DATA
 
 from .._DshellParser.ast_nodes import IfNode, ParamNode, ListNode
 from .._DshellParser.dshell_parser import to_postfix
@@ -172,7 +173,7 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
 
     for token in postfix:
 
-        if token.type in {DTT.INT, DTT.FLOAT, DTT.BOOL, DTT.STR, DTT.LIST, DTT.IDENT, DTT.EVAL_GROUP}:
+        if token.type in DTT_DATA:
             stack.append(await interpreter.eval_data_token(token))
 
         elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR, DTT.LOGIC_WORD_OPERATOR):
