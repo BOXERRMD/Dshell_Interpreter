@@ -173,11 +173,11 @@ dshell_logical_word_operators: dict[str, tuple[Callable, int]] = {
 
 dshell_logical_operators: dict[str, tuple[Callable, int]] = {
 
-    r"!": (lambda a: not a, 3),
     r"<=": (lambda a, b: a <= b, 4),
     r"=<": (lambda a, b: a <= b, 4),
     r"!=": (lambda a, b: a != b, 4),
     r"=!": (lambda a, b: a != b, 4),
+    r"!": (lambda a: not a, 3),
     r">=": (lambda a, b: a >= b, 4),
     r"=>": (lambda a, b: a >= b, 4),
     r"<": (lambda a, b: a < b, 4),
