@@ -29,10 +29,10 @@ MASK_CHARACTER = '§'
 
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
-    DTT.EVAL_GROUP: compile(r"`(.*)`"),
+    DTT.EVAL_GROUP: compile(r"`([^;\n]*)`"),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
-    DTT.EVAL_EXPRESSION: compile(r"\{(.*)}"),
-    DTT.LIST: compile(r"\[(.*)]"),
+    DTT.EVAL_EXPRESSION: compile(r"\{([^;\n]*)}"),
+    DTT.LIST: compile(r"\[([^;\n]*)]"),
     DTT.PARAMETERS: compile(rf"--\*\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.STR_PARAMETER: compile(rf"--\'\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.PARAMETER: compile(rf"--\s*([A-Za-z_]+)\s*", flags=ASCII),
