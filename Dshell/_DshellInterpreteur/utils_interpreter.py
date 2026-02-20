@@ -185,7 +185,12 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
                     raise SyntaxError(f"Not enough operands for operator '{op}'")
 
                 operands: dict = {'a': stack.pop()}  # pop the last operand and store it as 'a'
-                if len(stack) > 0:
+                len_stack = len(stack)
+
+                if dshell_operators[op][2] > len_stack+1:
+                    raise SyntaxError(f"Not enough operands for operator '{op}'")
+
+                if (dshell_operators[op][2] > 1 or dshell_operators[op][2] == -1) and len(stack) > 0:
                     operands['b'] = operands['a']
                     b = stack.pop()
                     operands['a'] = b  # if there is another operand, pop it and store it as 'b'
@@ -198,6 +203,6 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
             raise SyntaxError(f"Unexpected token type: {token.type} - {token.value}")
 
     if len(stack) != 1:
-        raise SyntaxError("Invalid expression: stack should contain exactly one element after evaluation.")
+        raise SyntaxError(f"Invalid expression: missing operators or operands in expression <{' '.join((i.value for i in tokens))}>")
 
     return stack[0]
