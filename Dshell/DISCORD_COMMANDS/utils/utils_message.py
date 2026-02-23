@@ -1,5 +1,6 @@
 from Dshell.full_import import (Message,
-                            PartialMessage)
+                            PartialMessage,
+                            AllowedMentions)
 
 from Dshell.full_import import search
 
@@ -102,8 +103,6 @@ def utils_autorised_mentions(global_mentions: bool = None,
         >>> mentions = utils_autorised_mentions(global_mentions=False)
     """
     _CMD = "autorised_mentions"
-    
-    from discord import AllowedMentions
 
     _validate_optional_bool(global_mentions, "Mention parameter", _CMD)
 
@@ -126,3 +125,5 @@ def utils_autorised_mentions(global_mentions: bool = None,
                                roles=roles_mentions,
                                users=users_mentions,
                                replied_user=reply_mention)
+
+

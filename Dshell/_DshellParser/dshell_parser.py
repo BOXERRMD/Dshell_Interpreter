@@ -214,6 +214,10 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 return_node = ReturnNode(body=tokens_by_line[1:])
                 last_block.body.append(return_node)
 
+            elif first_token_line.value == 'scan':
+                scan_node = ScanNode(ArgsCommandNode(body=tokens_by_line[1:]))
+                last_block.body.append(scan_node)
+
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
                 error_message = True
                 if len(tokens_by_line) > 1:

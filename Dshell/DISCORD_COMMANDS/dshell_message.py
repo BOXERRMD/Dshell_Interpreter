@@ -17,7 +17,9 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_missing_or_type)
 from .._DshellInterpreteur.cached_messages import dshell_cached_messages
 
-from Dshell.full_import import Optional
+from Dshell.full_import import Optional, Union, compile, DOTALL
+from asyncio import wait_for, sleep
+
 
 __all__ = [
     'dshell_send_message',
@@ -39,6 +41,7 @@ __all__ = [
     'dshell_get_message_attachments',
     'dshell_get_channel_pined_messages',
     'dshell_is_message_system',
+    'dshell_scan_message'
 ]
 
 
@@ -459,3 +462,75 @@ async def dshell_is_message_system(ctx: Message, message: int = None):
                 raise Exception(f"[is_system_message] Message ID to get is not found !")
 
     return target_message.is_system()
+
+
+async def dshell_scan_message(ctx: Message,
+                              channel: Optional[int] = None,
+                              regex: Optional[str] = None,
+                              member: Optional[int] = None,
+                              timeout: int = 60) -> Union[int, None]:
+    """
+    Attend un message dans un salon spécifique qui correspond à une expression régulière (si spécifié), et retourne son ID.
+    :param ctx:
+    :param regex: Expression régulière à matcher dans le contenu du message (optionnel)
+    :param timeout: Durée maximale d'attente en secondes (par défaut : 60 secondes)
+    :return: ID du message qui correspond aux critères, ou None si le temps est écoulé ou si aucun message ne correspond
+    """
+
+    _CMD = "scan_message"
+
+    _validate_optional_int(channel, "channel", _CMD)
+
+    _validate_optional_string(regex, "regex", _CMD)
+
+    _validate_optional_int(member, "member", _CMD)
+
+    _validate_required_int(timeout, "timeout", _CMD)
+
+    target_channel = ctx.channel if channel is None else ctx.guild.get_channel(channel)
+
+    if target_channel is None:
+        raise Exception(f"Channel with ID {channel} not found in guild {ctx.guild.name}.")
+
+    if regex is not None:
+        try:
+            regex = compile(regex, flags=DOTALL)
+        except Exception as e:
+            raise Exception(f"Invalid regex pattern: {e}")
+
+    try:
+
+        last_message = None
+        param_required = bool(regex) + bool(member)
+        param_actual = -1 # on initialise à -1 pour compenser le fait que le message trouvé ne correspond pas encore aux critères, et ainsi entrer dans la boucle
+        while param_actual < param_required: # tant que le message trouvé ne correspond pas aux critères, on continue d'attendre les nouveaux messages
+            param_actual = -1 # on réinitialise à -1 à chaque nouveau message pour compenser le fait que le message trouvé ne correspond pas encore aux critères, et ainsi entrer dans la boucle si nécessaire
+
+            last_message = await wait_for(dshell_scan_check(target_channel), timeout=timeout)
+
+            if regex is not None and regex.search(last_message.content):
+                param_actual += 1
+
+            if member is not None and last_message.author.id == member:
+                param_actual += 1
+
+            param_actual += 1 # on ajoute 1 pour compenser l'initialisation à -1. Ainsi, si aucun critère n'est spécifié, le premier message trouvé fera que param_actual = 0, ce qui est égal à param_required, et donc fera sortir de la boucle.
+
+
+        cached_messages = dshell_cached_messages.get()
+        cached_messages[last_message.id] = last_message
+        dshell_cached_messages.set(cached_messages)
+
+        return last_message.id
+
+    except TimeoutError:
+        return None
+
+async def dshell_scan_check(target_channel) -> Message:
+    last_message_id = target_channel.last_message_id
+    while target_channel.last_message_id == last_message_id or target_channel.last_message.is_system():
+        await sleep(1)
+
+    return target_channel.last_message
+
+

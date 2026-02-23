@@ -4,14 +4,13 @@ from .._DshellInterpreteur.errors import DshellInterpreterStopExecution
 from Dshell.full_import import TypeVar, Union, Optional, Any, Callable, sleep, findall
 from .._DshellParser.ast_nodes import *
 from Dshell.full_import import AutoShardedBot, Interaction, Message, PrivateChannel, Embed
-from Dshell.full_import import EasyModifiedViews
 from .._DshellParser.dshell_parser import parse, print_ast
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 from .cached_messages import dshell_cached_messages
 from .._DshellTokenizer.dshell_keywords import dshell_commands
 from .utils_interpreter import get_params, eval_expression, eval_expression_inline, regroupe_commandes
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
-from ..DISCORD_COMMANDS.dshell_ui import build_ui, rebuild_ui
+from ..DISCORD_COMMANDS.dshell_ui import build_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
 from .dshell_scope import Scope, new_scope
 

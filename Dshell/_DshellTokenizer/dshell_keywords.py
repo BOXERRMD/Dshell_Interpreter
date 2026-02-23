@@ -91,6 +91,7 @@ dshell_commands: dict[str, Callable] = {
     "gmp": dshell_get_channel_pined_messages,  # get channel pined messages
     "gmat": dshell_get_message_attachments,  # get message attachments
     "ims": dshell_is_message_system,  # is message system
+    "scanm": dshell_scan_message,  # scan message for a regex and return the first group
 
     "sri": dshell_respond_interaction,  # respond to an interaction
     "sdi": dshell_defer_interaction,  # defer an interaction

@@ -533,6 +533,7 @@ class ReturnNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+
 class UiButtonNode(ASTNode):
     """
     Node representing a UI button component in the AST.
