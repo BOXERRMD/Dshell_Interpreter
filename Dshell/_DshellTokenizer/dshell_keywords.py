@@ -103,6 +103,7 @@ dshell_commands: dict[str, Callable] = {
     "dca": dshell_delete_category,  # delete category
     "dc": dshell_delete_channel,  # delete channel
     "dcs": dshell_delete_channels,  # delete several channels by name or regex
+    "clc": dshell_clone_channel,  # clone channel
 
     "gc": dshell_get_channel,  # get channel
     "gcs": dshell_get_channels,  # get channels by name or regex

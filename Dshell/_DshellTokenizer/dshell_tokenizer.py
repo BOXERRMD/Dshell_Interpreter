@@ -16,6 +16,7 @@ from Dshell.full_import import (Pattern,
                            escape,
                            findall,
                            finditer,
+                           search,
                            sub)
 
 from .dshell_keywords import (dshell_keyword,
@@ -27,12 +28,20 @@ from .dshell_keywords import (dshell_keyword,
 
 MASK_CHARACTER = '§'
 
+def is_line_empty(line: str) -> bool:
+    """
+    Check if a line is empty (only contains whitespace characters).
+    :param line: The line to check.
+    :return: True if the line is empty, False otherwise.
+    """
+    return all(c in (MASK_CHARACTER, ' ') for c in line)
+
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
-    DTT.EVAL_GROUP: compile(r"`([^;]*)`"),
-    DTT.EVAL_EXPRESSION: compile(r"\{(.+)};"),
-    DTT.LIST: compile(r"\[([^;]*)]"),
+    DTT.EVAL_EXPRESSION: compile(r"(?P<brace>\{(?:[^{}]+|(?&brace))*})"),
+    DTT.EVAL_GROUP: compile(r"(?P<brace>`(?:[^`]+|(?&brace))*`)"),
+    DTT.LIST: compile(r"(?P<brace>\[(?:[^\[]+|(?&brace))*])"),
     DTT.PARAMETERS: compile(rf"--\*\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.STR_PARAMETER: compile(rf"--\'\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.PARAMETER: compile(rf"--\s*([A-Za-z_]+)\s*", flags=ASCII),
@@ -83,7 +92,14 @@ class DshellTokenizer:
             tokens_per_line: list[Token] = []
             is_comment: bool = False
 
+            if is_line_empty(line):
+                line_number += 1
+                continue
+
             for token_type, pattern in table_regex.items():  # iterate the regex table to test all patterns on the line
+
+                if is_line_empty(line):
+                    break
 
                 if not self.match_any_character and token_type == DTT.ANY_CHARACTER:
                     continue
@@ -110,7 +126,7 @@ class DshellTokenizer:
                             DTT.LIST,
                             DTT.EVAL_GROUP,
                             DTT.EVAL_EXPRESSION):  # if it's a data grouping, tokenize its contents
-                        result = self.tokenizer([token.value])
+                        result = self.tokenizer([token.value[1:-1]]) # tokenize the content of the grouping without the grouping characters
                         token.value = result[0] if len(
                             result) > 0 else result  # handle whether the data structure is empty or not
 

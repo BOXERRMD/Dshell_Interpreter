@@ -51,6 +51,7 @@ __all__ = [
     'dshell_get_channel_position',
     'dshell_get_channel_url',
     'dshell_get_channel_voice_members',
+    'dshell_clone_channel'
 ]
 
 
@@ -664,3 +665,27 @@ async def dshell_get_channel_voice_members(ctx: Message, channel=None):
         members.add(member.id)
 
     return members
+
+async def dshell_clone_channel(ctx: Message,
+                               channel=None,
+                               catagory=None,
+                               name=None,
+                               reason=None):
+    """
+    Clones a channel.
+    """
+    _CMD = "clc"
+
+    _validate_optional_int(channel, "Channel", _CMD)
+    channel_to_clone = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
+
+    _validate_optional_int(catagory, "category", _CMD)
+    category_to_put = ctx.channel.category if catagory is None else ctx.channel.guild.get_channel(catagory)
+
+    cloned_channel = await channel_to_clone.clone(name=name if name is not None else channel_to_clone.name,
+                                                  reason=reason)
+
+    if category_to_put is not None:
+        await cloned_channel.edit(category=category_to_put, reason=reason)
+
+    return cloned_channel.id
