@@ -1,4 +1,4 @@
-from Dshell.full_import import Enum, auto, Union
+from Dshell.full_import import Enum, auto, Any
 
 __all__ = [
     'DshellTokenType',
@@ -13,9 +13,10 @@ class DshellTokenType(Enum):
     INT = auto()
     FLOAT = auto()
     STR = auto()
-    BOOL = auto(),
-    NONE = auto(),
-    LIST = auto()
+    BOOL = auto()
+    NONE = auto()
+    R_LIST = auto() # [
+    L_LIST = auto() # ]
     MENTION = auto()
     IDENT = auto()  # nom de variable, fonction
     KEYWORD = auto()  # if, let, end, etc.
@@ -28,7 +29,8 @@ class DshellTokenType(Enum):
     LOGIC_OPERATOR = auto(),
     LOGIC_WORD_OPERATOR = auto()  # and, or, not
     EVAL_GROUP = auto()  # `code`
-    EVAL_EXPRESSION = auto()  # for inline mathematical and logical expression
+    R_EVAL_EXPRESSION = auto()  # for inline mathematical and logical expression {
+    L_EVAL_EXPRESSION = auto()  # for inline mathematical and logical expression }
     ANY_CHARACTER = auto()  # pour les caractères non reconnus mais utilisé dans les données passé en paramètre des commandes
     COMMENT = auto()  # lignes commençant par ##
 
@@ -37,12 +39,12 @@ DTT_DATA = {DshellTokenType.INT,
             DshellTokenType.STR,
             DshellTokenType.BOOL,
             DshellTokenType.IDENT,
-            DshellTokenType.LIST,
+            DshellTokenType.R_LIST,
             DshellTokenType.EVAL_GROUP,
-            DshellTokenType.EVAL_EXPRESSION}
+            DshellTokenType.R_EVAL_EXPRESSION}
 
 class Token:
-    def __init__(self, type_: DshellTokenType, value: Union[str, list], position: tuple[int, int]):
+    def __init__(self, type_: DshellTokenType, value: Any, position: tuple[int, int]):
         self.type = type_
         self.value = value
         self.position = position

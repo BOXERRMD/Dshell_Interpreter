@@ -1,23 +1,10 @@
 __all__ = [
-    "DshellTokenizer",
-    "table_regex",
-    "MASK_CHARACTER"
+    "DshellTokenizer"
 ]
 
 from .dshell_token_type import Token
 from .dshell_token_type import DshellTokenType as DTT
-
-from Dshell.full_import import (Pattern,
-                           ASCII,
-                           DOTALL,
-                           IGNORECASE,
-                           MULTILINE,
-                           compile,
-                           escape,
-                           findall,
-                           finditer,
-                           search,
-                           sub)
+from ..full_import import sub, findall, DOTALL
 
 from .dshell_keywords import (dshell_keyword,
                               dshell_discord_keyword,
@@ -26,40 +13,30 @@ from .dshell_keywords import (dshell_keyword,
                               dshell_logical_operators,
                               dshell_logical_word_operators)
 
-MASK_CHARACTER = '§'
-
-def is_line_empty(line: str) -> bool:
-    """
-    Check if a line is empty (only contains whitespace characters).
-    :param line: The line to check.
-    :return: True if the line is empty, False otherwise.
-    """
-    return all(c in (MASK_CHARACTER, ' ') for c in line)
-
-table_regex: dict[DTT, Pattern] = {
-    DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
-    DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
-    DTT.EVAL_EXPRESSION: compile(r"(?P<brace>\{(?:[^{}]+|(?&brace))*})"),
-    DTT.EVAL_GROUP: compile(r"(?P<brace>`(?:[^`]+|(?&brace))*`)"),
-    DTT.LIST: compile(r"(?P<brace>\[(?:[^\[]+|(?&brace))*])"),
-    DTT.PARAMETERS: compile(rf"--\*\s*([A-Za-z_]+)\s*", flags=ASCII),
-    DTT.STR_PARAMETER: compile(rf"--\'\s*([A-Za-z_]+)\s*", flags=ASCII),
-    DTT.PARAMETER: compile(rf"--\s*([A-Za-z_]+)\s*", flags=ASCII),
-    DTT.MENTION: compile(r'<(?:@!?|@&|#)([0-9]+)>'),
-    DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
-    DTT.DISCORD_KEYWORD: compile(rf"(?<!\w|-)(#?{'|'.join(dshell_discord_keyword)})(?!\w|-)", flags=IGNORECASE),
-    DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b", flags=IGNORECASE),
-    DTT.MATHS_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_mathematical_operators.keys()])})"),
-    DTT.LOGIC_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_logical_operators.keys()])})"),
-    DTT.LOGIC_WORD_OPERATOR: compile(rf"(?:^|\s)({'|'.join([escape(i) for i in dshell_logical_word_operators.keys()])})(?:$|\s)"),
-    DTT.FLOAT: compile(r"(\d+\.\d+)"),
-    DTT.INT: compile(r"(\d+)"),
-    DTT.BOOL: compile(r"(True|False)", flags=IGNORECASE),
-    DTT.NONE: compile(r"(None)", flags=IGNORECASE),
-    DTT.IDENT: compile(rf"([A-Za-z0-9_]+)"),
-    DTT.ANY_CHARACTER: compile(rf"([^{MASK_CHARACTER}\n]+)"),
+encapsulated_caracter: dict[str, DTT] = {
+    '[' : DTT.R_LIST,
+    ']' : DTT.L_LIST,
+    '{' : DTT.R_EVAL_EXPRESSION,
+    '}' : DTT.L_EVAL_EXPRESSION,
+    '`' :DTT.EVAL_GROUP
 }
 
+multiple_characters: dict[str, DTT] = {
+    '--*': DTT.PARAMETERS,
+    "--'": DTT.STR_PARAMETER,
+    '--' : DTT.PARAMETER
+}
+
+word_characters: dict[str, DTT] = {
+    'none' : DTT.NONE,
+    'true' : DTT.BOOL,
+    'false' : DTT.BOOL
+}
+
+string_caracters: dict[str, DTT] = {
+    '"' : DTT.STR,
+    "'" : DTT.STR
+}
 
 class DshellTokenizer:
 
@@ -77,116 +54,114 @@ class DshellTokenizer:
         Start the tokenizer to process the current code.
         Returns an array of tokens per line (normally separated by \\n)
         """
-        split_commands = self.split(self.code)
-        return self.tokenizer(split_commands)
+        return self.tokenizer(self.code)
 
-    def tokenizer(self, command_lines: list[str]) -> list[list[Token]]:
+    def tokenizer(self, code: str) -> list[Token]:
         """
         Tokenize each line of code
         :param command_lines: The code separated into multiple lines by the split method
         """
-        tokens: list[list[Token]] = []
+        allow_ident_caracters = ('_', '#')
 
-        line_number = 1
-        for line in command_lines:  # iterate each line of code
-            tokens_per_line: list[Token] = []
-            is_comment: bool = False
 
-            if is_line_empty(line):
-                line_number += 1
-                continue
+        tokens: list[Token] = []
+        current_line: int = 1
+        i: int = 0 # position in the code
 
-            for token_type, pattern in table_regex.items():  # iterate the regex table to test all patterns on the line
+        while i < len(code):
 
-                if is_line_empty(line):
-                    break
+            caracter = code[i]
 
-                if not self.match_any_character and token_type == DTT.ANY_CHARACTER:
-                    continue
+            if caracter in "\t\r\n ":
+                pass
 
-                if is_comment:
-                    is_comment = False
-                    break
+            elif caracter in string_caracters.keys():
+                string_delimiter = caracter
+                string_value = ''
+                i += 1
+                while i < len(code) and code[i] != string_delimiter:
+                    if code[i] == '\\' and i + 1 < len(code): # gestion des caractères d'échappement
+                        string_value += code[i + 1]
+                        i += 2
+                    else:
+                        string_value += code[i]
+                        i += 1
+                if i >= len(code):
+                    raise SyntaxError(f"Unterminated string starting at line {current_line}, position {i - len(string_value) - 1}")
+                tokens.append(Token(string_caracters[string_delimiter], string_value, (current_line, i - len(string_value) - 1)))
+                i += 1
 
-                for match in finditer(pattern, line):  # iterate the match results to get their positions
+            elif caracter in encapsulated_caracter.keys():
+                tokens.append(
+                    Token(encapsulated_caracter[caracter], caracter, (current_line, i))
+                )
 
-                    if token_type == DTT.COMMENT:  # if we encounter a comment, stop tokenizing the line
-                        is_comment = True
+            elif caracter in dshell_keyword:
+                tokens.append(
+                    Token(DTT.KEYWORD, caracter, (current_line, i))
+                )
+
+            elif caracter in dshell_discord_keyword:
+                tokens.append(
+                    Token(DTT.DISCORD_KEYWORD, caracter, (current_line, i))
+                )
+
+            elif any(code.startswith(multi_char, i) for multi_char in multiple_characters.keys()):
+                for multi_char, token_type in multiple_characters.items():
+                    if code.startswith(multi_char, i):
+                        tokens.append(
+                            Token(token_type, multi_char, (current_line, i))
+                        )
+                        i += len(multi_char)-1
                         break
 
-                    start_match = match.start()  # start position of the match
+            elif caracter in dshell_mathematical_operators:
+                tokens.append(
+                    Token(DTT.MATHS_OPERATOR, caracter, (current_line, i))
+                )
 
-                    token = Token(token_type, match.group(1), (line_number, start_match))  # record its token
-                    tokens_per_line.append(token)
+            elif caracter in dshell_logical_operators:
+                tokens.append(
+                    Token(DTT.LOGIC_OPERATOR, caracter, (current_line, i))
+                )
 
-                    if token_type == DTT.STR:
-                        token.value = token.value.replace(r'\"', '"')
+            elif caracter in dshell_logical_word_operators:
+                tokens.append(
+                    Token(DTT.LOGIC_WORD_OPERATOR, caracter, (current_line, i))
+                )
 
-                    if token_type in (
-                            DTT.LIST,
-                            DTT.EVAL_GROUP,
-                            DTT.EVAL_EXPRESSION):  # if it's a data grouping, tokenize its contents
-                        result = self.tokenizer([token.value[1:-1]]) # tokenize the content of the grouping without the grouping characters
-                        token.value = result[0] if len(
-                            result) > 0 else result  # handle whether the data structure is empty or not
+            elif caracter.isdigit():
+                number_str = caracter
+                i += 1
+                while i < len(code) and (code[i].isdigit() or code[i] == '.'):
+                    number_str += code[i]
+                    i += 1
+                if '.' in number_str:
+                    tokens.append(Token(DTT.FLOAT, float(number_str), (current_line, i - len(number_str))))
+                else:
+                    tokens.append(Token(DTT.INT, int(number_str), (current_line, i - len(number_str))))
+                continue
 
-                        for token_in_list in token.value:
-                            token_in_list.position = (line_number, token_in_list.position[1])
+            elif caracter.isalpha() or caracter in allow_ident_caracters:
+                ident_str = caracter
+                i += 1
+                while i < len(code) and (code[i].isalnum() or code[i] in allow_ident_caracters):
+                    ident_str += code[i]
+                    i += 1
+                if ident_str in dshell_commands:
+                    tokens.append(Token(DTT.COMMAND, ident_str, (current_line, i - len(ident_str))))
+                elif ident_str in dshell_keyword:
+                    tokens.append(Token(DTT.KEYWORD, ident_str, (current_line, i - len(ident_str))))
+                elif ident_str in dshell_discord_keyword:
+                    tokens.append(Token(DTT.DISCORD_KEYWORD, ident_str, (current_line, i - len(ident_str))))
+                elif ident_str.lower() in word_characters: # on utilise lower() pour permettre une ecriture insensible à la casse
+                    tokens.append(Token(word_characters[ident_str], ident_str, (current_line, i - len(ident_str))))
+                else:
+                    tokens.append(Token(DTT.IDENT, ident_str, (current_line, i - len(ident_str))))
 
-                        for token_in_line in range(len(tokens_per_line)-1):
-                            if tokens_per_line[token_in_line].position[1] > start_match:
-                                str_tokens_in_list = tokens_per_line[token_in_line:-1]
-                                tokens_per_line = tokens_per_line[:token_in_line] + [tokens_per_line[-1]]
-                                token.value.extend(str_tokens_in_list)
-                                token.value.sort(key=lambda t: t.position[1])  # sort tokens by their position
-                                break
+            else:
+                tokens.append(Token(DTT.ANY_CHARACTER, caracter, (current_line, i)))
 
-
-                    len_match = len(match.group(0))  # length of the match found
-                    line = line[:start_match] + (MASK_CHARACTER * len_match) + line[
-                                                                                    match.end():]  # replace the match to avoid matching it a second time
-
-            tokens_per_line.sort(key=lambda
-                token: token.position[1])  # sort the position based on token match positions to have them in code order
-            if tokens_per_line:
-                tokens.append(tokens_per_line)
-
-            line_number += 1  # increment the line number for the next line
+            i += 1
 
         return tokens
-
-    @staticmethod
-    def split(command: str, global_split='\n', keep_grouping_character=True, grouping_character='"') -> list[
-        str]:
-        """
-        Separate commands into a list while respecting strings between quotes.
-        Escape grouping characters with a backslash (\\) to include them in the string.
-        :param command: The string to split.
-        :param global_split: The separator used (default '\\n').
-        :param keep_grouping_character: If False, remove quotes around strings.
-        :param grouping_character: The character used to group a string (default '"').
-        :return: A list of split commands with restored strings.
-        """
-
-        commands: str = command.strip()
-        temporary_replacement = '[REPLACE]'
-        pattern_find_regrouped_part = compile(fr'({grouping_character}(?:[^\\{grouping_character}]|\\.)*{grouping_character})', flags=DOTALL)
-        between_grouping_character = findall(pattern_find_regrouped_part, commands)  # find parts between quotes and save them
-
-        res = sub(pattern_find_regrouped_part,
-                  temporary_replacement,
-                  commands,
-                  )  # replace parts between quotes
-
-        res = res.split(global_split)  # split commands without quotes
-
-        # restore quotes to their place
-        result = []
-        for i in res:
-            while temporary_replacement in i:
-                i = i.replace(temporary_replacement,
-                              between_grouping_character[0][1: -1] if not keep_grouping_character else
-                              between_grouping_character[0], 1)
-                between_grouping_character.pop(0)
-            result.append(i)
-        return result

@@ -1,3 +1,3 @@
-from regex import search, findall
+from re import findall
 
-print(findall(r"""(?P<brace>\{(?:[^{}]+|(?&brace))*\})""", "debug  {{A+B{.}} + {d+c}} + {test} ", overlapped=False))
+print(findall(r"`.*?`", "debug {`len [0,1,2]` + {`len [0]`}}"))
