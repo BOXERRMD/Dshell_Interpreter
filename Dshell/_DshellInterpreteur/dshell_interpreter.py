@@ -4,10 +4,10 @@ from .._DshellInterpreteur.errors import DshellInterpreterStopExecution
 from Dshell.full_import import TypeVar, Union, Optional, Any, Callable, sleep, findall
 from .._DshellParser.ast_nodes import *
 from Dshell.full_import import AutoShardedBot, Interaction, Message, PrivateChannel, Embed
-from .._DshellParser.dshell_parser import parse, print_ast
+from .._DshellParser.dshell_parser import parse
 from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
 from .cached_messages import dshell_cached_messages
-from .._DshellTokenizer.dshell_keywords import dshell_commands
+from .._DshellKeys.dshell_commands import dshell_commands
 from .utils_interpreter import get_params, eval_expression, eval_expression_inline, regroupe_commandes
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
 from ..DISCORD_COMMANDS.dshell_ui import build_ui
@@ -30,7 +30,6 @@ class DshellInterpreteur:
     """
 
     def __init__(self, code: Union[str, CodeNode], ctx: context,
-                 debug: bool = False,
                  vars: Optional[str] = None,
                  vars_env: Optional[dict[str, Any] | Scope] = None):
         """
@@ -107,7 +106,7 @@ class DshellInterpreteur:
             '__guild_forum_channels__': ListNode([channel.id for channel in message.channel.guild.forum_channels]),
             '__guild_channels_count__': len(message.channel.guild.channels),
 
-        } if message is not None and not debug else {'__ret__': None}) # {} is used in debug mode, when ctx is None
+        } if message is not None else {'__ret__': None}) # {} is used in debug mode, when ctx is None
 
         if isinstance(vars_env, Scope):
             self.env = vars_env
@@ -118,9 +117,6 @@ class DshellInterpreteur:
         self.ctx: context = ctx
 
         dshell_cached_messages.set(dict()) # save all messages view in the current scoop
-
-        if debug:
-            print_ast(self.ast)
 
     async def _execute_command_node(self, node: CommandNode):
         """Execute a command node."""

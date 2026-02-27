@@ -167,7 +167,7 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
     :param tokens: A list of tokens representing the expression.
     :param interpreter: The Dshell interpreter instance.
     """
-    from .._DshellTokenizer.dshell_keywords import dshell_operators
+    from Dshell._DshellKeys.dshell_keywords import dshell_operators
     postfix = to_postfix(tokens, interpreter)
     stack = []
 

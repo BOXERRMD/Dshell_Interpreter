@@ -1,25 +1,10 @@
 __all__ = [
-    "dshell_keyword",
-    "dshell_discord_keyword",
-    "dshell_commands",
-    "dshell_mathematical_operators",
-    "dshell_logical_operators",
-    "dshell_operators",
-    "dshell_logical_word_operators"
+    "dshell_commands"
 ]
 
-from ..DISCORD_COMMANDS import *
-
+from Dshell.DISCORD_COMMANDS import *
 from Dshell.full_import import Callable
 
-
-dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code', 'eval', 'return'
-}
-
-dshell_discord_keyword: set[str] = {
-    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui', 'button', '#button', 'select', '#select', 'option'
-}
 
 async def dshell_debug(ctx, x):
     """
@@ -147,55 +132,3 @@ dshell_commands: dict[str, Callable] = {
     "cor": dshell_clear_one_reactions , # clear one reaction from a message
 
 }
-
-"""
-Tuple format: (function, precedence, number of operands)
-"""
-
-dshell_mathematical_operators: dict[str, tuple[Callable, int, int]] = {
-
-    r"++": (lambda a: a + 1, 6, 1),
-    r"--": (lambda a: a - 1, 6, 1),
-    r"**": (lambda a, b: a ** b, 8, 2),
-    r"//": (lambda a, b: a // b, 7, 2),
-    r">>": (lambda a, b: a >> b, 5, 2),
-    r"<<": (lambda a, b: a << b, 5, 2),
-    r"^": (lambda a, b: a ^ b, 5, 2),
-    r"/": (lambda a, b: a / b, 7, 2),
-    r"*": (lambda a, b: a * b, 7, 2),
-    r"%": (lambda a, b: a % b, 7, 2),
-    r"-": (lambda a, b=None: a - b if b is not None else -a, 6, -1),
-    r"+": (lambda a, b: a + b, 6, 2),
-    # warning: ambiguity between unary and binary to be handled in your parser
-
-}
-
-dshell_logical_word_operators: dict[str, tuple[Callable, int, int]] = {
-    r"and": (lambda a, b: bool(a and b), 2, 2),
-    r"or": (lambda a, b: bool(a or b), 1, 2),
-    r"not": (lambda a: not a, 3, 1),
-    r"in": (lambda a, b: a in b, 4, 2),
-}
-
-dshell_logical_operators: dict[str, tuple[Callable, int, int]] = {
-
-    r"<=": (lambda a, b: a <= b, 4, 2),
-    r"=<": (lambda a, b: a <= b, 4, 2),
-    r"!=": (lambda a, b: a != b, 4, 2),
-    r"=!": (lambda a, b: a != b, 4, 2),
-    r">=": (lambda a, b: a >= b, 4, 2),
-    r"=>": (lambda a, b: a >= b, 4, 2),
-    r"&&": (lambda a, b: a and b, 2, 2),
-    r"||": (lambda a, b: a or b, 1, 2),
-    r"&": (lambda a, b: a & b, 2, 2),
-    r"|": (lambda a, b: a | b, 1, 2),
-    r"=": (lambda a, b: a == b, 4, 2),
-    r"<": (lambda a, b: a < b, 4, 2),
-    r">": (lambda a, b: a > b, 4, 2),
-    r"!": (lambda a: not a, 3, 1),
-
-}
-
-dshell_operators: dict[str, tuple[Callable, int, int]] = dshell_logical_operators.copy()
-dshell_operators.update(dshell_logical_word_operators)
-dshell_operators.update(dshell_mathematical_operators)

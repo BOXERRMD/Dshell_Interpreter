@@ -2,343 +2,53 @@ __all__ = [
     "parse",
     "parser_inline",
     "to_postfix",
-    "print_ast",
     "ast_to_dict",
 ]
 
+from .ast_nodes import *
+from .._DshellKeys.dshell_keywords import dshell_keyword, dshell_discord_keyword
 from .._DshellTokenizer.dshell_token_type import Token
 from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import DTT_DATA
-from .ast_nodes import *
+from .._DshellKeys.dshell_operators import dshell_operators
 
 
-def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[ASTNode], int]:
+def parse(tokens: list[Token], start_node) -> list[ASTNode]:
     """
     Parse the list of tokens and return a list of AST nodes.
-    :param token_lines: table of tokens
-    :param start_node: the node where to start the parsing
+    :param tokens: table of tokens
     """
     pointer = 0  # pointer on token lists to track where to parse
     blocks = [start_node]  # list of block nesting to manage indentation
-    len_token_lines = len(token_lines)
+    tokens_by_line: list[list[Token]] = split_newlines(tokens)  # split tokens by line to facilitate parsing
 
-    while pointer < len_token_lines:
+    while pointer < len(tokens):
 
-        tokens_by_line = token_lines[pointer]  # get the token list based on the pointer
-        len_tokens_by_line = len(tokens_by_line)
-        len_tokens_by_line_since_command_name = len_tokens_by_line - 1
-        first_token_line = tokens_by_line[0]  # get the first token of the line
-        last_block = blocks[-1]
+        current_line = tokens_by_line[pointer]
 
-        if first_token_line.type == DTT.COMMAND:  # if the token is a command
-            body = tokens_by_line[1:]  # get its arguments
-            last_block.body.append(CommandNode(first_token_line.value,
-                                               ArgsCommandNode(body)))  # add the command to the last block's body
+        if 
 
-        ############################## DSHELL KEYWORDS ##############################
 
-        elif first_token_line.type == DTT.KEYWORD:  # if it's a keyword
 
-            if first_token_line.value == 'if':  # if it's a condition
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[IF] Take one or more arguments on line {first_token_line.position} !')
 
-                if_node = IfNode(condition=tokens_by_line[1:],
-                                 body=[])  # create the node with the if condition arguments
-                last_block.body.append(if_node)
-                _, p = parse(token_lines[pointer + 1:],
-                             if_node)  # parse the rest of the code with if_node as the start of the new parsing
-                pointer += p + 1  # essential to not parse already processed lines
-
-            elif first_token_line.value == '#if':
-                if not isinstance(last_block, (IfNode, ElseNode, ElifNode)):
-                    raise SyntaxError(f'[#IF] No conditional bloc open on line {first_token_line.position} !')
-
-                if isinstance(last_block, (ElifNode, ElseNode)):
-
-                    while isinstance(last_block, (ElifNode, ElseNode)):
-                        blocks.pop()
-                        last_block = blocks[-1]
-                blocks.pop()
-                return blocks, pointer
-
-            elif first_token_line.value == 'elif':
-                if not isinstance(last_block, (IfNode, ElifNode)):
-                    raise SyntaxError(f'[ELIF] No conditional bloc open on line {first_token_line.position} !')
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[ELIF] Take one or more arguments on line {first_token_line.position} !')
-                elif_node = ElifNode(condition=tokens_by_line[1:], body=[],
-                                     parent=last_block if isinstance(last_block, IfNode) else last_block.parent)
-
-                if isinstance(last_block, ElifNode):
-                    last_block.parent.elif_nodes.append(elif_node)
-                else:
-                    if last_block.elif_nodes is None:
-                        last_block.elif_nodes = [elif_node]
-                    else:
-                        last_block.elif_nodes.append(elif_node)
-                blocks.append(elif_node)
-
-            elif first_token_line.value == 'else':
-                if not isinstance(last_block, (IfNode, ElifNode)):
-                    raise SyntaxError(f'[ELSE] No conditional bloc open on line {first_token_line.position} !')
-
-                if isinstance(last_block, ElseNode) and last_block.else_body is not None:
-                    raise SyntaxError(f'[ELSE] already define !')
-
-                else_node = ElseNode(body=[])
-                if isinstance(last_block, ElifNode):  # if the last block is an elif
-                    last_block.parent.else_body = else_node  # add the else block to its parent (which is the last if)
-                else:
-                    last_block.else_body = else_node  # once parsing is done, add it to the last block
-                blocks.append(else_node)
-
-            elif first_token_line.value == 'loop':
-
-                if len_tokens_by_line <= 1:
-                    raise SyntaxError(f'[LOOP] Take one (or two) argument(s) on line {first_token_line.position} !')
-
-                if len_tokens_by_line_since_command_name >= 2: # if the loop has two arguments : an ident and an iterator
-
-                    if tokens_by_line[1].type != DTT.IDENT:
-                        raise TypeError(f'[LOOP] the variable given must be a ident, '
-                                        f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-                    if tokens_by_line[2].type not in DTT_DATA:
-                        raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
-                                        f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
-
-                    loop_node = LoopNode(VarNode(tokens_by_line[1], to_postfix(tokens_by_line[2:])), body=[])
-                    last_block.body.append(loop_node)
-                    _, p = parse(token_lines[pointer + 1:],
-                                 loop_node)  # parse everything after the loop instruction
-                    pointer += p + 1
-
-                else:
-                    if tokens_by_line[1].type not in DTT_DATA:
-                        raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
-                                        f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                    loop_node = LoopNode(VarNode(Token(DTT.IDENT, "__loop__", tokens_by_line[1].position), to_postfix(tokens_by_line[1:])), body=[])
-                    last_block.body.append(loop_node)
-                    _, p = parse(token_lines[pointer + 1:],
-                                 loop_node)  # parse everything after the loop instruction
-                    pointer += p + 1
-
-            elif first_token_line.value == '#loop':  # if encountered
-                if not isinstance(last_block, LoopNode):
-                    raise SyntaxError(f'[#LOOP] No loop open on line {first_token_line.position} !')
-
-                blocks.pop()
-                return blocks, pointer  # return the parsed information to the last opened loop
-
-            elif first_token_line.value == 'var':
-                if len(tokens_by_line) <= 2:
-                    raise SyntaxError(f'[VAR] Take two arguments on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[VAR] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                var_node = VarNode(name=tokens_by_line[1], body=[])
-                last_block.body.append(var_node)
-                result, status = parser_inline(tokens_by_line[
-                                               2:])  # separate tokens on the line by newlines at each condition/else
-                if status:
-                    parse(result, var_node)  # parse everything in the variable
-                else:
-                    # var_node.body = parse(result, StartNode([]))[0][0].body
-                    var_node.body = result[0]
-
-            elif first_token_line.value == 'sleep':
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[SLEEP] Take one arguments on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.INT:
-                    raise TypeError(f'[SLEEP] the variable given must be an integer, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                sleep_node = SleepNode(tokens_by_line[1:])
-                last_block.body.append(sleep_node)
-
-            elif first_token_line.value == 'param':
-
-                param_node = ParamNode(body=[])
-                last_block.body.append(param_node)
-                _, p = parse(token_lines[pointer + 1:], param_node)
-                pointer += p + 1  # advance the pointer to the next line
-
-            elif first_token_line.value == '#param':
-                if not isinstance(last_block, ParamNode):
-                    raise SyntaxError(f'[#PARAM] No parameters open on line {first_token_line.position} !')
-
-                blocks.pop()  # remove the last block (the parameter)
-                return blocks, pointer  # return the parsed information to the last opened parameter
-
-            elif first_token_line.value == 'code':
-
-                if len(tokens_by_line) < 2:
-                    raise SyntaxError(f"[CODE] take one argument on line {first_token_line.position}")
-
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[CODE] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                code_node = CodeNode(body=[])
-                var_node = VarNode(tokens_by_line[1], [code_node])
-                last_block.body.append(var_node)
-                _, p = parse(token_lines[pointer + 1:], code_node)
-                pointer += p + 1
-
-            elif first_token_line.value == '#code':
-                if not isinstance(last_block, CodeNode):
-                    raise SyntaxError(f"[#CODE] No code open on line {first_token_line.position}")
-
-                blocks.pop()
-                return blocks, pointer
-
-            elif first_token_line.value == 'eval':
-                if len(tokens_by_line) < 2:
-                    raise SyntaxError(f"[EVAL] take one or more arguments on line {first_token_line.position}")
-
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[EVAL] the first variable given must be a ident (CodeNode), '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                eval_node = EvalNode(codeNode=tokens_by_line[1], argsNode=ArgsCommandNode(tokens_by_line[2:]))
-                last_block.body.append(eval_node)
-
-            elif first_token_line.value == 'return':
-                if not isinstance(last_block, CodeNode):
-                    raise SyntaxError(f"[RETURN] No code open on line {first_token_line.position} !")
-                if len(tokens_by_line) < 2:
-                    raise SyntaxError(f"[RETURN] take one or more arguments on line {first_token_line.position}")
-
-                return_node = ReturnNode(body=tokens_by_line[1:])
-                last_block.body.append(return_node)
-
-            elif first_token_line.value == 'scan':
-                scan_node = ScanNode(ArgsCommandNode(body=tokens_by_line[1:]))
-                last_block.body.append(scan_node)
-
-            elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
-                error_message = True
-                if len(tokens_by_line) > 1:
-                    if tokens_by_line[1].type != DTT.BOOL:
-                        raise TypeError(f'[#END] the variable given must be a boolean, not {tokens_by_line[1].type}')
-                    else:
-                        error_message = tokens_by_line[1]
-                end_node = EndNode(error_message)
-                last_block.body.append(end_node)
-
-        ############################## DISCORD KEYWORDS ##############################
-
-        elif first_token_line.type == DTT.DISCORD_KEYWORD:
-
-            if first_token_line.value == 'embed':
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[EMBED] Take one or more arguments on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[EMBED] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                embed_node = EmbedNode(body=[], fields=[])
-                var_node = VarNode(tokens_by_line[1], body=[embed_node])
-                last_block.body.append(var_node)
-                _, p = parse(token_lines[pointer + 1:], embed_node)
-                pointer += p + 1
-
-            elif first_token_line.value == '#embed':
-                if not isinstance(last_block, EmbedNode):
-                    raise SyntaxError(f'[#EMBED] No embed open on line {first_token_line.position} !')
-                blocks.pop()
-                return blocks, pointer
-
-            elif first_token_line.value == 'field':
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[FIELD] Take one or more arguments on line {first_token_line.position} !')
-                if not isinstance(last_block, EmbedNode):
-                    raise SyntaxError(f'[FIELD] No embed open on line {first_token_line.position} !')
-
-                last_block.fields.append(FieldEmbedNode(tokens_by_line[1:]))
-
-            elif first_token_line.value in ('perm', 'permission'):
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[PERM] Take one argument on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[PERM] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                perm_node = PermissionNode(body=[])
-                var_node = VarNode(tokens_by_line[1], body=[perm_node])
-                last_block.body.append(var_node)
-                _, p = parse(token_lines[pointer + 1:], perm_node)
-                pointer += p + 1
-
-            elif first_token_line.value in ('#perm', '#permission'):
-                if not isinstance(last_block, PermissionNode):
-                    raise SyntaxError(f'[#PERM] No permission open on line {first_token_line.position} !')
-                blocks.pop()
-                return blocks, pointer
-
-            elif first_token_line.value == 'button':
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[BUTTON] Take one or more arguments on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[BUTTON] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                button_node = UiButtonNode([])
-                var_node = VarNode(tokens_by_line[1], body=[button_node])
-                last_block.body.append(var_node)
-                _, p = parse(token_lines[pointer + 1:], button_node)
-                pointer += p + 1
-
-            elif first_token_line.value == '#button':
-                if not isinstance(last_block, UiButtonNode):
-                    raise SyntaxError(f'[#BUTTON] No UIButton open on line {first_token_line.position} !')
-                blocks.pop()
-                return blocks, pointer
-
-            elif first_token_line.value == 'select':
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[SELECT] Take one or more arguments on line {first_token_line.position} !')
-                if tokens_by_line[1].type != DTT.IDENT:
-                    raise TypeError(f'[SELECT] the variable given must be a ident, '
-                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
-
-                select_node = UiSelectNode([])
-                var_node = VarNode(tokens_by_line[1], body=[select_node])
-                last_block.body.append(var_node)
-                _, p = parse(token_lines[pointer + 1:], select_node)
-                pointer += p + 1
-
-            elif first_token_line.value == '#select':
-                if not isinstance(last_block, UiSelectNode):
-                    raise SyntaxError(f'[#SELECT] No UISelect open on line {first_token_line.position} !')
-                blocks.pop()
-                return blocks, pointer
-
-            elif first_token_line.value == 'option':
-                if len(tokens_by_line) <= 1:
-                    raise SyntaxError(f'[OPTION] Take one or more arguments on line {first_token_line.position} !')
-                if not isinstance(last_block, UiSelectNode):
-                    raise SyntaxError(f'[OPTION] No UISelect open on line {first_token_line.position} !')
-
-                last_block.options.append(OptionUiSelectNode(tokens_by_line[1:]))
-
-        ############################## AUTRE ##############################
-
-        elif first_token_line.type in DTT_DATA:  # if the line starts with a data token, we consider it as a command with an implicit "sm" name
-            for token in tokens_by_line:
-
-                if token.type in DTT_DATA:
-                    last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([token])))
-
+def split_newlines(tokens: list[Token]) -> list[list[Token]]:
+    """
+    Split a list of tokens into a list of lists of tokens, each inner list representing a line of code.
+    :param tokens: the list of tokens to split
+    :return: a list of lists of tokens, each inner list representing a line of code
+    """
+    lines = []
+    current_line = []
+    for token in tokens:
+        if token.type == DTT.NEWLINE:
+            if current_line:  # only add non-empty lines
+                lines.append(current_line)
+                current_line = []
         else:
-            last_block.body += tokens_by_line
-
-        pointer += 1
-
-    return blocks, pointer
-
+            current_line.append(token)
+    if current_line:  # add the last line if it's not empty
+        lines.append(current_line)
+    return lines
 
 def ast_to_dict(obj):
     if isinstance(obj, list):
@@ -392,7 +102,6 @@ def to_postfix(expression, interpreter=None):
     :param interpreter: optional interpreter instance
     :return: the expression in postfix notation
     """
-    from Dshell._DshellTokenizer import dshell_operators
 
     output = []
     operators: list[Token] = []
@@ -412,63 +121,3 @@ def to_postfix(expression, interpreter=None):
         output.append(operators.pop())
 
     return output
-
-
-def print_ast(ast: list[ASTNode], decalage: int = 0):
-    for i in ast:
-
-        if isinstance(i, StartNode):
-            print_ast(i.body, decalage)
-
-        if isinstance(i, LoopNode):
-            print(f"{' ' * decalage}LOOP -> {i.variable.name} : {i.variable.body}")
-            print_ast(i, decalage + 5)
-
-        elif isinstance(i, IfNode):
-            print(f"{' ' * decalage}IF -> {i.condition}")
-            print_ast(i, decalage + 5)
-
-            if i.elif_nodes is not None:
-                for elif_body in i.elif_nodes:
-                    print(f"{' ' * decalage}ELIF -> {elif_body.condition}")
-                    print_ast(elif_body, decalage + 5)
-
-            if i.else_body is not None:
-                print(f"{' ' * decalage}ELSE -> ...")
-                print_ast(i.else_body, decalage + 5)
-
-        elif isinstance(i, CommandNode):
-            print(f"{' ' * decalage}COMMAND -> {i.name} : {i.body}")
-
-        elif isinstance(i, VarNode):
-            print(f"{' ' * decalage}VAR -> {i.name} : {i.body}")
-
-        elif isinstance(i, EmbedNode):
-            print(f"{' ' * decalage}EMBED :")
-            print_ast(i.fields, decalage + 5)
-
-        elif isinstance(i, FieldEmbedNode):
-            for field in i.body:
-                print(f"{' ' * decalage}FIELD -> {field.value}")
-
-        elif isinstance(i, PermissionNode):
-            print(f"{' ' * decalage}PERMISSION -> {i.body}")
-
-        elif isinstance(i, ParamNode):
-            print(f"{' ' * decalage}PARAM -> {i.body}")
-
-
-        elif isinstance(i, UiButtonNode):
-            print(f"{' ' * decalage}BUTTON -> {i.body}")
-
-        elif isinstance(i, UiSelectNode):
-            print(f"{' ' * decalage}SELECT -> {i.body}")
-
-        elif isinstance(i, SleepNode):
-            print(f"{' ' * decalage}SLEEP -> {i.body}")
-
-        elif isinstance(i, EndNode):
-            print(f"{' ' * decalage}END -> ...")
-
-        else:
-            print(f"{' ' * decalage}UNKNOWN NODE {i}")

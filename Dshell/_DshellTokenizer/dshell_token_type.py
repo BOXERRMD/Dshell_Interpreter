@@ -10,6 +10,7 @@ MASK_CHARACTER = '§'
 
 
 class DshellTokenType(Enum):
+    NEWLINE = auto()  # \n
     INT = auto()
     FLOAT = auto()
     STR = auto()
@@ -19,7 +20,7 @@ class DshellTokenType(Enum):
     L_LIST = auto() # ]
     MENTION = auto()
     IDENT = auto()  # nom de variable, fonction
-    KEYWORD = auto()  # if, let, end, etc.
+    KEYWORD = auto()  # if, end, etc.
     DISCORD_KEYWORD = auto()  # embed, #embed...
     COMMAND = auto()
     PARAMETER = auto()  # --

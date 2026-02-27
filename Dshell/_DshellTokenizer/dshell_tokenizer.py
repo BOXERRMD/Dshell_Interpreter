@@ -2,16 +2,13 @@ __all__ = [
     "DshellTokenizer"
 ]
 
+from typing import Iterable, Union
+from re import search, escape
 from .dshell_token_type import Token
 from .dshell_token_type import DshellTokenType as DTT
-from ..full_import import sub, findall, DOTALL
-
-from .dshell_keywords import (dshell_keyword,
-                              dshell_discord_keyword,
-                              dshell_commands,
-                              dshell_mathematical_operators,
-                              dshell_logical_operators,
-                              dshell_logical_word_operators)
+from .._DshellKeys.dshell_keywords import dshell_keyword, dshell_discord_keyword
+from .._DshellKeys.dshell_operators import dshell_mathematical_operators, dshell_logical_operators, dshell_logical_word_operators
+from .._DshellKeys.dshell_commands import dshell_commands
 
 encapsulated_caracter: dict[str, DTT] = {
     '[' : DTT.R_LIST,
@@ -72,8 +69,16 @@ class DshellTokenizer:
 
             caracter = code[i]
 
-            if caracter in "\t\r\n ":
-                pass
+            if caracter in "\t\r ":
+                i += 1
+
+            elif caracter == '\n':
+                tokens.append(
+                    Token(DTT.NEWLINE, '\\n', (current_line, i))
+                )
+                current_line += 1
+                i += 1
+
 
             elif caracter in string_caracters.keys():
                 string_delimiter = caracter
@@ -95,40 +100,49 @@ class DshellTokenizer:
                 tokens.append(
                     Token(encapsulated_caracter[caracter], caracter, (current_line, i))
                 )
+                i += 1
 
-            elif caracter in dshell_keyword:
+            elif keyword := startswith(code, i, dshell_keyword.keys()):
                 tokens.append(
-                    Token(DTT.KEYWORD, caracter, (current_line, i))
+                    Token(DTT.KEYWORD, keyword, (current_line, i))
                 )
+                i += len(keyword)
+                del keyword
 
-            elif caracter in dshell_discord_keyword:
+            elif discord_keyword := startswith(code, i, dshell_discord_keyword.keys()):
                 tokens.append(
-                    Token(DTT.DISCORD_KEYWORD, caracter, (current_line, i))
+                    Token(DTT.DISCORD_KEYWORD, discord_keyword, (current_line, i))
                 )
+                i += len(discord_keyword)
+                del discord_keyword
 
-            elif any(code.startswith(multi_char, i) for multi_char in multiple_characters.keys()):
-                for multi_char, token_type in multiple_characters.items():
-                    if code.startswith(multi_char, i):
-                        tokens.append(
-                            Token(token_type, multi_char, (current_line, i))
-                        )
-                        i += len(multi_char)-1
-                        break
-
-            elif caracter in dshell_mathematical_operators:
+            elif multiple := startswith(code, i, multiple_characters.keys()):
                 tokens.append(
-                    Token(DTT.MATHS_OPERATOR, caracter, (current_line, i))
+                    Token(multiple_characters[multiple], multiple, (current_line, i))
                 )
+                i += len(multiple)
+                del multiple
 
-            elif caracter in dshell_logical_operators:
+            elif mathematical_operator := startswith(code, i, dshell_mathematical_operators.keys()):
                 tokens.append(
-                    Token(DTT.LOGIC_OPERATOR, caracter, (current_line, i))
+                    Token(DTT.MATHS_OPERATOR, mathematical_operator, (current_line, i))
                 )
+                i += len(mathematical_operator)
+                del mathematical_operator
 
-            elif caracter in dshell_logical_word_operators:
+            elif logical_operator := startswith(code, i, dshell_logical_operators.keys()):
                 tokens.append(
-                    Token(DTT.LOGIC_WORD_OPERATOR, caracter, (current_line, i))
+                    Token(DTT.LOGIC_OPERATOR, logical_operator, (current_line, i))
                 )
+                i += len(logical_operator)
+                del logical_operator
+
+            elif logical_word_operator := startswith(code, i, dshell_logical_word_operators.keys()):
+                tokens.append(
+                    Token(DTT.LOGIC_WORD_OPERATOR, logical_word_operator, (current_line, i))
+                )
+                i += len(logical_word_operator)
+                del logical_word_operator
 
             elif caracter.isdigit():
                 number_str = caracter
@@ -140,7 +154,6 @@ class DshellTokenizer:
                     tokens.append(Token(DTT.FLOAT, float(number_str), (current_line, i - len(number_str))))
                 else:
                     tokens.append(Token(DTT.INT, int(number_str), (current_line, i - len(number_str))))
-                continue
 
             elif caracter.isalpha() or caracter in allow_ident_caracters:
                 ident_str = caracter
@@ -161,7 +174,19 @@ class DshellTokenizer:
 
             else:
                 tokens.append(Token(DTT.ANY_CHARACTER, caracter, (current_line, i)))
-
-            i += 1
+                i += 1
 
         return tokens
+
+def startswith(code: str, i: int, to_find: Iterable[str]) -> Union[str, None]:
+    """
+    Find and return the firs string in to_find that starts at position i in code, or None if no match is found.
+    :param code: the code to search in
+    :param i: the position in code to start searching from
+    :param to_find: an iterable of strings to search for
+    :return:
+    """
+    for s in to_find:
+        if match := search(f"^({escape(s)})", code[i:]):
+            return match.group(1)
+    return None
