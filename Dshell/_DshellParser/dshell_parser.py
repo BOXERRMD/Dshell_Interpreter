@@ -22,12 +22,48 @@ def parse(tokens: list[Token], start_node) -> list[ASTNode]:
     blocks = [start_node]  # list of block nesting to manage indentation
     tokens_by_line: list[list[Token]] = split_newlines(tokens)  # split tokens by line to facilitate parsing
 
-    while pointer < len(tokens):
+    while pointer < len(tokens_by_line):
 
         current_line = tokens_by_line[pointer]
+        first_token = current_line[0]
 
-        if 
+        if first_token.type == DTT.COMMAND:
+            keyword_node = CommandNode(first_token.value, parse_parameters(tokens_by_line[pointer], 1))
+            blocks[-1].body.append(keyword_node)
+            pointer += 1
 
+        elif first_token.type == DTT.KEYWORD:
+            pass
+
+    return blocks
+
+def parse_parameters(tokens: list[Token], start_parsing: int) -> list[ArgsCommandNode]:
+    """
+    Parse the parameters of a command and return a ParamNode.
+    :param tokens:
+    :return:
+    """
+    params = []
+    i = start_parsing
+    while i < len(tokens):
+        token = tokens[i]
+        if token.type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
+            param_name = token.value # le nom du paramètre est dans token.value, et sa valeur est dans le/les token(s) suivant
+            i += 1
+            param_value = tokens[i] if i < len(tokens) else []
+
+            if token.type == DTT.PARAMETERS:
+                # Handle multiple parameters separated by spaces
+                i += 1
+                while i < len(tokens) and tokens[i].type not in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
+                    param_value.append(tokens[i])
+                    i += 1
+
+            params.append(ArgsCommandNode(param_name, param_value))
+        else:
+            params.append(ArgsCommandNode(None, tokens[i] if i < len(tokens) else []))
+        i += 1
+    return params
 
 
 

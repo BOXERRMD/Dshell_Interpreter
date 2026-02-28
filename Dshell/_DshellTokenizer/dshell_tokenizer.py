@@ -10,6 +10,11 @@ from .._DshellKeys.dshell_keywords import dshell_keyword, dshell_discord_keyword
 from .._DshellKeys.dshell_operators import dshell_mathematical_operators, dshell_logical_operators, dshell_logical_word_operators
 from .._DshellKeys.dshell_commands import dshell_commands
 
+NEWLINE = '\n'
+SPACE = ' '
+SLASH = '\\'
+POINT = '.'
+
 encapsulated_caracter: dict[str, DTT] = {
     '[' : DTT.R_LIST,
     ']' : DTT.L_LIST,
@@ -72,9 +77,9 @@ class DshellTokenizer:
             if caracter in "\t\r ":
                 i += 1
 
-            elif caracter == '\n':
+            elif caracter == NEWLINE:
                 tokens.append(
-                    Token(DTT.NEWLINE, '\\n', (current_line, i))
+                    Token(DTT.NEWLINE, NEWLINE, (current_line, i))
                 )
                 current_line += 1
                 i += 1
@@ -85,7 +90,7 @@ class DshellTokenizer:
                 string_value = ''
                 i += 1
                 while i < len(code) and code[i] != string_delimiter:
-                    if code[i] == '\\' and i + 1 < len(code): # gestion des caractères d'échappement
+                    if code[i] == SLASH and i + 1 < len(code): # gestion des caractères d'échappement
                         string_value += code[i + 1]
                         i += 2
                     else:
@@ -117,10 +122,33 @@ class DshellTokenizer:
                 del discord_keyword
 
             elif multiple := startswith(code, i, multiple_characters.keys()):
-                tokens.append(
-                    Token(multiple_characters[multiple], multiple, (current_line, i))
-                )
+
+                # recupère le nom du paramètre (jusqu'au prochain espace)
+                ident_value = ''
                 i += len(multiple)
+                while i < len(code) and code[i] != SPACE and code[i] != NEWLINE:
+                    if code[i] == SLASH and i + 1 < len(code):  # gestion des caractères d'échappement
+                        ident_value += code[i + 1]
+                        i += 2
+                    else:
+                        ident_value += code[i]
+                        i += 1
+
+                tokens.append(Token(multiple_characters[multiple], ident_value, (current_line, i - len(ident_value) - len(multiple))))
+
+                if multiple_characters[multiple] == DTT.STR_PARAMETER:
+                    # Handle string parameter with the same logic as for regular strings, but with a different delimiter
+                    string_value = ''
+                    while i < len(code) and code[i] != NEWLINE and startswith(code, i, multiple_characters.keys()) is None:
+                        if code[i] == SLASH and i + 1 < len(code):  # gestion des caractères d'échappement
+                            string_value += code[i + 1]
+                            i += 2
+                        else:
+                            string_value += code[i]
+                            i += 1
+
+                    tokens.append(Token(DTT.STR, string_value, (current_line, i - len(string_value))))
+
                 del multiple
 
             elif mathematical_operator := startswith(code, i, dshell_mathematical_operators.keys()):
@@ -147,10 +175,10 @@ class DshellTokenizer:
             elif caracter.isdigit():
                 number_str = caracter
                 i += 1
-                while i < len(code) and (code[i].isdigit() or code[i] == '.'):
+                while i < len(code) and (code[i].isdigit() or code[i] == POINT):
                     number_str += code[i]
                     i += 1
-                if '.' in number_str:
+                if POINT in number_str:
                     tokens.append(Token(DTT.FLOAT, float(number_str), (current_line, i - len(number_str))))
                 else:
                     tokens.append(Token(DTT.INT, int(number_str), (current_line, i - len(number_str))))

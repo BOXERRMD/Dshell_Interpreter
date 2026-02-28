@@ -184,10 +184,11 @@ class ArgsCommandNode(ASTNode):
     Node representing the arguments of a command in the AST.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, name: Optional[str], body: list[Token]):
         """
         :param body: list of tokens representing the arguments of the command
         """
+        self.name = name
         self.body: list[Token] = body
 
     def __repr__(self):
@@ -209,7 +210,7 @@ class CommandNode(ASTNode):
     Node representing a command in the AST.
     """
 
-    def __init__(self, name: str, body: ArgsCommandNode):
+    def __init__(self, name: str, body: list[ArgsCommandNode]):
         """
         :param name: The command name (e.g., "sm", "cc")
         :param body: ArgsCommandNode containing the arguments of the command
