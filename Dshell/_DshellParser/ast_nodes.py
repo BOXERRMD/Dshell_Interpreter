@@ -57,6 +57,26 @@ class StartNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class ExpressionNode(ASTNode):
+    """
+    Node representing an expression in the AST.
+    """
+
+    def __init__(self, body: list[Token]):
+        self.body = body
+
+    def __repr__(self):
+        return f"<ExpressionNode> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the ExpressionNode to a dictionary representation.
+        :return: Dictionary representation of the ExpressionNode.
+        """
+        return {
+            "type": "ExpressionNode",
+            "body": [token.to_dict() for token in self.body]
+        }
 
 class ElseNode(ASTNode):
     """
@@ -192,7 +212,7 @@ class ArgsCommandNode(ASTNode):
         self.body: list[Token] = body
 
     def __repr__(self):
-        return f"<Args Command> - {self.body}"
+        return f"<Args Command {self.name}> - {self.body}"
 
     def to_dict(self):
         """

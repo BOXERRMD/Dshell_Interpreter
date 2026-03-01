@@ -13,7 +13,7 @@ from .._DshellTokenizer.dshell_token_type import DTT_DATA
 from .._DshellKeys.dshell_operators import dshell_operators
 
 
-def parse(tokens: list[Token], start_node) -> list[ASTNode]:
+def parse(tokens: list[Token], start_node) -> tuple[list[ASTNode], int]:
     """
     Parse the list of tokens and return a list of AST nodes.
     :param tokens: table of tokens
@@ -28,14 +28,23 @@ def parse(tokens: list[Token], start_node) -> list[ASTNode]:
         first_token = current_line[0]
 
         if first_token.type == DTT.COMMAND:
-            keyword_node = CommandNode(first_token.value, parse_parameters(tokens_by_line[pointer], 1))
-            blocks[-1].body.append(keyword_node)
+            command_node = CommandNode(first_token.value, [])
+            blocks[-1].body.append(command_node)
+            parse(current_line[1:], command_node)
             pointer += 1
 
         elif first_token.type == DTT.KEYWORD:
-            pass
+            keyword_node = dshell_keyword.get(first_token.value, None)
+            if keyword_node is None:
+                raise SyntaxError(f"Unknown keyword: {first_token.value} at line {first_token.position[0]}, position {first_token.position[1]}")
 
-    return blocks
+
+        elif first_token.type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
+            param_nodes = parse_parameters(current_line, 0)
+            blocks[-1].body.extend(param_nodes)
+            pointer += 1
+
+    return blocks, pointer
 
 def parse_parameters(tokens: list[Token], start_parsing: int) -> list[ArgsCommandNode]:
     """
