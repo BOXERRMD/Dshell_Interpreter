@@ -51,7 +51,6 @@ def parse(tokens: list[Token], start_node, start_parsing: int = 0) -> tuple[list
                     _, p = parse(tokens, loop_node, pointer + 1)
                     pointer += p + 1
 
-
     return blocks, pointer
 
 def parse_loop_definition(token_loop: DTT.KEYWORD, tokens: list[Token]) -> LoopNode:
@@ -60,7 +59,7 @@ def parse_loop_definition(token_loop: DTT.KEYWORD, tokens: list[Token]) -> LoopN
     :param tokens: the tokens of the line containing the loop definition
     :return: a LoopNode representing the loop definition
     """
-    if len(tokens) <= 1:
+    if len(tokens) < 1:
         raise SyntaxError(f'[LOOP] Take one (or two) argument(s) on line {token_loop.position} !')
 
     if len(tokens) >= 2:  # if the loop has two arguments : an ident and an iterator
@@ -75,7 +74,7 @@ def parse_loop_definition(token_loop: DTT.KEYWORD, tokens: list[Token]) -> LoopN
         loop_node = LoopNode(VarNode(tokens[0], to_postfix(tokens[1:])), body=[])
 
     else:
-        if tokens[1].type not in DTT_DATA:
+        if tokens[0].type not in DTT_DATA:
             raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
                             f'not {tokens[0].type} in line {tokens[0].position}')
 
