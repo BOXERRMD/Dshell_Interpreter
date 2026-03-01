@@ -13,12 +13,12 @@ from .._DshellTokenizer.dshell_token_type import DTT_DATA
 from .._DshellKeys.dshell_operators import dshell_operators
 
 
-def parse(tokens: list[Token], start_node) -> tuple[list[ASTNode], int]:
+def parse(tokens: list[Token], start_node, start_parsing: int = 0) -> tuple[list[ASTNode], int]:
     """
     Parse the list of tokens and return a list of AST nodes.
     :param tokens: table of tokens
     """
-    pointer = 0  # pointer on token lists to track where to parse
+    pointer = start_parsing  # pointer on token lists to track where to parse
     blocks = [start_node]  # list of block nesting to manage indentation
     tokens_by_line: list[list[Token]] = split_newlines(tokens)  # split tokens by line to facilitate parsing
 
@@ -28,23 +28,61 @@ def parse(tokens: list[Token], start_node) -> tuple[list[ASTNode], int]:
         first_token = current_line[0]
 
         if first_token.type == DTT.COMMAND:
-            command_node = CommandNode(first_token.value, [])
+            command_node = CommandNode(first_token.value, parse_parameters(current_line, 1))
             blocks[-1].body.append(command_node)
-            parse(current_line[1:], command_node)
             pointer += 1
 
         elif first_token.type == DTT.KEYWORD:
             keyword_node = dshell_keyword.get(first_token.value, None)
+
             if keyword_node is None:
                 raise SyntaxError(f"Unknown keyword: {first_token.value} at line {first_token.position[0]}, position {first_token.position[1]}")
 
+            if keyword_node == LoopNode:
+                if first_token.value.startswith("#"):
+                    if not isinstance(blocks[-1], LoopNode):
+                        raise SyntaxError(f'[LOOP] Unexpected end of loop at line {first_token.position[0]}, position {first_token.position[1]}')
+                    # if it's an end of loop, we pop the last loop block
+                    blocks.pop()
+                    return blocks, pointer
+                else:
+                    loop_node = parse_loop_definition(first_token, current_line[1:])
+                    blocks[-1].body.append(loop_node)
+                    _, p = parse(tokens, loop_node, pointer + 1)
+                    pointer += p + 1
 
-        elif first_token.type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
-            param_nodes = parse_parameters(current_line, 0)
-            blocks[-1].body.extend(param_nodes)
-            pointer += 1
 
     return blocks, pointer
+
+def parse_loop_definition(token_loop: DTT.KEYWORD, tokens: list[Token]) -> LoopNode:
+    """
+    Parse the definition of a loop and return a LoopNode.
+    :param tokens: the tokens of the line containing the loop definition
+    :return: a LoopNode representing the loop definition
+    """
+    if len(tokens) <= 1:
+        raise SyntaxError(f'[LOOP] Take one (or two) argument(s) on line {token_loop.position} !')
+
+    if len(tokens) >= 2:  # if the loop has two arguments : an ident and an iterator
+
+        if tokens[0].type != DTT.IDENT:
+            raise TypeError(f'[LOOP] the variable given must be a ident, '
+                            f'not {tokens[1].type} in line {tokens[1].position}')
+        if tokens[1].type not in DTT_DATA:
+            raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
+                            f'not {tokens[2].type} in line {tokens[2].position}')
+
+        loop_node = LoopNode(VarNode(tokens[0], to_postfix(tokens[1:])), body=[])
+
+    else:
+        if tokens[1].type not in DTT_DATA:
+            raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
+                            f'not {tokens[0].type} in line {tokens[0].position}')
+
+        loop_node = LoopNode(
+            VarNode(Token(DTT.IDENT, "__loop__", tokens[0].position), to_postfix(tokens[0:])), body=[])
+
+    return loop_node
 
 def parse_parameters(tokens: list[Token], start_parsing: int) -> list[ArgsCommandNode]:
     """
