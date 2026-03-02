@@ -5,6 +5,8 @@ __all__ = [
     "ast_to_dict",
 ]
 
+from typing import Union
+
 from .ast_nodes import *
 from .._DshellKeys.dshell_keywords import dshell_keyword, dshell_discord_keyword
 from .._DshellTokenizer.dshell_token_type import Token
@@ -51,6 +53,39 @@ def parse(tokens: list[Token], start_node, start_parsing: int = 0) -> tuple[list
                     _, p = parse(tokens, loop_node, pointer + 1)
                     pointer += p + 1
 
+            elif keyword_node == IfNode:
+                if first_token.value.startswith("#"):
+                    if not isinstance(blocks[-1], (IfNode, ElifNode, ElseNode)):
+                        raise SyntaxError(f'[IF] Unexpected end of if block at line {first_token.position[0]}, position {first_token.position[1]}')
+                    # if it's an end of if, we pop the last if block
+                    blocks.pop()
+                    return blocks, pointer
+                else:
+                    if_node = IfNode(to_postfix(current_line[1:]), body=[])
+                    blocks[-1].body.append(if_node)
+                    blocks.append(if_node)
+                    pointer += 1
+
+            elif keyword_node == ElifNode:
+                if not isinstance(blocks[-1], IfNode):
+                    raise SyntaxError(f'[ELIF] Unexpected elif without a preceding if at line {first_token.position[0]}, position {first_token.position[1]}')
+                # we pop the last if/elif block and create a new one for the elif
+                blocks.pop()
+                elif_node = ElifNode(to_postfix(current_line[1:]), body=[], parent=blocks[-1])
+                blocks[-1].elif_node.append(elif_node)
+                blocks.append(elif_node)
+                pointer += 1
+
+            elif keyword_node == ElseNode:
+                if not isinstance(blocks[-1], (IfNode, ElifNode)):
+                    raise SyntaxError(f'[ELSE] Unexpected else without a preceding if at line {first_token.position[0]}, position {first_token.position[1]}')
+                # we pop the last if/elif block and create a new one for the else
+                blocks.pop()
+                else_node = ElseNode(body=[])
+                blocks[-1].body.append(else_node)
+                blocks.append(else_node)
+                pointer += 1
+
     return blocks, pointer
 
 def parse_loop_definition(token_loop: DTT.KEYWORD, tokens: list[Token]) -> LoopNode:
@@ -83,6 +118,7 @@ def parse_loop_definition(token_loop: DTT.KEYWORD, tokens: list[Token]) -> LoopN
 
     return loop_node
 
+
 def parse_parameters(tokens: list[Token], start_parsing: int) -> list[ArgsCommandNode]:
     """
     Parse the parameters of a command and return a ParamNode.
@@ -105,13 +141,83 @@ def parse_parameters(tokens: list[Token], start_parsing: int) -> list[ArgsComman
                     param_value.append(tokens[i])
                     i += 1
 
-            params.append(ArgsCommandNode(param_name, param_value))
+            params.append(ArgsCommandNode(param_name, parse_arguments(param_value, i)))
         else:
-            params.append(ArgsCommandNode(None, tokens[i] if i < len(tokens) else []))
+            params.append(ArgsCommandNode(None, parse_arguments(tokens, i) if i < len(tokens) else []))
         i += 1
     return params
 
 
+def parse_encapsulated(tokens: list[Token],
+                       start_node,
+                       start_parsing: int) -> tuple[list[Union[ListNode, EvalExpressionNode, EvalGroupNode]], int]:
+    """
+        Parse encapsulated structures (parentheses, brackets, braces) and return a list of AST nodes representing these structures.
+    :param tokens:
+    :return:
+    """
+    result: list[Union[ListNode, EvalExpressionNode, EvalGroupNode]] = [start_node]
+    pointer: int = start_parsing
+    while pointer < len(tokens):
+        token = tokens[pointer]
+        if token.type == DTT.R_LIST:
+            list_node = ListNode([])
+            result[-1].body.append(list_node)
+            _, p = parse_encapsulated(tokens, list_node, pointer + 1)
+            pointer += p + 1
+
+        elif token.type == DTT.L_LIST:
+            if not isinstance(result[-1], ListNode):
+                raise SyntaxError(f"Unexpected closing bracket at line {token.position[0]}, position {token.position[1]}")
+            result.pop()  # we pop the last list node, which is now complete
+            return result, pointer
+
+        elif token.type == DTT.R_EVAL_EXPRESSION:
+            eval_node = EvalExpressionNode([])
+            result[-1].body.append(eval_node)
+            eval_tokens_after_paring, p = parse_encapsulated(tokens, eval_node, pointer + 1)
+            eval_node.expression = to_postfix(eval_tokens_after_paring)
+            pointer += p + 1
+
+        elif token.type == DTT.EVAL_GROUP:
+            start_eval_group_node = StartNode([])
+            result_parsing_eval_group, p = parse(tokens, start_eval_group_node, pointer + 1)
+            if len(result_parsing_eval_group) != 1:
+                raise SyntaxError(f"Unexpected number of nodes in eval group at line {token.position[0]}, position {token.position[1]}")
+            eval_group_node = EvalGroupNode(result_parsing_eval_group[0])
+            result[-1].body.append(eval_group_node)
+            pointer += p + 1
+
+        else:
+            if token.type in DTT_DATA:
+                result[-1].body.append(token)
+            pointer += 1
+
+    return result, pointer
+
+def parse_arguments(tokens: list[Token], start_parsing: int) -> list[Union[ListNode, EvalExpressionNode, EvalGroupNode, Token]]:
+    """
+    Parse the arguments of a command and return a list of AST nodes representing these arguments.
+    :param tokens:
+    :return:
+    """
+    result: list[Union[ListNode, EvalExpressionNode, EvalGroupNode, Token]] = []
+    pointer: int = start_parsing
+    while pointer < len(tokens):
+        token = tokens[pointer]
+        if token.type in DTT_DATA:
+            result.append(token)
+            pointer += 1
+        elif token.type in (DTT.R_LIST, DTT.R_EVAL_EXPRESSION, DTT.EVAL_GROUP):
+            start_node = StartNode([])
+            _, p = parse_encapsulated(tokens, start_node, pointer)
+            result.extend(start_node.body)  # we skip the start node
+            pointer += p + 1
+
+        else:
+            pointer += 1
+
+    return result
 
 def split_newlines(tokens: list[Token]) -> list[list[Token]]:
     """

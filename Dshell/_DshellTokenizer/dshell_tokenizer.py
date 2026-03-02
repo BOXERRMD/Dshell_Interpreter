@@ -15,12 +15,13 @@ SPACE = ' '
 SLASH = '\\'
 POINT = '.'
 
-encapsulated_caracter: dict[str, DTT] = {
+single_caracter: dict[str, DTT] = {
     '[' : DTT.R_LIST,
     ']' : DTT.L_LIST,
     '{' : DTT.R_EVAL_EXPRESSION,
     '}' : DTT.L_EVAL_EXPRESSION,
-    '`' :DTT.EVAL_GROUP
+    '`' : DTT.EVAL_GROUP,
+    ',' : DTT.SEPARATOR
 }
 
 multiple_characters: dict[str, DTT] = {
@@ -101,9 +102,9 @@ class DshellTokenizer:
                 tokens.append(Token(string_caracters[string_delimiter], string_value, (current_line, i - len(string_value) - 1)))
                 i += 1
 
-            elif caracter in encapsulated_caracter.keys():
+            elif caracter in single_caracter.keys():
                 tokens.append(
-                    Token(encapsulated_caracter[caracter], caracter, (current_line, i))
+                    Token(single_caracter[caracter], caracter, (current_line, i))
                 )
                 i += 1
 

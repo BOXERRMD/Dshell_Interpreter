@@ -32,6 +32,7 @@ class DshellTokenType(Enum):
     EVAL_GROUP = auto()  # `code`
     R_EVAL_EXPRESSION = auto()  # for inline mathematical and logical expression {
     L_EVAL_EXPRESSION = auto()  # for inline mathematical and logical expression }
+    SEPARATOR = auto()  # , |
     ANY_CHARACTER = auto()  # pour les caractères non reconnus mais utilisé dans les données passé en paramètre des commandes
     COMMENT = auto()  # lignes commençant par ##
 
@@ -39,10 +40,7 @@ DTT_DATA = {DshellTokenType.INT,
             DshellTokenType.FLOAT,
             DshellTokenType.STR,
             DshellTokenType.BOOL,
-            DshellTokenType.IDENT,
-            DshellTokenType.R_LIST,
-            DshellTokenType.EVAL_GROUP,
-            DshellTokenType.R_EVAL_EXPRESSION}
+            DshellTokenType.IDENT}
 
 class Token:
     def __init__(self, type_: DshellTokenType, value: Any, position: tuple[int, int]):

@@ -10,6 +10,7 @@ __all__ = [
     'IfNode',
     'LoopNode',
     'ArgsCommandNode',
+    'EvalExpressionNode',
     'CommandNode',
     'VarNode',
     'EndNode',
@@ -204,7 +205,7 @@ class ArgsCommandNode(ASTNode):
     Node representing the arguments of a command in the AST.
     """
 
-    def __init__(self, name: Optional[str], body: list[Token]):
+    def __init__(self, name: Optional[str], body: list[Union[Token, "ListNode", "EvalExpressionNode", "EvalGroupNode"]]):
         """
         :param body: list of tokens representing the arguments of the command
         """
@@ -224,6 +225,29 @@ class ArgsCommandNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class EvalExpressionNode(ASTNode):
+    """
+    Node representing an evaluation expression in the AST.
+    """
+
+    def __init__(self, body: list[Token]):
+        """
+        :param body: list of tokens representing the evaluation expression
+        """
+        self.body = body
+
+    def __repr__(self):
+        return f"<Eval Expression> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the EvalExpressionNode to a dictionary representation.
+        :return: Dictionary representation of the EvalExpressionNode.
+        """
+        return {
+            "type": "EvalExpressionNode",
+            "body": [token.to_dict() for token in self.body]
+        }
 
 class CommandNode(ASTNode):
     """
@@ -434,7 +458,7 @@ class EvalGroupNode(ASTNode):
     This is used to group multiple evaluations together.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: CommandNode):
         """
         :param body: list of tokens representing the body of the evaluation group
         """
@@ -508,7 +532,7 @@ class EvalNode(ASTNode):
     This is used to evaluate expressions in Dshell.
     """
 
-    def __init__(self, codeNode: Token, argsNode: ArgsCommandNode):
+    def __init__(self, codeNode: Token, argsNode: list[ArgsCommandNode]):
         """
         :param body: list of tokens representing the expression to evaluate
         """
@@ -642,8 +666,8 @@ class ListNode(ASTNode):
         """
         :param body: list of elements to initialize the ListNode with
         """
-        self.iterable: list[Any] = body
-        self.len_iterable: int = len(body)
+        self.body: list[Any] = body
+        self.len_body: int = len(body)
         self.iterator_count: int = 0
 
     def to_dict(self):
@@ -653,18 +677,18 @@ class ListNode(ASTNode):
         """
         return {
             "type": "ListNode",
-            "body": [token.to_dict() for token in self.iterable]
+            "body": [token.to_dict() for token in self.body]
         }
 
     def add(self, value: Any):
         """
         Add a value to the list.
         """
-        if self.len_iterable > 1000:
+        if self.len_body > 1000:
             raise PermissionError('The list is too long, it must not exceed 1000 elements !')
 
-        self.iterable.append(value)
-        self.len_iterable += 1
+        self.body.append(value)
+        self.len_body += 1
 
     def remove(self, value: Any, number: int = 1):
         """
@@ -674,10 +698,10 @@ class ListNode(ASTNode):
             raise Exception(f"The number of elements to remove must be at least 1, not {number} !")
 
         count = 0
-        while number > 0 and count < self.len_iterable:
-            if self.iterable[count] == value:
-                self.iterable.pop(count)
-                self.len_iterable -= 1
+        while number > 0 and count < self.len_body:
+            if self.body[count] == value:
+                self.body.pop(count)
+                self.len_body -= 1
                 number -= 1
                 continue
             count += 1
@@ -687,27 +711,27 @@ class ListNode(ASTNode):
         Remove and return the last element of the list.
         :return: The last element of the list.
         """
-        if self.len_iterable == 0:
+        if self.len_body == 0:
             raise IndexError("pop from empty list")
-        if 0 > index >= self.len_iterable or -self.len_iterable > index < 0:
+        if 0 > index >= self.len_body or -self.len_body > index < 0:
             raise IndexError("pop index out of range")
 
-        self.len_iterable -= 1
-        return self.iterable.pop(index)
+        self.len_body -= 1
+        return self.body.pop(index)
 
     def count(self):
         """
         Return the number of elements in the list.
         :return: The number of elements in the list.
         """
-        return self.len_iterable
+        return self.len_body
 
     def clear(self):
         """
         Clear the list.
         """
-        self.iterable = []
-        self.len_iterable = 0
+        self.body = []
+        self.len_body = 0
         self.iterator_count = 0
 
     def sort(self, reverse: bool = False):
@@ -715,13 +739,13 @@ class ListNode(ASTNode):
         Sort the list.
         :param reverse: Whether to sort the list in reverse order.
         """
-        self.iterable.sort(reverse=reverse)
+        self.body.sort(reverse=reverse)
 
     def reverse(self):
         """
         Reverse the list.
         """
-        self.iterable.reverse()
+        self.body.reverse()
 
     def extend(self, values: "ListNode"):
         """
@@ -750,24 +774,26 @@ class ListNode(ASTNode):
         :return: an element from the list.
         """
 
-        if self.iterator_count >= self.len_iterable:
+        if self.iterator_count >= self.len_body:
             self.iterator_count = 0
             raise StopIteration()
 
-        v = self.iterable[self.iterator_count]
+        v = self.body[self.iterator_count]
         self.iterator_count += 1
         return v
 
     def __len__(self):
-        return self.len_iterable
+        return self.len_body
 
     def __getitem__(self, item):
-        if 0 <= item <= self.len_iterable-1:
-            return self.iterable[item]
+        if 0 <= item <= self.len_body-1:
+            return self.body[item]
         raise IndexError(f"Index out of range on ListNode !")
 
     def __bool__(self):
-        return bool(self.iterable)
+        return bool(self.body)
 
     def __repr__(self):
-        return f"<LIST> - {self.iterable}"
+        return f"<LIST> - {self.body}"
+
+NODES_DATA = {ListNode, EvalExpressionNode, EvalGroupNode}
