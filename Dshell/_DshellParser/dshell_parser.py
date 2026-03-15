@@ -14,6 +14,7 @@ from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from .._DshellTokenizer.dshell_token_type import DTT_DATA
 from .._DshellKeys.dshell_operators import dshell_operators
 
+marker_parameter = {DTT.STR_PARAMETER, DTT.PARAMETERS, DTT.PARAMETER}
 
 def parse(tokens: list[Token], start_node, start_parsing: int = 0) -> tuple[list[ASTNode], int]:
     """
@@ -129,22 +130,31 @@ def parse_parameters(tokens: list[Token], start_parsing: int) -> list[ArgsComman
     i = start_parsing
     while i < len(tokens):
         token = tokens[i]
-        if token.type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
+        if token.type in marker_parameter:
             param_name = token.value # le nom du paramètre est dans token.value, et sa valeur est dans le/les token(s) suivant
             i += 1
-            param_value = tokens[i] if i < len(tokens) else []
+            param_value = [tokens[i]] if i < len(tokens) else []
 
             if token.type == DTT.PARAMETERS:
                 # Handle multiple parameters separated by spaces
                 i += 1
-                while i < len(tokens) and tokens[i].type not in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
-                    param_value.append(tokens[i])
-                    i += 1
+                temp_ident = i
+                while temp_ident < len(tokens) and tokens[temp_ident].type not in marker_parameter:
+                    param_value.append(tokens[temp_ident])
+                    temp_ident += 1
 
-            params.append(ArgsCommandNode(param_name, parse_arguments(param_value, i)))
+            parse_result = parse_arguments(param_value)
+            params.append(ArgsCommandNode(param_name, parse_result))
+            i += len(parse_result)
         else:
-            params.append(ArgsCommandNode(None, parse_arguments(tokens, i) if i < len(tokens) else []))
-        i += 1
+            tokens_to_parse = []
+            temp_ident = i
+            while temp_ident < len(tokens) and tokens[temp_ident].type not in marker_parameter:
+                tokens_to_parse.append(tokens[temp_ident])
+                temp_ident += 1
+            parse_result = parse_arguments(tokens_to_parse)
+            params.append(ArgsCommandNode(None, parse_result))
+            i = temp_ident
     return params
 
 
@@ -195,14 +205,14 @@ def parse_encapsulated(tokens: list[Token],
 
     return result, pointer
 
-def parse_arguments(tokens: list[Token], start_parsing: int) -> list[Union[ListNode, EvalExpressionNode, EvalGroupNode, Token]]:
+def parse_arguments(tokens: list[Token]) -> list[Union[ListNode, EvalExpressionNode, EvalGroupNode, Token]]:
     """
     Parse the arguments of a command and return a list of AST nodes representing these arguments.
     :param tokens:
     :return:
     """
     result: list[Union[ListNode, EvalExpressionNode, EvalGroupNode, Token]] = []
-    pointer: int = start_parsing
+    pointer: int = 0
     while pointer < len(tokens):
         token = tokens[pointer]
         if token.type in DTT_DATA:
