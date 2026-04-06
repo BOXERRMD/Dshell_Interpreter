@@ -7,7 +7,8 @@ __all__ = [
 from .dshell_token_type import Token
 from .dshell_token_type import DshellTokenType as DTT
 
-from Dshell.full_import import (Pattern,
+from Dshell.full_import import (Optional,
+                           Pattern,
                            ASCII,
                            DOTALL,
                            IGNORECASE,
@@ -16,7 +17,6 @@ from Dshell.full_import import (Pattern,
                            escape,
                            findall,
                            finditer,
-                           search,
                            sub)
 
 from .dshell_keywords import (dshell_keyword,
@@ -39,9 +39,12 @@ def is_line_empty(line: str) -> bool:
 table_regex: dict[DTT, Pattern] = {
     DTT.COMMENT: compile(r"::(.*)", flags=MULTILINE),
     DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
-    DTT.EVAL_EXPRESSION: compile(r"(?P<brace>\{(?:[^{}]+|(?&brace))*})"),
-    DTT.EVAL_GROUP: compile(r"(?P<brace>`(?:[^`]+|(?&brace))*`)"),
-    DTT.LIST: compile(r"(?P<brace>\[(?:[^\[]+|(?&brace))*])"),
+    DTT.EVAL_L_EXPRESSION: compile(r"({)"),
+    DTT.EVAL_R_EXPRESSION: compile(r"(})"),
+    DTT.EVAL_L_GROUP: compile(r"(\()"),
+    DTT.EVAL_R_GROUP: compile(r"(\))"),
+    DTT.LIST_L: compile(r"(\[)"),
+    DTT.LIST_R: compile(r"(])"),
     DTT.PARAMETERS: compile(rf"--\*\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.STR_PARAMETER: compile(rf"--\'\s*([A-Za-z_]+)\s*", flags=ASCII),
     DTT.PARAMETER: compile(rf"--\s*([A-Za-z_]+)\s*", flags=ASCII),
@@ -122,26 +125,6 @@ class DshellTokenizer:
                     if token_type == DTT.STR:
                         token.value = token.value.replace(r'\"', '"')
 
-                    if token_type in (
-                            DTT.LIST,
-                            DTT.EVAL_GROUP,
-                            DTT.EVAL_EXPRESSION):  # if it's a data grouping, tokenize its contents
-                        result = self.tokenizer([token.value[1:-1]]) # tokenize the content of the grouping without the grouping characters
-                        token.value = result[0] if len(
-                            result) > 0 else result  # handle whether the data structure is empty or not
-
-                        for token_in_list in token.value:
-                            token_in_list.position = (line_number, token_in_list.position[1])
-
-                        for token_in_line in range(len(tokens_per_line)-1):
-                            if tokens_per_line[token_in_line].position[1] > start_match:
-                                str_tokens_in_list = tokens_per_line[token_in_line:-1]
-                                tokens_per_line = tokens_per_line[:token_in_line] + [tokens_per_line[-1]]
-                                token.value.extend(str_tokens_in_list)
-                                token.value.sort(key=lambda t: t.position[1])  # sort tokens by their position
-                                break
-
-
                     len_match = len(match.group(0))  # length of the match found
                     line = line[:start_match] + (MASK_CHARACTER * len_match) + line[
                                                                                     match.end():]  # replace the match to avoid matching it a second time
@@ -149,6 +132,10 @@ class DshellTokenizer:
             tokens_per_line.sort(key=lambda
                 token: token.position[1])  # sort the position based on token match positions to have them in code order
             if tokens_per_line:
+
+                tokens_per_line = self.parse_group(tokens_per_line,
+                                                  line_number)  # parse list in the current line to regroup them in a single token with all the elements of the list as value
+
                 tokens.append(tokens_per_line)
 
             line_number += 1  # increment the line number for the next line
@@ -190,3 +177,78 @@ class DshellTokenizer:
                 between_grouping_character.pop(0)
             result.append(i)
         return result
+
+    @staticmethod
+    def parse_group(line: list[Token],
+                   line_position: int):
+        """
+        Parse all list in the current token line and return the modified list line.
+        :return:
+        """
+        new_line: list[Token] = []
+        last_tokens: list[Token] = []
+
+        def add_new_group(dtt, ident):
+            new_token = Token(dtt, [], (line_position, ident + 1))
+            if last_tokens:
+                last_tokens[-1].value.append(new_token)
+            else:
+                last_tokens.append(new_token)
+                new_line.append(new_token)
+
+        def add_group_in_existing_group(dtt_to_compare, dtt, ident: int):
+            if token.type == dtt_to_compare:
+                new_token = Token(dtt, [], (line_position, ident + 1))
+                last_tokens[-1].value.append(new_token)
+                last_tokens.append(new_token)
+            else:
+                last_tokens[-1].value.append(token)
+
+        i = 0
+        while i < len(line):
+            token = line[i]
+
+            if token.type == DTT.LIST_L:
+                if last_tokens:
+                    add_group_in_existing_group(DTT.LIST_L, DTT.LIST, i)
+                else:
+                    add_new_group(DTT.LIST, i)
+
+            elif token.type == DTT.LIST_R:
+                if last_tokens and last_tokens[-1].type == DTT.LIST:
+                    last_tokens.pop()
+                else:
+                    raise SyntaxError(f"Unexpected ']' at line {line_position}")
+
+            elif token.type == DTT.EVAL_L_EXPRESSION:
+                if last_tokens:
+                    add_group_in_existing_group(DTT.EVAL_L_EXPRESSION, DTT.EVAL_EXPRESSION, i)
+                else:
+                    add_new_group(DTT.EVAL_EXPRESSION, i)
+
+            elif token.type == DTT.EVAL_R_EXPRESSION:
+                if last_tokens and last_tokens[-1].type == DTT.EVAL_EXPRESSION:
+                    last_tokens.pop()
+                else:
+                    raise SyntaxError("Unexpected '}' at line ", str(line_position))
+
+            elif token.type == DTT.EVAL_L_GROUP:
+                if last_tokens:
+                    add_group_in_existing_group(DTT.EVAL_L_GROUP, DTT.EVAL_GROUP, i)
+                else:
+                    add_new_group(DTT.EVAL_GROUP, i)
+
+            elif token.type == DTT.EVAL_R_GROUP:
+                if last_tokens and last_tokens[-1].type == DTT.EVAL_GROUP:
+                    last_tokens.pop()
+                else:
+                    raise SyntaxError(f"Unexpected ')' at line {line_position}, position {token.position}")
+
+            elif last_tokens:
+                last_tokens[-1].value.append(token)
+
+            else:
+                new_line.append(token)
+            i += 1
+
+        return new_line

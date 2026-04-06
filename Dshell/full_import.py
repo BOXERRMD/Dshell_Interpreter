@@ -1,5 +1,4 @@
 from asyncio import sleep
-from re import findall, sub, IGNORECASE, ASCII
 from typing import TypeVar, Optional, Callable, Union, Any, TYPE_CHECKING
 from copy import deepcopy
 from pycordViews import EasyModifiedViews, SelectMenu
@@ -14,6 +13,6 @@ from discord import (ButtonStyle, Interaction, Guild, Member, Role, Permissions,
 from discord.abc import PrivateChannel
 from discord.utils import get, _MissingSentinel
 from contextvars import ContextVar
-from regex import *
+from re import *
 from random import randint, choice, random
 from enum import Enum, auto, StrEnum

@@ -15,7 +15,9 @@ class DshellTokenType(Enum):
     STR = auto()
     BOOL = auto(),
     NONE = auto(),
-    LIST = auto()
+    LIST = auto(),
+    LIST_L = auto()
+    LIST_R = auto()
     MENTION = auto()
     IDENT = auto()  # nom de variable, fonction
     KEYWORD = auto()  # if, let, end, etc.
@@ -28,7 +30,11 @@ class DshellTokenType(Enum):
     LOGIC_OPERATOR = auto(),
     LOGIC_WORD_OPERATOR = auto()  # and, or, not
     EVAL_GROUP = auto()  # `code`
-    EVAL_EXPRESSION = auto()  # for inline mathematical and logical expression
+    EVAL_L_GROUP = auto()
+    EVAL_R_GROUP = auto()
+    EVAL_EXPRESSION = auto()
+    EVAL_L_EXPRESSION = auto()  # for inline mathematical and logical expression
+    EVAL_R_EXPRESSION = auto()
     ANY_CHARACTER = auto()  # pour les caractères non reconnus mais utilisé dans les données passé en paramètre des commandes
     COMMENT = auto()  # lignes commençant par ##
 

@@ -25,7 +25,8 @@ __all__ = [
     'ReturnNode',
     'UiButtonNode',
     'UiSelectNode',
-    'OptionUiSelectNode'
+    'OptionUiSelectNode',
+    'ScanNode'
 ]
 
 
@@ -203,6 +204,25 @@ class ArgsCommandNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class ScanNode(ASTNode):
+    """
+    Node representing a scan message in the AST
+    """
+    def __init__(self, body: ArgsCommandNode):
+        self.body = body
+
+    def __repr__(self):
+        return f"<SCAN> - {self.body}"
+
+    def to_dict(self):
+        """
+        Convert the ScanNode to a dictionary representation.
+        :return: Dictionary representation of the ScanNode.
+        """
+        return {
+            "type": "ScanNode",
+            "body": self.body.to_dict()
+        }
 
 class CommandNode(ASTNode):
     """
