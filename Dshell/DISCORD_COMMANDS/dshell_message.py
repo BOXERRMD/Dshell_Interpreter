@@ -14,7 +14,7 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_required_bool,
                                           _validate_required_int,
                                           _validate_not_none,
-                                          _validate_missing_or_type)
+                                          _validate_optional_eval_group_node)
 from .._DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Optional, Union, compile, DOTALL
@@ -166,9 +166,10 @@ async def dshell_purge_message(ctx: Message, message_number: int, channel: Optio
     """
     Purges messages from a channel
     """
+    _CMD = "pm"
 
-    _validate_required_int(message_number, "Message number", "pm")
-    _validate_missing_or_type(check, "check", EvalNode, "pm")
+    _validate_required_int(message_number, "Message number", _CMD)
+    _validate_optional_eval_group_node(check, "check", _CMD)
 
     purge_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -182,13 +183,13 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
     """
     Edits a message
     """
+    _CMD = "em"
+
     edit_message = utils_get_message(ctx, message)
 
+    _validate_optional_embed(embeds, "Embeds", _CMD)
 
-
-    _validate_optional_embed(embeds, "Embeds", "em")
-
-    _validate_optional_view(view, "View", "em")
+    _validate_optional_view(view, "View", _CMD)
 
     if embeds is None:
         embeds = ListNode([])

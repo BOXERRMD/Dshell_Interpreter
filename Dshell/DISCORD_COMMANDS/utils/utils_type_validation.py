@@ -13,6 +13,7 @@ __all__ = [
     "_validate_optional_view",
     "_validate_optional_code_node",
     "_validate_optional_list_node",
+    "_validate_optional_eval_group_node",
     "_validate_required_bool",
     "_validate_required_list_node",
     "_validate_required_int",
@@ -126,6 +127,18 @@ def _validate_optional_code_node(value, param_name: str, command_name: str):
     if value is not None and not isinstance(value, CodeNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a CodeNode or None, not {type(value)}")
 
+def _validate_optional_eval_group_node(value, param_name: str, command_name: str):
+    """
+    Validate that an optional value is a EvalNode type.
+    :param value:
+    :param param_name:
+    :param command_name:
+    :return:
+    """
+    from ..._DshellParser.ast_nodes import EvalGroupNode
+
+    if value is not None and not isinstance(value, EvalGroupNode):
+        raise TypeError(f"[{command_name}] -> {param_name} must be an EvalGroupNode or None, not {type(value)}")
 
 def _validate_optional_list_node(value, param_name: str, command_name: str):
     """
