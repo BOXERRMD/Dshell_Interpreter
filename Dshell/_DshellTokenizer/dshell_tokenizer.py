@@ -43,6 +43,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.EVAL_R_EXPRESSION: compile(r"(})"),
     DTT.EVAL_L_GROUP: compile(r"(\()"),
     DTT.EVAL_R_GROUP: compile(r"(\))"),
+    DTT.EVAL_OUTDATED_GROUP: compile(r"(`)"),
     DTT.LIST_L: compile(r"(\[)"),
     DTT.LIST_R: compile(r"(])"),
     DTT.PARAMETERS: compile(rf"--\*\s*([A-Za-z_]+)\s*", flags=ASCII),
@@ -188,6 +189,8 @@ class DshellTokenizer:
         new_line: list[Token] = []
         last_tokens: list[Token] = []
 
+        is_outdated_group: bool = False
+
         def add_new_group(dtt, ident):
             new_token = Token(dtt, [], (line_position, ident + 1))
             if last_tokens:
@@ -230,7 +233,7 @@ class DshellTokenizer:
                 if last_tokens and last_tokens[-1].type == DTT.EVAL_EXPRESSION:
                     last_tokens.pop()
                 else:
-                    raise SyntaxError("Unexpected '}' at line ", str(line_position))
+                    raise SyntaxError("Unexpected '}' at line " + str(line_position))
 
             elif token.type == DTT.EVAL_L_GROUP:
                 if last_tokens:
@@ -243,6 +246,18 @@ class DshellTokenizer:
                     last_tokens.pop()
                 else:
                     raise SyntaxError(f"Unexpected ')' at line {line_position}, position {token.position}")
+
+            elif token.type == DTT.EVAL_OUTDATED_GROUP:
+                if is_outdated_group:
+                    last_tokens.pop()
+                    is_outdated_group = False
+                elif last_tokens:
+                    add_group_in_existing_group(DTT.EVAL_OUTDATED_GROUP, DTT.EVAL_GROUP, i)
+                    is_outdated_group = True
+                else:
+                    add_new_group(DTT.EVAL_GROUP, i)
+                    is_outdated_group = True
+
 
             elif last_tokens:
                 last_tokens[-1].value.append(token)
