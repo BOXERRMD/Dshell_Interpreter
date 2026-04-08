@@ -1,5 +1,5 @@
 from Dshell.full_import import Any, randint, Optional, Union, search
-from .._DshellTokenizer.dshell_token_type import Token
+from ..DshellTokenizer.dshell_token_type import Token
 
 __all__ = [
     'ASTNode',
@@ -828,6 +828,17 @@ class ListNode(ASTNode):
 
         self.len_iterable -= 1
         return self.iterable.pop(index)
+
+    def set(self, index: int, value: Any):
+        """
+        Set the value at a specific index in the list.
+        :param index: The index at which to set the value.
+        :param value: The value to set at the specified index.
+        """
+        if 0 > index >= self.len_iterable or -self.len_iterable > index < 0:
+            raise IndexError("set index out of range")
+
+        self.iterable[index] = value
 
     def count(self):
         """

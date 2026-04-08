@@ -5,7 +5,7 @@ from Dshell.full_import import (Message,
                            Permissions,
                            Role)
 
-from .._DshellParser.ast_nodes import ListNode
+from ..DshellParser.ast_nodes import ListNode
 
 from Dshell.full_import import (datetime,
                            timedelta,

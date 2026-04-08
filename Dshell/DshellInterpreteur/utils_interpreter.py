@@ -1,16 +1,16 @@
 from .dshell_arguments import DshellArguments
-from .._DshellTokenizer.dshell_token_type import Token
-from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
-from .._DshellTokenizer.dshell_token_type import DTT_DATA
+from ..DshellTokenizer.dshell_token_type import Token
+from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from ..DshellTokenizer.dshell_token_type import DTT_DATA
 
-from .._DshellParser.ast_nodes import IfNode, ParamNode, ListNode
-from .._DshellParser.dshell_parser import to_postfix
+from ..DshellParser.ast_nodes import IfNode, ParamNode, ListNode
+from ..DshellParser.dshell_parser import to_postfix
 
 from Dshell.full_import import sub, escape
 from Dshell.full_import import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
+    from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
 async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur", normalise: bool = False) -> DshellArguments:
     """
@@ -107,7 +107,7 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
     variables = interpreter.vars
     regrouped_parameters: DshellArguments = await regroupe_commandes(node.body, interpreter)
 
-    from .._DshellTokenizer.dshell_tokenizer import DshellTokenizer
+    from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
     _ = DshellTokenizer(variables, math_any_character=True).start()
     regrouped_variables = await regroupe_commandes(_[0] if _ else tuple(), interpreter)
 
@@ -167,7 +167,7 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
     :param tokens: A list of tokens representing the expression.
     :param interpreter: The Dshell interpreter instance.
     """
-    from .._DshellTokenizer.dshell_keywords import dshell_operators
+    from ..DshellTokenizer.dshell_keywords import dshell_operators
     postfix = to_postfix(tokens, interpreter)
     stack = []
 

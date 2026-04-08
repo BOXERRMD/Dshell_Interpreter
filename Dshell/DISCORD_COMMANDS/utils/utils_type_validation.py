@@ -94,7 +94,7 @@ def _validate_optional_embed(value, param_name: str, command_name: str):
     :raises Exception: If the value is not None and not an Embed or ListNode
     """
     from Dshell.full_import import Embed
-    from ..._DshellParser.ast_nodes import ListNode
+    from ...DshellParser.ast_nodes import ListNode
     
     if value is not None and not isinstance(value, (ListNode, Embed)):
         raise TypeError(f"[{command_name}] -> {param_name} must be a list of Embed objects or a single Embed object, not {type(value).__name__} !")
@@ -122,7 +122,7 @@ def _validate_optional_code_node(value, param_name: str, command_name: str):
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not None and not a CodeNode
     """
-    from ..._DshellParser.ast_nodes import CodeNode
+    from ...DshellParser.ast_nodes import CodeNode
     
     if value is not None and not isinstance(value, CodeNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a CodeNode or None, not {type(value).__name__}")
@@ -135,7 +135,7 @@ def _validate_optional_eval_group_node(value, param_name: str, command_name: str
     :param command_name:
     :return:
     """
-    from ..._DshellParser.ast_nodes import EvalGroupNode
+    from ...DshellParser.ast_nodes import EvalGroupNode
 
     if value is not None and not isinstance(value, EvalGroupNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be an EvalGroupNode or None, not {type(value).__name__}")
@@ -148,7 +148,7 @@ def _validate_optional_list_node(value, param_name: str, command_name: str):
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not None and not a ListNode
     """
-    from ..._DshellParser.ast_nodes import ListNode
+    from ...DshellParser.ast_nodes import ListNode
     
     if value is not None and not isinstance(value, ListNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a list, not {type(value).__name__}")
@@ -176,7 +176,7 @@ def _validate_required_list_node(value, param_name: str, command_name: str):
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not a ListNode
     """
-    from ..._DshellParser.ast_nodes import ListNode
+    from ...DshellParser.ast_nodes import ListNode
     
     if not isinstance(value, ListNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a list, not {type(value).__name__}")

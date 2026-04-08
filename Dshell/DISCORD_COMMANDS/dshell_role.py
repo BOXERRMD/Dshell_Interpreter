@@ -1,6 +1,6 @@
 from Dshell.full_import import (Message, MISSING, PermissionOverwrite, _MissingSentinel, Union)
 
-from .._DshellParser.ast_nodes import ListNode
+from ..DshellParser.ast_nodes import ListNode
 from .utils.utils_global import utils_build_colour
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,

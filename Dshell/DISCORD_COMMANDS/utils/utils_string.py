@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 from Dshell.full_import import Message, Any
-from ..._DshellParser.ast_nodes import ListNode
+from ...DshellParser.ast_nodes import ListNode
 from Dshell.full_import import (search,
                             sub,
                             findall)

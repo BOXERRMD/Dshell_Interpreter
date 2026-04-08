@@ -86,7 +86,7 @@ async def dshell_respond_interaction(ctx: Interaction,
                                                 users_mentions,
                                                 reply_mention)
 
-    from Dshell._DshellParser.ast_nodes import ListNode
+    from Dshell.DshellParser.ast_nodes import ListNode
 
     _validate_optional_embed(embeds, "Embeds", _CMD)
 

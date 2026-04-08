@@ -47,6 +47,7 @@ dshell_commands: dict[str, Callable] = {
     'sort': utils_list_sort,
     'reverse': utils_list_reverse,
     'get': utils_list_get_value,
+    'set': utils_list_set_value,
 
     ## String utils
     'str': utils_convert_to_string,

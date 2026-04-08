@@ -1,8 +1,8 @@
-from .._DshellTokenizer.dshell_token_type import Token
+from ..DshellTokenizer.dshell_token_type import Token
 
-from .._DshellParser.ast_nodes import FieldEmbedNode
+from ..DshellParser.ast_nodes import FieldEmbedNode
 
-from .._DshellInterpreteur.utils_interpreter import regroupe_commandes
+from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
 from Dshell.full_import import Embed
 
@@ -11,7 +11,7 @@ from Dshell.full_import import Any, TYPE_CHECKING
 from .utils.utils_global import utils_build_colour
 
 if TYPE_CHECKING:
-    from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
+    from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
 async def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], interpreter: "DshellInterpreteur") -> tuple[dict, list[dict]]:
     """

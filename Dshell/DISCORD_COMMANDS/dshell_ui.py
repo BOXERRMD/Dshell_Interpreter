@@ -10,11 +10,11 @@ from Dshell.full_import import (ButtonStyle,
                            Select,
                            random)
 
-from .._DshellParser.ast_nodes import UiSelectNode, UiButtonNode, CodeNode, OptionUiSelectNode, ListNode
+from ..DshellParser.ast_nodes import UiSelectNode, UiButtonNode, CodeNode, OptionUiSelectNode, ListNode
 
-from .._DshellInterpreteur.utils_interpreter import regroupe_commandes
+from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
-from .._DshellInterpreteur.dshell_scope import new_scope
+from ..DshellInterpreteur.dshell_scope import new_scope
 
 from Dshell.full_import import Any, TYPE_CHECKING, Union
 
@@ -25,7 +25,7 @@ from .utils.utils_type_validation import (_validate_optional_code_node,
 from .utils.utils_global import utils_refactor_emoji
 
 if TYPE_CHECKING:
-    from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
+    from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
 
 ButtonStyleValues: set = {i.name for i in ButtonStyle}
@@ -311,7 +311,7 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
             '__private_channel__': isinstance(interaction.channel, PrivateChannel),
         }
         local_env.update(data)
-        from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
+        from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
         with new_scope(interpreter, local_env):
             await DshellInterpreteur(code, ctx=interaction, debug=False, vars_env=interpreter.env).execute()
     else:
@@ -352,7 +352,7 @@ async def ui_select_callback(select: Select, interaction: Interaction, data: dic
             '__values__': ListNode([i.id for i in select.values]) if select.values and hasattr(select.values[0], 'id') else ListNode(select.values)
         }
         local_env.update(data)
-        from .._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
+        from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
         with new_scope(interpreter, local_env):
             await DshellInterpreteur(code, ctx=interaction, debug=False, vars_env=interpreter.env).execute()
     else:

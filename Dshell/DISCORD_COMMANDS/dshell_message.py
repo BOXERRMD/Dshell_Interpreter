@@ -2,7 +2,7 @@ from Dshell.full_import import (Message,
                            Embed,
                            PartialMessage)
 
-from .._DshellParser.ast_nodes import ListNode, EvalNode
+from ..DshellParser.ast_nodes import ListNode, EvalNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .utils.utils_type_validation import (_validate_optional_number,
@@ -15,7 +15,7 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_required_int,
                                           _validate_not_none,
                                           _validate_optional_eval_group_node)
-from .._DshellInterpreteur.cached_messages import dshell_cached_messages
+from ..DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Optional, Union, compile, DOTALL
 from asyncio import wait_for, sleep

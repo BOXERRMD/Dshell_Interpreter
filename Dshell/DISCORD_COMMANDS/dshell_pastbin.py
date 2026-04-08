@@ -14,7 +14,7 @@ async def dshell_get_pastbin(ctx: Message, code: str) -> "ListNode":
 
     _validate_required_string(ctx, code, _CMD)
 
-    from .._DshellParser.ast_nodes import ListNode
+    from ..DshellParser.ast_nodes import ListNode
 
     content = ListNode([])  # Initialize content to an empty string
 

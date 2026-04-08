@@ -2,13 +2,14 @@ __all__ = [
     "utils_list_add",
     "utils_list_remove",
     "utils_list_clear",
+    "utils_list_set_value",
     "utils_list_pop",
     "utils_list_sort",
     "utils_list_reverse",
     "utils_list_get_value",
 ]
 
-from ..._DshellParser.ast_nodes import ListNode
+from ...DshellParser.ast_nodes import ListNode
 
 from .utils_type_validation import (_validate_required_list_node,
                                     _validate_required_int,
@@ -141,3 +142,20 @@ async def utils_list_get_value(ctx, value: ListNode, index: int = 0):
     _validate_required_list_node(value, "value", _CMD)
     _validate_required_int(index, "index", _CMD)
     return value[index]
+
+async def utils_list_set_value(ctx, value: ListNode, index: int, new_value):
+    """
+    Set an element in a list
+    :param ctx:
+    :param value:
+    :param index:
+    :param new_value:
+    :return:
+    """
+    _CMD = "set"
+    _validate_required_list_node(value, "value", _CMD)
+    _validate_required_int(index, "index", _CMD)
+
+    value.set(index, new_value)
+
+    return value

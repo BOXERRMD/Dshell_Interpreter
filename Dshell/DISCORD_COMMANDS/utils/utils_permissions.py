@@ -7,18 +7,18 @@ from Dshell.full_import import (Member,
 
 from Dshell.full_import import Union, TYPE_CHECKING
 
-from ..._DshellParser.ast_nodes import ListNode
+from ...DshellParser.ast_nodes import ListNode
 
-from ..._DshellTokenizer.dshell_token_type import Token
-from ..._DshellInterpreteur.dshell_arguments import DshellArguments
-from ..._DshellInterpreteur.utils_interpreter import regroupe_commandes
+from ...DshellTokenizer.dshell_token_type import Token
+from ...DshellInterpreteur.dshell_arguments import DshellArguments
+from ...DshellInterpreteur.utils_interpreter import regroupe_commandes
 
 from .utils_global import utils_what_discord_type_is, DiscordType
 
 from .utils_type_validation import _validate_required_dict
 
 if TYPE_CHECKING:
-    from ..._DshellInterpreteur.dshell_interpreter import DshellInterpreteur
+    from ...DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
 async def utils_update_permissions(ctx: Message,
                                    permission1: dict[Union[Member, Role, None], PermissionOverwrite],

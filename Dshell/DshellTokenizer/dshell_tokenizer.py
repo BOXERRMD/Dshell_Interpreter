@@ -26,6 +26,8 @@ from .dshell_keywords import (dshell_keyword,
                               dshell_logical_operators,
                               dshell_logical_word_operators)
 
+from ..DshellPreProcess.dshell_preprocess import preProcessor, applyPreProcessor, PreProcessorData
+
 MASK_CHARACTER = '§'
 
 def is_line_empty(line: str) -> bool:
@@ -75,6 +77,7 @@ class DshellTokenizer:
         """
         self.code: str = code
         self.match_any_character: bool = math_any_character
+        self.data_pre_processor: list[PreProcessorData] = []
 
     def start(self):
         """
@@ -99,6 +102,14 @@ class DshellTokenizer:
             if is_line_empty(line):
                 line_number += 1
                 continue
+
+            if pre_processor_data := preProcessor(line):
+                self.data_pre_processor.append(pre_processor_data)
+                continue
+            else:
+                if self.data_pre_processor:
+                    for processor_data in self.data_pre_processor:
+                        line = applyPreProcessor(line, processor_data)
 
             for token_type, pattern in table_regex.items():  # iterate the regex table to test all patterns on the line
 

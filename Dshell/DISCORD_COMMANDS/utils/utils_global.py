@@ -30,7 +30,7 @@ from Dshell.full_import import (Message,
 from Dshell.full_import import (random,
                             choice)
 
-from ..._DshellParser.ast_nodes import ListNode
+from ...DshellParser.ast_nodes import ListNode
 
 from .utils_type_validation import (_validate_optional_list_node,
                                     _validate_required_int,

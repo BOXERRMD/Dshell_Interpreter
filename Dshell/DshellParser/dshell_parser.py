@@ -6,9 +6,9 @@ __all__ = [
     "ast_to_dict",
 ]
 
-from .._DshellTokenizer.dshell_token_type import Token
-from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
-from .._DshellTokenizer.dshell_token_type import DTT_DATA
+from ..DshellTokenizer.dshell_token_type import Token
+from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from ..DshellTokenizer.dshell_token_type import DTT_DATA
 from .ast_nodes import *
 
 
@@ -392,7 +392,7 @@ def to_postfix(expression, interpreter=None):
     :param interpreter: optional interpreter instance
     :return: the expression in postfix notation
     """
-    from Dshell._DshellTokenizer import dshell_operators
+    from Dshell.DshellTokenizer import dshell_operators
 
     output = []
     operators: list[Token] = []

@@ -4,7 +4,7 @@ from Dshell.full_import import (Message,
 
 from Dshell.full_import import search
 
-from ..._DshellInterpreteur.cached_messages import dshell_cached_messages
+from ...DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Union
 

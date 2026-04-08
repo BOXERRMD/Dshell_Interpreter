@@ -1,5 +1,5 @@
 from Dshell.full_import import Any, Union
-from .._DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 
 class DshellArgumentsData:
     """

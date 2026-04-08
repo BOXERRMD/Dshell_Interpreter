@@ -8,7 +8,7 @@ from Dshell.full_import import (Message,
                            VoiceChannel,
                            PartialMessage)
 
-from .._DshellParser.ast_nodes import ListNode
+from ..DshellParser.ast_nodes import ListNode
 
 from Dshell.full_import import search
 
