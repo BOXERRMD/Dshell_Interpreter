@@ -7,3 +7,4 @@ from .utils_member import *
 from .utils_string import *
 from .utils_list import *
 from .utils_type_validation import *
+from .utils_numbers import *

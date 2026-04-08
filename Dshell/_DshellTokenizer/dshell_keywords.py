@@ -49,6 +49,7 @@ dshell_commands: dict[str, Callable] = {
     'get': utils_list_get_value,
 
     ## String utils
+    'str': utils_convert_to_string,
     'split': utils_split_string,
     'upper': utils_upper_string,
     'lower': utils_lower_string,
@@ -59,6 +60,10 @@ dshell_commands: dict[str, Callable] = {
     'regex_sub': utils_regex_sub,
     'regex': utils_regex_search,
     'regex_group': utils_regex_group,
+
+    ## number utils
+    'int': utils_convert_to_int,
+    'float': utils_convert_to_float,
 
     ## Discord utils
     'name': utils_get_name, # get the name from id (channel, role, member)
@@ -164,7 +169,7 @@ dshell_mathematical_operators: dict[str, tuple[Callable, int, int]] = {
     r"/": (lambda a, b: a / b, 7, 2),
     r"*": (lambda a, b: a * b, 7, 2),
     r"%": (lambda a, b: a % b, 7, 2),
-    r"-": (lambda a, b=None: a - b if b is not None else -a, 6, -1),
+    r"-": (lambda a, b=None: a-b if b is not None else -a, 6, -1),
     r"+": (lambda a, b: a + b, 6, 2),
     # warning: ambiguity between unary and binary to be handled in your parser
 

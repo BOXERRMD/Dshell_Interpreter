@@ -1,8 +1,12 @@
-from Dshell.full_import import Any, randint, Optional, Union
+from Dshell.full_import import Any, randint, Optional, Union, search
 from .._DshellTokenizer.dshell_token_type import Token
 
 __all__ = [
     'ASTNode',
+    #'BoolNode',
+    #'IntNode',
+    #'FloatNode',
+    #'StrNode',
     'LengthNode',
     'StartNode',
     'ElseNode',
@@ -35,6 +39,137 @@ class ASTNode:
     Base class for all AST nodes.
     """
     pass
+
+"""class IntNode(ASTNode):
+    ""
+    Node representing an 'int' part of an expression.
+    ""
+    def __init__(self, value: int):
+        self.value = value
+
+    def __index__(self):
+        return self.value
+
+    def __int__(self):
+        return self.value
+
+    def __repr__(self):
+        return f"{self.value}"
+
+    def __add__(self, other):
+        return IntNode(self.value + int(other.value))
+
+    def __str__(self):
+        return f"{self.value}"
+
+
+class FloatNode(ASTNode):
+    ""
+    Node representing a 'float' part of an expression.
+    ""
+
+    def __init__(self, value: float):
+        self.value = value
+
+    def __index__(self):
+        return int(self.value)
+
+    def __repr__(self):
+        return f"{self.value}"
+
+    def __add__(self, other):
+        return FloatNode(self.value + float(other.value))
+
+    def __str__(self):
+        return f"{self.value}"
+
+class StrNode(ASTNode):
+    ""
+    Node representing a 'str' part of an expression.
+    ""
+
+    def __init__(self, value: str):
+        self.value = value
+
+    def __str__(self):
+        return self.value
+
+    def __int__(self):
+        result = search(r"^\s*(\d+)\s*$", self.value)
+        if result: return IntNode(int(result.group(1)))
+        raise ValueError(f"Cannot convert string '{self.value}' to int !")
+
+    def __float__(self):
+        result = search(r"^\s*(\d+(?:\.\d+)?)\s*$", self.value)
+        if result: return FloatNode(float(result.group(1)))
+        raise ValueError(f"Cannot convert string '{self.value}' to float !")
+
+    def __repr__(self):
+        return self.value
+
+    def __add__(self, other):
+        return StrNode(self.value + str(other))
+
+    def __mul__(self, other):
+        if isinstance(other, IntNode):
+            return StrNode(self.value * int(other))
+        raise TypeError(f"Cannot multiply string by non-integer of type '{type(other).__name__}' !")
+
+class BoolNode(ASTNode):
+    ""
+    Node representing a 'bool' part of an expression.
+    ""
+    def __init__(self, value: bool):
+        self.value = value
+
+    def __bool__(self):
+        return self.value
+
+    def __int__(self):
+        return int(self.value)
+
+    def __float__(self):
+        return float(self.value)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __add__(self, other):
+        return IntNode(self.value + int(other))
+
+    def __sub__(self, other):
+        return IntNode(int(self.value) - int(other))
+
+    def __mul__(self, other):
+        return IntNode(int(self.value) * int(other))
+
+    def __repr__(self):
+        if self.value:
+            return "TRUE"
+        else:
+            return "FALSE"
+
+    def __eq__(self, other):
+        return BoolNode(self.value == bool(other.value))
+
+    def __gt__(self, other):
+        return BoolNode(self.value > bool(other.value))
+
+    def __ge__(self, other):
+        return BoolNode(self.value >= bool(other.value))
+
+    def __lt__(self, other):
+        return BoolNode(self.value < bool(other.value))
+
+    def __le__(self, other):
+        return BoolNode(self.value <= bool(other.value))
+
+    def __and__(self, other):
+        return BoolNode(self.value and bool(other.value))
+
+    def __or__(self, other):
+        return BoolNode(self.value or bool(other.value))
+"""
 
 
 class StartNode(ASTNode):

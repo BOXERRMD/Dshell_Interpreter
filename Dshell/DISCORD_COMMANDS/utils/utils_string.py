@@ -1,4 +1,5 @@
 __all__ = [
+    "utils_convert_to_string",
     "utils_split_string",
     "utils_upper_string",
     "utils_lower_string",
@@ -11,24 +12,21 @@ __all__ = [
     "utils_regex_group"
 ]
 
-from Dshell.full_import import Message
+from Dshell.full_import import Message, Any
 from ..._DshellParser.ast_nodes import ListNode
 from Dshell.full_import import (search,
                             sub,
                             findall)
+from .utils_type_validation import _validate_required_string
 
-
-def _validate_string_type(value, param_name: str, command_name: str):
+async def utils_convert_to_string(ct: Message, value: Any):
     """
-    Validate that a value is a string type.
-    :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :param command_name: The command name for error messages
-    :raises TypeError: If the value is not a string
+    Convert any value to a string
+    :param ct:
+    :param value:
+    :return:
     """
-    if not isinstance(value, str):
-        raise TypeError(f"{param_name} must be a str in {command_name} command, not {type(value)}")
-
+    return str(value)
 
 async def utils_split_string(ctx: Message, value: str, separator: str = ' ') -> ListNode:
     """
@@ -50,8 +48,8 @@ async def utils_split_string(ctx: Message, value: str, separator: str = ' ') -> 
         >>> await utils_split_string(ctx, "a,b,c", ",")
         ListNode(["a", "b", "c"])
     """
-    _validate_string_type(value, 'value', 'split')
-    _validate_string_type(separator, 'separator', 'split')
+    _validate_required_string(value, 'value', 'split')
+    _validate_required_string(separator, 'separator', 'split')
     return ListNode(value.split(separator))
 
 
@@ -71,7 +69,7 @@ async def utils_upper_string(ctx: Message, value: str) -> str:
         >>> await utils_upper_string(ctx, "bonjour")
         "BONJOUR"
     """
-    _validate_string_type(value, 'value', 'upper')
+    _validate_required_string(value, 'value', 'upper')
     return value.upper()
 
 
@@ -91,7 +89,7 @@ async def utils_lower_string(ctx: Message, value: str) -> str:
         >>> await utils_lower_string(ctx, "BONJOUR")
         "bonjour"
     """
-    _validate_string_type(value, 'value', 'lower')
+    _validate_required_string(value, 'value', 'lower')
     return value.lower()
 
 
@@ -111,7 +109,7 @@ async def utils_title_string(ctx: Message, value: str) -> str:
         >>> await utils_title_string(ctx, "bonjour le monde")
         "Bonjour Le Monde"
     """
-    _validate_string_type(value, 'value', 'title')
+    _validate_required_string(value, 'value', 'title')
     return value.title()
 
 
@@ -131,7 +129,7 @@ async def utils_strip_string(ctx: Message, value: str) -> str:
         >>> await utils_strip_string(ctx, "  bonjour  ")
         "bonjour"
     """
-    _validate_string_type(value, 'value', 'strip')
+    _validate_required_string(value, 'value', 'strip')
     return value.strip()
 
 
@@ -155,9 +153,9 @@ async def utils_replace_string(ctx: Message, value: str, old: str, new: str) -> 
         >>> await utils_replace_string(ctx, "Hello World", "World", "Discord")
         "Hello Discord"
     """
-    _validate_string_type(value, 'value', 'replace')
-    _validate_string_type(old, 'old', 'replace')
-    _validate_string_type(new, 'new', 'replace')
+    _validate_required_string(value, 'value', 'replace')
+    _validate_required_string(old, 'old', 'replace')
+    _validate_required_string(new, 'new', 'replace')
     return value.replace(old, new)
 
 
@@ -182,9 +180,9 @@ async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> 
         >>> await utils_regex_findall(ctx, r"\\d+", "J'ai 3 pommes et 5 bananes")
         ListNode([["3"], ["5"]])
     """
-    _validate_string_type(regex, 'regex', 'regex_findall')
+    _validate_required_string(regex, 'regex', 'regex_findall')
     if content is not None:
-        _validate_string_type(content, 'content', 'regex_findall')
+        _validate_required_string(content, 'content', 'regex_findall')
 
     result = findall(regex, content if content is not None else ctx.content)
     return ListNode([ListNode(list(i)) for i in result])
@@ -213,10 +211,10 @@ async def utils_regex_sub(ctx: Message, regex: str, replace: str, content: str =
         >>> await utils_regex_sub(ctx, r"\\d+", "X", "J'ai 3 pommes")
         "J'ai X pommes"
     """
-    _validate_string_type(regex, 'regex', 'regex_sub')
-    _validate_string_type(replace, 'replacement', 'regex_sub')
+    _validate_required_string(regex, 'regex', 'regex_sub')
+    _validate_required_string(replace, 'replacement', 'regex_sub')
     if content is not None:
-        _validate_string_type(content, 'content', 'regex_sub')
+        _validate_required_string(content, 'content', 'regex_sub')
 
     return sub(regex, replace, content if content is not None else ctx.content)
 
@@ -242,9 +240,9 @@ async def utils_regex_search(ctx: Message, regex: str, content: str = None) -> s
         >>> await utils_regex_search(ctx, r"\\d+", "Prix: 42 euros")
         "42"
     """
-    _validate_string_type(regex, 'regex', 'regex_search')
+    _validate_required_string(regex, 'regex', 'regex_search')
     if content is not None:
-        _validate_string_type(content, 'content', 'regex_search')
+        _validate_required_string(content, 'content', 'regex_search')
 
     result = search(regex, content if content is not None else ctx.content)
     return result.group() if result else ''
@@ -271,9 +269,9 @@ async def utils_regex_group(ctx: Message, regex: str, content: str = None) -> Li
         >>> await utils_regex_group(ctx, r"(\d+)-(\d+)", "Code: 123-456")
         ListNode(["123", "456"])
     """
-    _validate_string_type(regex, 'regex', 'regex_group')
+    _validate_required_string(regex, 'regex', 'regex_group')
     if content is not None:
-        _validate_string_type(content, 'content', 'regex_group')
+        _validate_required_string(content, 'content', 'regex_group')
 
     result = search(regex, content if content is not None else ctx.content)
     return ListNode(list(result.groups())) if result else ListNode([])
