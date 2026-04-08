@@ -13,7 +13,7 @@ def define(code, pre_processor_data: PreProcessorData) -> str:
     :param value:
     :return:
     """
-    return sub(f"\b{pre_processor_data.symbol}\b", pre_processor_data.value, code)
+    return sub(f"(?<![a-zA-Z]){pre_processor_data.symbol}(?![a-zA-Z])", pre_processor_data.value, code)
 
 def preProcessor(code: str) -> Optional[PreProcessorData]:
     """

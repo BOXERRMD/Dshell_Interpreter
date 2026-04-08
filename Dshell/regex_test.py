@@ -1,3 +1,3 @@
-from regex import search, findall
+from re import sub, search
 
-print(findall(r"""(?P<brace>\{(?:[^{}]+|(?&brace))*\})""", "debug  {{A+B{.}} + {d+c}} + {test} ", overlapped=False))
+print(sub(f"(?<![a-zA-Z])p(?![a-zA-Z])", "debug", "{p*2}"))
