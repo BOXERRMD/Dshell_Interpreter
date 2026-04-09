@@ -124,8 +124,9 @@ class DshellInterpreteur:
 
     async def _execute_command_node(self, node: CommandNode):
         """Execute a command node."""
-        result = await call_function(dshell_commands[node.name], node.body, self)
-        self.env.set(f'__{node.name}__', result)  # return value of the command
+        command_name = node.name
+        result = await call_function(dshell_commands[command_name], node.body, self)
+        self.env.set(f'__{command_name}__', result)  # return value of the command
         self.env.set('__ret__', result)  # global return variable for all commands
 
     async def _execute_if_node(self, node: IfNode):

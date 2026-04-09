@@ -12,7 +12,10 @@ async def utils_convert_to_int(ctx: Message, value: Any) -> int:
     :param value:
     :return:
     """
-    return int(value)
+    try:
+        return int(value)
+    except ValueError:
+        raise ValueError(f"Cannot convert '{value}' to an integer")
 
 async def utils_convert_to_float(ctx: Message, value: Any) -> float:
     """
@@ -21,4 +24,7 @@ async def utils_convert_to_float(ctx: Message, value: Any) -> float:
     :param value:
     :return:
     """
-    return float(value)
+    try:
+        return float(value)
+    except ValueError:
+        raise ValueError(f"Cannot convert '{value}' to a float")
