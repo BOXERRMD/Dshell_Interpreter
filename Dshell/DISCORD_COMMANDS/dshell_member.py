@@ -1,3 +1,5 @@
+from discord import VoiceChannel
+
 from Dshell.full_import import (Message,
                            Embed,
                            MISSING,
@@ -338,7 +340,7 @@ async def dshell_check_permissions(ctx: Message, permissions, member=None):
     return False
 
 
-async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect: bool = False, reason=None):
+async def dshell_move_member(ctx: Message, channel=None, member=None, reason=None):
     """
     Déplace un membre vers un autre canal vocal ou le déconnecte.
     
@@ -373,7 +375,6 @@ async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect
 
     _validate_optional_int(member, "Member", _CMD)
     _validate_optional_int(channel, "Channel", _CMD)
-    _validate_required_bool(disconnect, "Disconnect", _CMD)
     _validate_optional_string(reason, "Reason", _CMD)
     
     target_member = ctx.author if member is None else ctx.channel.guild.get_member(member)
@@ -385,13 +386,10 @@ async def dshell_move_member(ctx: Message, member=None, channel=None, disconnect
     if target_member.voice.channel is None:
         raise Exception(f'Member {target_member.name} is not in a voice channel !')
 
-    if not target_channel:
-        raise Exception(f'Channel {channel} not found in the server !')
+    if target_channel is not None and not isinstance(target_channel, VoiceChannel):
+        raise TypeError(f"Target channel must be a Voice Channel !")
 
-    if disconnect:
-        await target_member.move_to(None, reason=reason)
-    else:
-        await target_member.move_to(target_channel, reason=reason)
+    await target_member.move_to(target_channel, reason=reason)
 
     return target_member.id
 
