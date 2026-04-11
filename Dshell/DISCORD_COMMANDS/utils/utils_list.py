@@ -1,4 +1,5 @@
 __all__ = [
+    "utils_convert_to_list",
     "utils_list_add",
     "utils_list_remove",
     "utils_list_clear",
@@ -9,11 +10,44 @@ __all__ = [
     "utils_list_get_value",
 ]
 
-from ...DshellParser.ast_nodes import ListNode
-
+from ...DshellParser.ast_nodes import ListNode, UiButtonNode, UiSelectNode, CodeNode
+from ...full_import import Any, Union
 from .utils_type_validation import (_validate_required_list_node,
                                     _validate_required_int,
-                                    _validate_required_bool)
+                                    _validate_required_bool,
+                                    _validate_optional_bool)
+
+async def utils_convert_to_list(ctx,
+                                value: Union[str, int, float, UiButtonNode, UiSelectNode, CodeNode],
+                                split: bool = False):
+    """
+    Make a list with any value
+    :param ctx:
+    :param value:
+    :param split: split the value into list
+    :return:
+    """
+    _CMD = 'list'
+    _validate_optional_bool(split, "split", _CMD)
+
+    if isinstance(value, str):
+        if split:
+            return ListNode([i for i in value])
+        return ListNode([value])
+
+    elif isinstance(value, int):
+        if split:
+            l = ListNode([])
+            while value != 0:
+                l.add(value % 10)
+                value //= 10
+            return l
+        return ListNode([value])
+
+    else:
+        return ListNode([value])
+
+
 
 async def utils_list_add(ctx, value: ListNode, *elements):
     """

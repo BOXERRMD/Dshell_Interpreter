@@ -38,6 +38,7 @@ dshell_commands: dict[str, Callable] = {
     'random': utils_random,
 
     ## List utils
+    'list': utils_convert_to_list,
     'length': utils_len,
     'len': utils_len,
     'add': utils_list_add,
@@ -185,6 +186,7 @@ dshell_logical_word_operators: dict[str, tuple[Callable, int, int]] = {
 
 dshell_logical_operators: dict[str, tuple[Callable, int, int]] = {
 
+    r"==": (lambda a, b: a == b, 4, 2),
     r"<=": (lambda a, b: a <= b, 4, 2),
     r"=<": (lambda a, b: a <= b, 4, 2),
     r"!=": (lambda a, b: a != b, 4, 2),

@@ -113,21 +113,25 @@ class DshellTokenizer:
 
             for token_type, pattern in table_regex.items():  # iterate the regex table to test all patterns on the line
 
+                if is_comment:
+                    is_comment = False
+                    break
+
                 if is_line_empty(line):
                     break
 
                 if not self.match_any_character and token_type == DTT.ANY_CHARACTER:
                     continue
 
-                if is_comment:
-                    is_comment = False
-                    break
-
                 for match in finditer(pattern, line):  # iterate the match results to get their positions
 
                     if token_type == DTT.COMMENT:  # if we encounter a comment, stop tokenizing the line
-                        is_comment = True
-                        break
+                        if len(match.group(0)) == len(line):
+                            is_comment = True
+                            break
+                        else:
+                            line = line[:match.start()]
+                            continue
 
                     start_match = match.start()  # start position of the match
 
