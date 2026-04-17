@@ -59,6 +59,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.LOGIC_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_logical_operators.keys()])})"),
     DTT.LOGIC_WORD_OPERATOR: compile(rf"(?:^|\s)({'|'.join([escape(i) for i in dshell_logical_word_operators.keys()])})(?:$|\s)"),
     DTT.FLOAT: compile(r"(\d+\.\d+)"),
+    DTT.HEXA: compile(r"(0[Xx][0-9a-fA-F]+)"),
     DTT.INT: compile(r"(\d+)"),
     DTT.BOOL: compile(r"(True|False)", flags=IGNORECASE),
     DTT.NONE: compile(r"(None)", flags=IGNORECASE),

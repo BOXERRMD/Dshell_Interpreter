@@ -11,11 +11,12 @@ MASK_CHARACTER = '§'
 
 class DshellTokenType(Enum):
     INT = auto()
+    HEXA = auto()
     FLOAT = auto()
     STR = auto()
-    BOOL = auto(),
-    NONE = auto(),
-    LIST = auto(),
+    BOOL = auto()
+    NONE = auto()
+    LIST = auto()
     LIST_L = auto()
     LIST_R = auto()
     MENTION = auto()
@@ -24,10 +25,10 @@ class DshellTokenType(Enum):
     DISCORD_KEYWORD = auto()  # embed, #embed...
     COMMAND = auto()
     PARAMETER = auto()  # --
-    PARAMETERS = auto(),  # --*
-    STR_PARAMETER = auto(),  # --"
+    PARAMETERS = auto()  # --*
+    STR_PARAMETER = auto(),  # --'
     MATHS_OPERATOR = auto()  # ==, +, -, *, etc.
-    LOGIC_OPERATOR = auto(),
+    LOGIC_OPERATOR = auto()
     LOGIC_WORD_OPERATOR = auto()  # and, or, not
     EVAL_GROUP = auto()  # (code)
     EVAL_OUTDATED_GROUP = auto()  # `code`
@@ -42,13 +43,15 @@ class DshellTokenType(Enum):
 DTT_DATA = {
             DshellTokenType.NONE,
             DshellTokenType.INT,
+            DshellTokenType.HEXA,
             DshellTokenType.FLOAT,
             DshellTokenType.STR,
             DshellTokenType.BOOL,
             DshellTokenType.IDENT,
             DshellTokenType.LIST,
             DshellTokenType.EVAL_GROUP,
-            DshellTokenType.EVAL_EXPRESSION
+            DshellTokenType.EVAL_EXPRESSION,
+            DshellTokenType.MENTION
             }
 
 class Token:

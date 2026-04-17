@@ -260,28 +260,32 @@ class DshellInterpreteur:
         if not hasattr(token, 'type'):
             return token
 
-        if token.type in (DTT.INT, DTT.MENTION):
+        tokentype = token.type
+
+        if tokentype in (DTT.INT, DTT.MENTION):
             return int(token.value)
-        elif token.type == DTT.FLOAT:
+        elif tokentype == DTT.HEXA:
+            return int(token.value, 16)
+        elif tokentype == DTT.FLOAT:
             return float(token.value)
-        elif token.type == DTT.BOOL:
+        elif tokentype == DTT.BOOL:
             return token.value.lower() == "true"
-        elif token.type == DTT.NONE:
+        elif tokentype == DTT.NONE:
             return None
-        elif token.type == DTT.LIST:
+        elif tokentype == DTT.LIST:
             return ListNode(
                 [await self.eval_data_token(tok) for tok in token.value])  # token.value already contains a list of Tokens
-        elif token.type == DTT.IDENT:
+        elif tokentype == DTT.IDENT:
             try:
                 return self.env.get(token.value)
             except KeyError:
                 return token.value
-        elif token.type == DTT.EVAL_GROUP:
+        elif tokentype == DTT.EVAL_GROUP:
             await self.execute(parse([token.value], StartNode([]))[0])  # must parse because it's not already an AST
             return self.env.get('__ret__')
-        elif token.type == DTT.EVAL_EXPRESSION:
+        elif tokentype == DTT.EVAL_EXPRESSION:
             return await eval_expression(token.value, self)
-        elif token.type == DTT.STR:
+        elif tokentype == DTT.STR:
             temp = token.value
             for match in findall(rf"\$({'|'.join(self.env.keys())})", temp):
                 temp = temp.replace('$' + match, str(self.env.get(match)))
