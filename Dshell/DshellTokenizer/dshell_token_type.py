@@ -39,6 +39,7 @@ class DshellTokenType(Enum):
     EVAL_R_EXPRESSION = auto()
     ANY_CHARACTER = auto()  # pour les caractères non reconnus mais utilisé dans les données passé en paramètre des commandes
     COMMENT = auto()  # lignes commençant par ##
+    COMPARISON_SELECTION = auto()  # complément ":" sur l'opérateur "?" (ex: a? b:c) permettant de choisir par rapport à une condition
 
 DTT_DATA = {
             DshellTokenType.NONE,

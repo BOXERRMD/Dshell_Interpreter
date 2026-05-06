@@ -1,4 +1,4 @@
-from Dshell.full_import import Any, randint, Optional, Union, search
+from Dshell.full_import import Any, randint, Optional, Union
 from ..DshellTokenizer.dshell_token_type import Token
 
 __all__ = [
@@ -38,7 +38,10 @@ class ASTNode:
     """
     Base class for all AST nodes.
     """
-    pass
+    def __init__(self, line: int):
+        self.line = line
+
+
 
 """class IntNode(ASTNode):
     ""
@@ -177,7 +180,8 @@ class StartNode(ASTNode):
     Node representing the start of the AST.
     """
 
-    def __init__(self, body: list):
+    def __init__(self, body: list, line: int):
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -199,10 +203,11 @@ class ElseNode(ASTNode):
     Node representing the 'else' part of an if statement.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the body of the else statement
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -224,12 +229,13 @@ class ElifNode(ASTNode):
     Node representing an 'elif' part of an if statement.
     """
 
-    def __init__(self, condition: list[Token], body: list[Token], parent: "IfNode"):
+    def __init__(self, condition: list[Token], body: list[Token], parent: "IfNode", line: int):
         """
         :param condition: list of tokens representing the condition for the elif
         :param body: list of tokens representing the body of the elif
         :param parent: the if node that this elif belongs to
         """
+        super().__init__(line)
         self.condition = condition
         self.body = body
         self.parent = parent
@@ -255,14 +261,15 @@ class IfNode(ASTNode):
     Node representing an 'if' statement, which can contain 'elif' and 'else' parts.
     """
 
-    def __init__(self, condition: list[Token], body: list[Token], elif_nodes: Optional[list[ElifNode]] = None,
-                 else_body: Optional[ElseNode] = None):
+    def __init__(self, condition: list[Token], body: list[Token], line: int,
+                 elif_nodes: Optional[list[ElifNode]] = None, else_body: Optional[ElseNode] = None):
         """
         :param condition: list of tokens representing the condition for the if statement
         :param body: list of tokens representing the body of the if statement
         :param elif_nodes: optional list of ElifNode instances representing 'elif' parts
         :param else_body: optional ElseNode instance representing the 'else' part
         """
+        super().__init__(line)
         self.condition = condition
         self.body = body
         self.elif_nodes = elif_nodes
@@ -292,11 +299,12 @@ class LoopNode(ASTNode):
     Node representing a loop structure in the AST.
     """
 
-    def __init__(self, variable: "VarNode", body: list):
+    def __init__(self, variable: "VarNode", body: list, line: int):
         """
         :param variable: VarNode representing the loop variable. This variable will be used to iterate over the body. Can contain a ListNode, string or integer.
         :param body: list of tokens representing the body of the loop
         """
+        super().__init__(line)
         self.variable = variable
         self.body = body
 
@@ -320,10 +328,11 @@ class ArgsCommandNode(ASTNode):
     Node representing the arguments of a command in the AST.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the arguments of the command
         """
+        super().__init__(line)
         self.body: list[Token] = body
 
     def __repr__(self):
@@ -343,7 +352,8 @@ class ScanNode(ASTNode):
     """
     Node representing a scan message in the AST
     """
-    def __init__(self, body: ArgsCommandNode):
+    def __init__(self, body: ArgsCommandNode, line: int):
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -364,11 +374,12 @@ class CommandNode(ASTNode):
     Node representing a command in the AST.
     """
 
-    def __init__(self, name: str, body: ArgsCommandNode):
+    def __init__(self, name: str, body: ArgsCommandNode, line: int):
         """
         :param name: The command name (e.g., "sm", "cc")
         :param body: ArgsCommandNode containing the arguments of the command
         """
+        super().__init__(line)
         self.name = name
         self.body = body
 
@@ -392,11 +403,12 @@ class VarNode(ASTNode):
     Node representing a variable declaration in the AST.
     """
 
-    def __init__(self, name: Token, body: list[Union[Token, ASTNode]]):
+    def __init__(self, name: Token, body: list[Union[Token, ASTNode]], line: int):
         """
         :param name: Token representing the variable name
         :param body: list of tokens representing the body of the variable
         """
+        super().__init__(line)
         self.name = name
         self.body = body
 
@@ -419,10 +431,11 @@ class LengthNode(ASTNode):
     Node representing the length operation in the AST.
     """
 
-    def __init__(self, body: Token):
+    def __init__(self, body: Token, line: int):
         """
         :param body: list of tokens representing the body of the length operation
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -443,7 +456,8 @@ class EndNode(ASTNode):
     Node representing the end of the AST.
     """
 
-    def __init__(self, error_message: Union[Token, bool] = True):
+    def __init__(self, line: int, error_message: Union[Token, bool] = True):
+        super().__init__(line)
         self.error_message: bool = error_message
 
     def __repr__(self):
@@ -465,10 +479,11 @@ class FieldEmbedNode(ASTNode):
     Node representing a field in an embed structure.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the field content
         """
+        super().__init__(line)
         self.body: list[Token] = body
 
     def __repr__(self):
@@ -490,11 +505,12 @@ class EmbedNode(ASTNode):
     Node representing an embed structure in the AST.
     """
 
-    def __init__(self, body: list[Token], fields: list[FieldEmbedNode]):
+    def __init__(self, body: list[Token], fields: list[FieldEmbedNode], line: int):
         """
         :param body: list of tokens representing the embed content
         :param fields: list of FieldEmbedNode instances representing the fields of the embed
         """
+        super().__init__(line)
         self.body = body
         self.fields = fields
 
@@ -518,10 +534,11 @@ class PermissionNode(ASTNode):
     Node representing a permission structure in the AST.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the permission content
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -543,10 +560,11 @@ class SleepNode(ASTNode):
     Node representing a sleep command in the AST.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the sleep duration
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -568,10 +586,11 @@ class EvalGroupNode(ASTNode):
     This is used to group multiple evaluations together.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the body of the evaluation group
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -593,11 +612,12 @@ class ParamNode(ASTNode):
     This is used to define parameters for variables passed to the dshell interpreter.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param name: Token representing the parameter name
         :param body: list of tokens representing the body of the parameter
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -617,10 +637,11 @@ class CodeNode(ASTNode):
     """
     Node representing a block of code to pass in arguments.
     """
-    def __init__(self, body: list[ASTNode]):
+    def __init__(self, body: list[ASTNode], line: int):
         """
         :param body: list of Node representing the code already parsed
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -642,10 +663,11 @@ class EvalNode(ASTNode):
     This is used to evaluate expressions in Dshell.
     """
 
-    def __init__(self, codeNode: Token, argsNode: ArgsCommandNode):
+    def __init__(self, codeNode: Token, argsNode: ArgsCommandNode, line: int):
         """
         :param body: list of tokens representing the expression to evaluate
         """
+        super().__init__(line)
         self.codeNode = codeNode
         self.argsNode = argsNode
 
@@ -669,10 +691,11 @@ class ReturnNode(ASTNode):
     This is used to return values from functions in Dshell.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the value to return
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -695,10 +718,11 @@ class UiButtonNode(ASTNode):
     This is used to define button elements for commands in Dshell.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the button component
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -720,10 +744,11 @@ class UiSelectNode(ASTNode):
     This is used to define select elements for commands in Dshell.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the select component
         """
+        super().__init__(line)
         self.body = body
         self.options: list[OptionUiSelectNode] = []
 
@@ -746,10 +771,11 @@ class OptionUiSelectNode(ASTNode):
     This is used to define options for select elements for commands in Dshell.
     """
 
-    def __init__(self, body: list[Token]):
+    def __init__(self, body: list[Token], line: int):
         """
         :param body: list of tokens representing the option component
         """
+        super().__init__(line)
         self.body = body
 
     def __repr__(self):
@@ -772,10 +798,11 @@ class ListNode(ASTNode):
     This class also lets you interact with the list via specific methods not built in by python.
     """
 
-    def __init__(self, body: list[Any]):
+    def __init__(self, body: list[Any], line: int):
         """
         :param body: list of elements to initialize the ListNode with
         """
+        super().__init__(line)
         self.iterable: list[Any] = body
         self.len_iterable: int = len(body)
         self.iterator_count: int = 0

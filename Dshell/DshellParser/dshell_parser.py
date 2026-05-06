@@ -30,10 +30,12 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
         first_token_line = tokens_by_line[0]  # get the first token of the line
         last_block = blocks[-1]
 
+        line = pointer+1
+
         if first_token_line.type == DTT.COMMAND:  # if the token is a command
             body = tokens_by_line[1:]  # get its arguments
             last_block.body.append(CommandNode(first_token_line.value,
-                                               ArgsCommandNode(body)))  # add the command to the last block's body
+                                               ArgsCommandNode(body, line=line), line=line))  # add the command to the last block's body
 
         ############################## DSHELL KEYWORDS ##############################
 
@@ -44,7 +46,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise SyntaxError(f'[IF] Take one or more arguments on line {first_token_line.position} !')
 
                 if_node = IfNode(condition=tokens_by_line[1:],
-                                 body=[])  # create the node with the if condition arguments
+                                 body=[], line=line)  # create the node with the if condition arguments
                 last_block.body.append(if_node)
                 _, p = parse(token_lines[pointer + 1:],
                              if_node)  # parse the rest of the code with if_node as the start of the new parsing
@@ -68,7 +70,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if len(tokens_by_line) <= 1:
                     raise SyntaxError(f'[ELIF] Take one or more arguments on line {first_token_line.position} !')
                 elif_node = ElifNode(condition=tokens_by_line[1:], body=[],
-                                     parent=last_block if isinstance(last_block, IfNode) else last_block.parent)
+                                     parent=last_block if isinstance(last_block, IfNode) else last_block.parent, line=line)
 
                 if isinstance(last_block, ElifNode):
                     last_block.parent.elif_nodes.append(elif_node)
@@ -86,7 +88,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if isinstance(last_block, ElseNode) and last_block.else_body is not None:
                     raise SyntaxError(f'[ELSE] already define !')
 
-                else_node = ElseNode(body=[])
+                else_node = ElseNode(body=[], line=line)
                 if isinstance(last_block, ElifNode):  # if the last block is an elif
                     last_block.parent.else_body = else_node  # add the else block to its parent (which is the last if)
                 else:
@@ -107,7 +109,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                         raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
                                         f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
 
-                    loop_node = LoopNode(VarNode(tokens_by_line[1], to_postfix(tokens_by_line[2:])), body=[])
+                    loop_node = LoopNode(VarNode(tokens_by_line[1], to_postfix(tokens_by_line[2:]), line=line), body=[], line=line)
                     last_block.body.append(loop_node)
                     _, p = parse(token_lines[pointer + 1:],
                                  loop_node)  # parse everything after the loop instruction
@@ -118,7 +120,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                         raise TypeError(f'[LOOP] the iterator must be a ident, string, integer, float or list, '
                                         f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                    loop_node = LoopNode(VarNode(Token(DTT.IDENT, "__loop__", tokens_by_line[1].position), to_postfix(tokens_by_line[1:])), body=[])
+                    loop_node = LoopNode(VarNode(Token(DTT.IDENT, "__loop__", tokens_by_line[1].position), to_postfix(tokens_by_line[1:]), line=line), body=[], line=line)
                     last_block.body.append(loop_node)
                     _, p = parse(token_lines[pointer + 1:],
                                  loop_node)  # parse everything after the loop instruction
@@ -138,7 +140,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[VAR] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                var_node = VarNode(name=tokens_by_line[1], body=[])
+                var_node = VarNode(name=tokens_by_line[1], body=[], line=line)
                 last_block.body.append(var_node)
                 result, status = parser_inline(tokens_by_line[
                                                2:])  # separate tokens on the line by newlines at each condition/else
@@ -155,12 +157,12 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[SLEEP] the variable given must be an integer, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                sleep_node = SleepNode(tokens_by_line[1:])
+                sleep_node = SleepNode(tokens_by_line[1:], line=line)
                 last_block.body.append(sleep_node)
 
             elif first_token_line.value == 'param':
 
-                param_node = ParamNode(body=[])
+                param_node = ParamNode(body=[], line=line)
                 last_block.body.append(param_node)
                 _, p = parse(token_lines[pointer + 1:], param_node)
                 pointer += p + 1  # advance the pointer to the next line
@@ -181,8 +183,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[CODE] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                code_node = CodeNode(body=[])
-                var_node = VarNode(tokens_by_line[1], [code_node])
+                code_node = CodeNode(body=[], line=line)
+                var_node = VarNode(tokens_by_line[1], [code_node], line=line)
                 last_block.body.append(var_node)
                 _, p = parse(token_lines[pointer + 1:], code_node)
                 pointer += p + 1
@@ -202,7 +204,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[EVAL] the first variable given must be a ident (CodeNode), '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                eval_node = EvalNode(codeNode=tokens_by_line[1], argsNode=ArgsCommandNode(tokens_by_line[2:]))
+                eval_node = EvalNode(codeNode=tokens_by_line[1], argsNode=ArgsCommandNode(tokens_by_line[2:], line=line), line=line)
                 last_block.body.append(eval_node)
 
             elif first_token_line.value == 'return':
@@ -211,11 +213,11 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if len(tokens_by_line) < 2:
                     raise SyntaxError(f"[RETURN] take one or more arguments on line {first_token_line.position}")
 
-                return_node = ReturnNode(body=tokens_by_line[1:])
+                return_node = ReturnNode(body=tokens_by_line[1:], line=line)
                 last_block.body.append(return_node)
 
             elif first_token_line.value == 'scan':
-                scan_node = ScanNode(ArgsCommandNode(body=tokens_by_line[1:]))
+                scan_node = ScanNode(ArgsCommandNode(body=tokens_by_line[1:], line=line), line=line)
                 last_block.body.append(scan_node)
 
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
@@ -239,8 +241,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[EMBED] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                embed_node = EmbedNode(body=[], fields=[])
-                var_node = VarNode(tokens_by_line[1], body=[embed_node])
+                embed_node = EmbedNode(body=[], fields=[], line=line)
+                var_node = VarNode(tokens_by_line[1], body=[embed_node], line=line)
                 last_block.body.append(var_node)
                 _, p = parse(token_lines[pointer + 1:], embed_node)
                 pointer += p + 1
@@ -257,7 +259,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if not isinstance(last_block, EmbedNode):
                     raise SyntaxError(f'[FIELD] No embed open on line {first_token_line.position} !')
 
-                last_block.fields.append(FieldEmbedNode(tokens_by_line[1:]))
+                last_block.fields.append(FieldEmbedNode(tokens_by_line[1:], line=line))
 
             elif first_token_line.value in ('perm', 'permission'):
                 if len(tokens_by_line) <= 1:
@@ -266,8 +268,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[PERM] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                perm_node = PermissionNode(body=[])
-                var_node = VarNode(tokens_by_line[1], body=[perm_node])
+                perm_node = PermissionNode(body=[], line=line)
+                var_node = VarNode(tokens_by_line[1], body=[perm_node], line=line)
                 last_block.body.append(var_node)
                 _, p = parse(token_lines[pointer + 1:], perm_node)
                 pointer += p + 1
@@ -285,8 +287,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[BUTTON] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                button_node = UiButtonNode([])
-                var_node = VarNode(tokens_by_line[1], body=[button_node])
+                button_node = UiButtonNode([], line=line)
+                var_node = VarNode(tokens_by_line[1], body=[button_node], line=line)
                 last_block.body.append(var_node)
                 _, p = parse(token_lines[pointer + 1:], button_node)
                 pointer += p + 1
@@ -304,8 +306,8 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[SELECT] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                select_node = UiSelectNode([])
-                var_node = VarNode(tokens_by_line[1], body=[select_node])
+                select_node = UiSelectNode([], line=line)
+                var_node = VarNode(tokens_by_line[1], body=[select_node], line=line)
                 last_block.body.append(var_node)
                 _, p = parse(token_lines[pointer + 1:], select_node)
                 pointer += p + 1
@@ -322,7 +324,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 if not isinstance(last_block, UiSelectNode):
                     raise SyntaxError(f'[OPTION] No UISelect open on line {first_token_line.position} !')
 
-                last_block.options.append(OptionUiSelectNode(tokens_by_line[1:]))
+                last_block.options.append(OptionUiSelectNode(tokens_by_line[1:], line=line))
 
         ############################## AUTRE ##############################
 
@@ -330,7 +332,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
             for token in tokens_by_line:
 
                 if token.type in DTT_DATA:
-                    last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([token])))
+                    last_block.body.append(CommandNode(name='sm', body=ArgsCommandNode([token], line=line), line=line))
 
         else:
             last_block.body += tokens_by_line

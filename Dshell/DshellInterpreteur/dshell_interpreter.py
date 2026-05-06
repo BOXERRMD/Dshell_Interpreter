@@ -45,7 +45,7 @@ class DshellInterpreteur:
         """
         if not isinstance(code, CodeNode):
             try:
-                self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([]))[0]
+                self.ast: list[ASTNode] = parse(DshellTokenizer(code).start(), StartNode([], line=0))[0]
             except Exception as e:
                 raise e
         else:
@@ -121,6 +121,8 @@ class DshellInterpreteur:
 
         if debug:
             print_ast(self.ast)
+
+        self.raise_error = False
 
     async def _execute_command_node(self, node: CommandNode):
         """Execute a command node."""
@@ -216,40 +218,48 @@ class DshellInterpreteur:
 
         for node in ast:
 
-            if isinstance(node, StartNode):
-                await self.execute(node.body)
+            try:
+                if isinstance(node, StartNode):
+                    await self.execute(node.body)
 
-            if isinstance(node, CommandNode):
-                await self._execute_command_node(node)
+                if isinstance(node, CommandNode):
+                    await self._execute_command_node(node)
 
-            elif isinstance(node, ParamNode):
-                params = await get_params(node, self)
-                self.env.update(params)  # update the environment
+                elif isinstance(node, ParamNode):
+                    params = await get_params(node, self)
+                    self.env.update(params)  # update the environment
 
-            elif isinstance(node, IfNode):
-                await self._execute_if_node(node)
+                elif isinstance(node, IfNode):
+                    await self._execute_if_node(node)
 
-            elif isinstance(node, LoopNode):
-                await self._execute_loop_node(node)
+                elif isinstance(node, LoopNode):
+                    await self._execute_loop_node(node)
 
-            elif isinstance(node, VarNode):
-                await self._execute_var_node(node)
+                elif isinstance(node, VarNode):
+                    await self._execute_var_node(node)
 
-            elif isinstance(node, SleepNode):
-                await self._execute_sleep_node(node)
+                elif isinstance(node, SleepNode):
+                    await self._execute_sleep_node(node)
 
-            elif isinstance(node, EvalNode):
+                elif isinstance(node, EvalNode):
 
-                self.env.set('__ret__', await eval_CodeNode(node, self))
+                    self.env.set('__ret__', await eval_CodeNode(node, self))
 
-            elif isinstance(node, ReturnNode):
-                self.env.set('__ret__', await eval_expression(node.body, self))
+                elif isinstance(node, ReturnNode):
+                    self.env.set('__ret__', await eval_expression(node.body, self))
 
-            elif isinstance(node, EndNode):
-                if await self.eval_data_token(node.error_message):
-                    raise RuntimeError("Execution stopped - EndNode encountered")
+                elif isinstance(node, EndNode):
+                    if await self.eval_data_token(node.error_message):
+                        raise RuntimeError("Execution stopped - EndNode encountered")
+                    else:
+                        raise DshellInterpreterStopExecution("Execution stopped without error")
+
+            except Exception as e:
+                if not self.raise_error:
+                    self.raise_error = True
+                    raise Exception(f"{e} [line : {node.line}]")
                 else:
-                    raise DshellInterpreterStopExecution("Execution stopped without error")
+                    raise Exception(e)
 
     async def eval_data_token(self, token: Token):
         """
@@ -281,7 +291,7 @@ class DshellInterpreteur:
             except KeyError:
                 return token.value
         elif tokentype == DTT.EVAL_GROUP:
-            await self.execute(parse([token.value], StartNode([]))[0])  # must parse because it's not already an AST
+            await self.execute(parse([token.value], StartNode([], line=0))[0])  # must parse because it's not already an AST
             return self.env.get('__ret__')
         elif tokentype == DTT.EVAL_EXPRESSION:
             return await eval_expression(token.value, self)
