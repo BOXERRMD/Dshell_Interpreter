@@ -186,8 +186,9 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
 
                 i = 0
                 operands = []
-                while i < len(stack) and (i != number_operands_max):
+                while len(stack) > 0 and (i != number_operands_max):
                     operands.append(stack.pop())
+                    i += 1
 
                 if len(operands) < number_operands_min:
                     raise SyntaxError(f"Not enough operands for operator '{op}'")
