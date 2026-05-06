@@ -798,11 +798,11 @@ class ListNode(ASTNode):
     This class also lets you interact with the list via specific methods not built in by python.
     """
 
-    def __init__(self, body: list[Any], line: int):
+    def __init__(self, body: list[Any]):
         """
         :param body: list of elements to initialize the ListNode with
         """
-        super().__init__(line)
+        super().__init__(-1)
         self.iterable: list[Any] = body
         self.len_iterable: int = len(body)
         self.iterator_count: int = 0
