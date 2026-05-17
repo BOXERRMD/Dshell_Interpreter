@@ -6,3 +6,4 @@ from .dshell_role import *
 from .dshell_interaction import *
 from .dshell_embed import *
 from .utils import *
+from .dshell_file import *

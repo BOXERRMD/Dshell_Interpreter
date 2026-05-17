@@ -1,5 +1,7 @@
-from Dshell.full_import import Any, randint, Optional, Union
+from Dshell.full_import import (Any, randint, Optional, Union, Attachment,
+                                HTTPException, Forbidden)
 from ..DshellTokenizer.dshell_token_type import Token
+from inspect import iscoroutinefunction
 
 __all__ = [
     'ASTNode',
@@ -30,7 +32,8 @@ __all__ = [
     'UiButtonNode',
     'UiSelectNode',
     'OptionUiSelectNode',
-    'ScanNode'
+    'ScanNode',
+    'FileNode'
 ]
 
 
@@ -943,3 +946,39 @@ class ListNode(ASTNode):
 
     def __repr__(self):
         return f"<LIST> - {self.iterable}"
+
+
+class FileNode(ASTNode):
+    def __init__(self, name: Optional[str], description: Optional[str] = None, spoiler: bool = False):
+        super().__init__(0)
+        self.name = name
+        self.description = description
+        self.spoiler = spoiler
+        self.content: bytearray = bytearray("", "utf-8")
+
+    def write(self, content: bytearray, append: bool):
+        if append:
+            self.content += content
+        else:
+            self.content = content
+
+    def read(self):
+        return self.content.decode(encoding="utf-8", errors="ignore")
+
+    def size(self):
+        return len(self.content)
+
+    def call(self, attribute: str):
+        """
+        Permet d'appeler une méthode de l'attachment
+        :param attribute: nom de la méthode à appeler
+        :return: le résultat de la méthode appelée
+        """
+        if hasattr(self, attribute) and attribute != 'call':
+            attr = getattr(self, attribute)
+            if not iscoroutinefunction(attr) and callable(attr):
+                return attr()
+            else:
+                raise AttributeError(f"'{attribute}' is not a callable method of the attachment !")
+        else:
+            raise AttributeError(f"The attachment does not have an attribute named '{attribute}' !")

@@ -11,7 +11,7 @@ __all__ = [
 from ..DISCORD_COMMANDS import *
 
 from Dshell.full_import import Callable
-
+from ..DISCORD_COMMANDS.dshell_file import dshell_read_file, dshell_write_file, dshell_get_message_files
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code', 'eval', 'return'
@@ -80,6 +80,11 @@ dshell_commands: dict[str, Callable] = {
 
     ## Pastbin command
     "gp": dshell_get_pastbin,  # get pastbin
+
+    ## Files
+    "rf": dshell_read_file,
+    "wf": dshell_write_file,
+    "gmfs": dshell_get_message_files,
 
     ## Discord commands
     "sm": dshell_send_message,  # send message
@@ -201,7 +206,8 @@ dshell_logical_operators: dict[str, tuple[Callable, int, int, int]] = {
     r"<": (lambda a, b: a < b, 4, 2, 2),
     r">": (lambda a, b: a > b, 4, 2, 2),
     r"!": (lambda a: not a, 3, 1, 1),
-    r"?": (lambda condition, first_choice, second_choice: first_choice if condition else second_choice, 1, 3, 3)
+    r"?": (lambda condition, first_choice, second_choice: first_choice if condition else second_choice, 1, 3, 3),
+    r".": (lambda target, attribute: target.call(attribute) if hasattr(target, attribute) and hasattr(target, 'call') else None, 9, 2, 2), # attribute access operator
 
 }
 

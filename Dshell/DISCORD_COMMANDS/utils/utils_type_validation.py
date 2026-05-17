@@ -14,11 +14,13 @@ __all__ = [
     "_validate_optional_code_node",
     "_validate_optional_list_node",
     "_validate_optional_eval_group_node",
+    "_validate_optional_file_node",
     "_validate_required_bool",
     "_validate_required_list_node",
     "_validate_required_int",
     "_validate_required_string",
     "_validate_required_dict",
+    "_validate_required_file_node",
     "_validate_missing_or_type",
     "_validate_not_none",
     "_validate_has_attribute",
@@ -153,6 +155,19 @@ def _validate_optional_list_node(value, param_name: str, command_name: str):
     if value is not None and not isinstance(value, ListNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a list, not {type(value).__name__}")
 
+def _validate_optional_file_node(value, param_name: str, command_name: str):
+        """
+        Validate that a optional value is a FileNode type.
+        :param value: The value to validate
+        :param param_name: The parameter name for error messages
+        :param command_name: The command name for error messages (optional)
+        :raises TypeError: If the value is not a FileNode
+        """
+        from ...DshellParser.ast_nodes import FileNode
+
+        if value is not None and not isinstance(value, FileNode):
+            raise TypeError(f"[{command_name}] -> {param_name} must be a FileNode, not {type(value).__name__}")
+
 
 # Required parameter validation functions
 
@@ -216,6 +231,21 @@ def _validate_required_dict(value, param_name: str, command_name: str):
     """
     if not isinstance(value, dict):
         raise TypeError(f"[{command_name}] -> {param_name} must be a dict, not {type(value).__name__}")
+
+def _validate_required_file_node(value, param_name: str, command_name: str):
+    """
+    Validate that a required value is a FileNode type.
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param command_name: The command name for error messages (optional)
+    :raises TypeError: If the value is not a FileNode
+    """
+    from ...DshellParser.ast_nodes import FileNode
+
+    if not isinstance(value, FileNode):
+        raise TypeError(f"[{command_name}] -> {param_name} must be a FileNode, not {type(value).__name__}")
+
+
 
 
 # Validation functions for _MissingSentinel or other types
