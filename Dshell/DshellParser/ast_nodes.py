@@ -1,7 +1,7 @@
 from Dshell.full_import import (Any, randint, Optional, Union, Attachment,
                                 HTTPException, Forbidden)
 from ..DshellTokenizer.dshell_token_type import Token
-from inspect import iscoroutinefunction
+from sys import getsizeof
 
 __all__ = [
     'ASTNode',
@@ -794,6 +794,36 @@ class OptionUiSelectNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class FileNode(ASTNode):
+    def __init__(self, name: Optional[str] = None, description: Optional[str] = None, spoiler: bool = False):
+        super().__init__(0)
+        self.name = name
+        self.description = description
+        self.spoiler = spoiler
+        self.content: bytearray = bytearray("", "utf-8")
+
+    def write(self, content: bytearray, append: bool):
+
+        if self.size() + len(content) > 5 * 1024:
+            raise Exception("The file content cannot exceed 5 Ko !")
+
+        if append:
+            self.content += content
+        else:
+            self.content = content
+
+    def read(self):
+        return self.content.decode(encoding="utf-8", errors="ignore")
+
+    def size(self):
+        return len(self.content)
+
+    def __len__(self):
+        return len(self.read())
+    
+    def __sizeof__(self):
+        return self.size()
+
 class ListNode(ASTNode):
     """
     Node representing a list structure in the AST.
@@ -809,6 +839,7 @@ class ListNode(ASTNode):
         self.iterable: list[Any] = body
         self.len_iterable: int = len(body)
         self.iterator_count: int = 0
+        self.size: int = 0
 
     def to_dict(self):
         """
@@ -819,6 +850,16 @@ class ListNode(ASTNode):
             "type": "ListNode",
             "body": [token.to_dict() for token in self.iterable]
         }
+
+    def size_add(self, value):
+        """
+        Add the size value object to self.value
+        :param value:
+        :return:
+        """
+
+        if isinstance(value, FileNode):
+            self.size += value.size()
 
     def add(self, value: Any):
         """
@@ -947,38 +988,3 @@ class ListNode(ASTNode):
     def __repr__(self):
         return f"<LIST> - {self.iterable}"
 
-
-class FileNode(ASTNode):
-    def __init__(self, name: Optional[str], description: Optional[str] = None, spoiler: bool = False):
-        super().__init__(0)
-        self.name = name
-        self.description = description
-        self.spoiler = spoiler
-        self.content: bytearray = bytearray("", "utf-8")
-
-    def write(self, content: bytearray, append: bool):
-        if append:
-            self.content += content
-        else:
-            self.content = content
-
-    def read(self):
-        return self.content.decode(encoding="utf-8", errors="ignore")
-
-    def size(self):
-        return len(self.content)
-
-    def call(self, attribute: str):
-        """
-        Permet d'appeler une méthode de l'attachment
-        :param attribute: nom de la méthode à appeler
-        :return: le résultat de la méthode appelée
-        """
-        if hasattr(self, attribute) and attribute != 'call':
-            attr = getattr(self, attribute)
-            if not iscoroutinefunction(attr) and callable(attr):
-                return attr()
-            else:
-                raise AttributeError(f"'{attribute}' is not a callable method of the attachment !")
-        else:
-            raise AttributeError(f"The attachment does not have an attribute named '{attribute}' !")

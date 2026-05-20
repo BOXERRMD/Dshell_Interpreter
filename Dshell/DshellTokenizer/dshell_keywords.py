@@ -28,6 +28,8 @@ async def dshell_debug(ctx, x):
     :param x:
     :return:
     """
+    from ..DISCORD_COMMANDS.utils.utils_file import utils_check_files_arguments
+    #utils_check_files_arguments("debug", x)
     print(x)
     return x
 
@@ -207,7 +209,7 @@ dshell_logical_operators: dict[str, tuple[Callable, int, int, int]] = {
     r">": (lambda a, b: a > b, 4, 2, 2),
     r"!": (lambda a: not a, 3, 1, 1),
     r"?": (lambda condition, first_choice, second_choice: first_choice if condition else second_choice, 1, 3, 3),
-    r".": (lambda target, attribute: target.call(attribute) if hasattr(target, attribute) and hasattr(target, 'call') else None, 9, 2, 2), # attribute access operator
+    #r".": (lambda target, attribute: target.call(attribute) if hasattr(target, attribute) and hasattr(target, 'call') else None, 9, 2, 2), # attribute access operator
 
 }
 

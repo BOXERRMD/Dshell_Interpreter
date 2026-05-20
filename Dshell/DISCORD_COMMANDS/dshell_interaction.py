@@ -6,10 +6,12 @@ __all__ = [
 
 
 from Dshell.full_import import (Interaction,
-                           Embed,
-                           EasyModifiedViews)
+                           Embed, Optional, File, Union)
 
+from ..DshellParser.ast_nodes import ListNode, FileNode
 from .utils.utils_message import utils_autorised_mentions
+from .utils.utils_file import utils_check_files_arguments
+from .utils.utils_embed import utils_check_embeds_arguments
 from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_embed,
                                           _validate_optional_view,
@@ -27,6 +29,7 @@ async def dshell_respond_interaction(ctx: Interaction,
                                      reply_mention: bool = False,
                                      hide: bool = False,
                                      embeds=None,
+                                     files: Optional[Union[ListNode, FileNode]] = None,
                                      view=None) -> int:
     """
     Répond à une interaction Discord avec un message.
@@ -86,17 +89,13 @@ async def dshell_respond_interaction(ctx: Interaction,
                                                 users_mentions,
                                                 reply_mention)
 
-    from Dshell.DshellParser.ast_nodes import ListNode
-
     _validate_optional_embed(embeds, "Embeds", _CMD)
 
-    if embeds is None:
-        embeds = ListNode([])
-
-    elif isinstance(embeds, Embed):
-        embeds = ListNode([embeds])
+    embeds = utils_check_embeds_arguments(_CMD, embeds)
 
     _validate_optional_view(view, "View", _CMD)
+
+    final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
     sended_message = await ctx.response.send_message(
                                      content=str(content),
@@ -104,6 +103,7 @@ async def dshell_respond_interaction(ctx: Interaction,
                                      allowed_mentions=allowed_mentions,
                                      delete_after=delete,
                                      embeds=embeds,
+                                     files=final_files,
                                      view=view)
 
     return sended_message.id

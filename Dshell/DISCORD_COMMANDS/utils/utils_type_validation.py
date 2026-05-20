@@ -21,6 +21,7 @@ __all__ = [
     "_validate_required_string",
     "_validate_required_dict",
     "_validate_required_file_node",
+    "_validate_required_embed",
     "_validate_missing_or_type",
     "_validate_not_none",
     "_validate_has_attribute",
@@ -245,7 +246,24 @@ def _validate_required_file_node(value, param_name: str, command_name: str):
     if not isinstance(value, FileNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a FileNode, not {type(value).__name__}")
 
+    if len(value.content) == 0:
+        raise TypeError(f"[{command_name}] -> {param_name} must have at least one content")
 
+
+def _validate_required_embed(value, param_name: str, command_name: str):
+    """
+    Validate that an optional value is an Embed or ListNode type.
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param command_name: The command name for error messages (optional)
+    :raises Exception: If the value is not None and not an Embed or ListNode
+    """
+    from Dshell.full_import import Embed
+    from ...DshellParser.ast_nodes import ListNode
+
+    if not isinstance(value, (ListNode, Embed)):
+        raise TypeError(
+            f"[{command_name}] -> {param_name} must be a list of Embed objects or a single Embed object, not {type(value).__name__} !")
 
 
 # Validation functions for _MissingSentinel or other types

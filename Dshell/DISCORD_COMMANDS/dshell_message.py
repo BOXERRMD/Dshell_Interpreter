@@ -1,11 +1,12 @@
 from Dshell.full_import import (Message,
-                           Embed,
                            PartialMessage,
                                 File)
 
 from ..DshellParser.ast_nodes import ListNode, FileNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
+from .utils.utils_file import utils_check_files_arguments
+from .utils.utils_embed import utils_check_embeds_arguments
 from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_embed,
                                           _validate_optional_view,
@@ -15,9 +16,7 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_required_bool,
                                           _validate_required_int,
                                           _validate_not_none,
-                                          _validate_optional_eval_group_node,
-                                          _validate_optional_list_node,
-                                          _validate_required_file_node)
+                                          _validate_optional_eval_group_node)
 from ..DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Optional, Union, compile, DOTALL
@@ -71,7 +70,6 @@ async def dshell_send_message(ctx: Message,
     _validate_required_bool(roles_mentions, "Roles mentions", _CMD)
     _validate_required_bool(users_mentions, "Users mentions", _CMD)
     _validate_required_bool(reply_mention, "Reply mention", _CMD)
-    _validate_optional_list_node(files, "files", _CMD)
 
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     allowed_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
@@ -79,21 +77,11 @@ async def dshell_send_message(ctx: Message,
     if channel_to_send is None:
         raise Exception(f'Channel {channel} not found!')
 
-    if files is not None:
-        for file in files:
-            _validate_required_file_node(file, "file", _CMD)
-
-    final_files: list[File] = []
-    for file in files:
-        final_files.append(File(fp=file.content, filename=file.name, description=file.description, spoiler=file.spoiler))
+    final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
     _validate_optional_embed(embeds, "Embeds", _CMD)
 
-    if embeds is None:
-        embeds = ListNode([])
-
-    elif isinstance(embeds, Embed):
-        embeds = ListNode([embeds])
+    embeds = utils_check_embeds_arguments(_CMD, embeds)
 
     _validate_optional_view(view, "View", _CMD)
 
@@ -134,28 +122,16 @@ async def dshell_respond_message(ctx: Message,
     _validate_required_bool(roles_mentions, "Roles mentions", _CMD)
     _validate_required_bool(users_mentions, "Users mentions", _CMD)
     _validate_required_bool(reply_mention, "Reply mention", _CMD)
-    _validate_optional_list_node(files, "files", _CMD)
 
     respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
     mention_author = True if reply_mention else False
 
-    if files is not None:
-        for file in files:
-            _validate_required_file_node(file, "file", _CMD)
-
-    final_files: list[File] = []
-    for file in files:
-        final_files.append(
-            File(fp=file.content, filename=file.filename, description=file.description, spoiler=file.spoiler))
+    final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
     _validate_optional_embed(embeds, "Embeds", _CMD)
 
-    if embeds is None:
-        embeds = ListNode([])
-
-    elif isinstance(embeds, Embed):
-        embeds = ListNode([embeds])
+    embeds = utils_check_embeds_arguments(_CMD, embeds)
 
     sended_message = await respond_message.reply(
                                      content=str(content),
@@ -213,22 +189,10 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
 
     _validate_optional_embed(embeds, "Embeds", _CMD)
     _validate_optional_view(view, "View", _CMD)
-    _validate_optional_list_node(files, "files", _CMD)
 
-    if files is not None:
-        for file in files:
-            _validate_required_file_node(file, "file", _CMD)
+    final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
-    final_files: list[File] = []
-    for file in files:
-        final_files.append(
-            File(fp=file.content, filename=file.filename, description=file.description, spoiler=file.spoiler))
-
-    if embeds is None:
-        embeds = ListNode([])
-
-    elif isinstance(embeds, Embed):
-        embeds = ListNode([embeds])
+    embeds = utils_check_embeds_arguments(_CMD, embeds)
 
     await edit_message.edit(content=new_content, embeds=embeds, view=view, files=final_files)
 
