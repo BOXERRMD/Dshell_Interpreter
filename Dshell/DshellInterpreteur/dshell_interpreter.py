@@ -13,11 +13,7 @@ from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
 from ..DISCORD_COMMANDS.dshell_ui import build_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
 from .dshell_scope import Scope, new_scope
-
-# Constants for sleep time limits
-MAX_SLEEP_TIME_SECONDS = 3600  # 1 hour
-MIN_SLEEP_TIME_SECONDS = 1
-
+from .dshell_global_variables import MAX_SLEEP_TIME_SECONDS, MIN_SLEEP_TIME_SECONDS
 
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode)
