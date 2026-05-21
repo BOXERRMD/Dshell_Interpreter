@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 from Dshell.full_import import Message, Any
-from ...DshellParser.ast_nodes import ListNode
+from ...DshellParser.ast_nodes import ListNode, StrNode
 from Dshell.full_import import (search,
                             sub,
                             findall)
@@ -26,9 +26,9 @@ async def utils_convert_to_string(ct: Message, value: Any):
     :param value:
     :return:
     """
-    return str(value)
+    return StrNode(value)
 
-async def utils_split_string(ctx: Message, value: str, separator: str = ' ') -> ListNode:
+async def utils_split_string(ctx: Message, value: StrNode, separator: StrNode = StrNode(' ')) -> ListNode:
     """
     Divise une chaîne de caractères en une liste de sous-chaînes.
     
@@ -53,7 +53,7 @@ async def utils_split_string(ctx: Message, value: str, separator: str = ' ') -> 
     return ListNode(value.split(separator))
 
 
-async def utils_upper_string(ctx: Message, value: str) -> str:
+async def utils_upper_string(ctx: Message, value: StrNode) -> StrNode:
     """
     Convertit une chaîne en majuscules.
     
@@ -70,10 +70,10 @@ async def utils_upper_string(ctx: Message, value: str) -> str:
         "BONJOUR"
     """
     _validate_required_string(value, 'value', 'upper')
-    return value.upper()
+    return StrNode(value.upper())
 
 
-async def utils_lower_string(ctx: Message, value: str) -> str:
+async def utils_lower_string(ctx: Message, value: StrNode) -> StrNode:
     """
     Convertit une chaîne en minuscules.
     
@@ -90,10 +90,10 @@ async def utils_lower_string(ctx: Message, value: str) -> str:
         "bonjour"
     """
     _validate_required_string(value, 'value', 'lower')
-    return value.lower()
+    return StrNode(value.lower())
 
 
-async def utils_title_string(ctx: Message, value: str) -> str:
+async def utils_title_string(ctx: Message, value: StrNode) -> StrNode:
     """
     Convertit une chaîne en format titre (première lettre de chaque mot en majuscule).
     
@@ -110,10 +110,10 @@ async def utils_title_string(ctx: Message, value: str) -> str:
         "Bonjour Le Monde"
     """
     _validate_required_string(value, 'value', 'title')
-    return value.title()
+    return StrNode(value.title())
 
 
-async def utils_strip_string(ctx: Message, value: str) -> str:
+async def utils_strip_string(ctx: Message, value: StrNode) -> StrNode:
     """
     Supprime les espaces au début et à la fin d'une chaîne.
     
@@ -130,10 +130,10 @@ async def utils_strip_string(ctx: Message, value: str) -> str:
         "bonjour"
     """
     _validate_required_string(value, 'value', 'strip')
-    return value.strip()
+    return StrNode(value.strip())
 
 
-async def utils_replace_string(ctx: Message, value: str, old: str, new: str) -> str:
+async def utils_replace_string(ctx: Message, value: StrNode, old: StrNode, new: StrNode) -> StrNode:
     """
     Remplace toutes les occurrences d'une sous-chaîne par une autre.
     
@@ -159,7 +159,7 @@ async def utils_replace_string(ctx: Message, value: str, old: str, new: str) -> 
     return value.replace(old, new)
 
 
-async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> ListNode:
+async def utils_regex_findall(ctx: Message, regex: StrNode, content: StrNode = None) -> ListNode:
     """
     Trouve toutes les occurrences d'une expression régulière dans une chaîne.
     
@@ -184,11 +184,20 @@ async def utils_regex_findall(ctx: Message, regex: str, content: str = None) -> 
     if content is not None:
         _validate_required_string(content, 'content', 'regex_findall')
 
+    print(regex, content)
     result = findall(regex, content if content is not None else ctx.content)
-    return ListNode([ListNode(list(i)) for i in result])
 
+    final_list = ListNode([])
+    for match in result:
+        if len(match) > 1:
+            final_list.add(ListNode([StrNode(i) for i in match]))
+        elif len(match) == 1:
+            final_list.add(ListNode([StrNode(match[0])]))
+        else:
+            final_list.add(ListNode([]))
+    return final_list
 
-async def utils_regex_sub(ctx: Message, regex: str, replace: str, content: str = None) -> str:
+async def utils_regex_sub(ctx: Message, regex: StrNode, replace: StrNode, content: StrNode = None) -> StrNode:
     """
     Remplace toutes les occurrences d'une expression régulière par une chaîne.
     
@@ -216,10 +225,10 @@ async def utils_regex_sub(ctx: Message, regex: str, replace: str, content: str =
     if content is not None:
         _validate_required_string(content, 'content', 'regex_sub')
 
-    return sub(regex, replace, content if content is not None else ctx.content)
+    return StrNode(sub(regex, replace, content if content is not None else ctx.content))
 
 
-async def utils_regex_search(ctx: Message, regex: str, content: str = None) -> str:
+async def utils_regex_search(ctx: Message, regex: StrNode, content: StrNode = None) -> StrNode:
     """
     Recherche la première occurrence d'une expression régulière.
     
@@ -245,10 +254,10 @@ async def utils_regex_search(ctx: Message, regex: str, content: str = None) -> s
         _validate_required_string(content, 'content', 'regex_search')
 
     result = search(regex, content if content is not None else ctx.content)
-    return result.group() if result else ''
+    return StrNode(result.group() if result else '')
 
 
-async def utils_regex_group(ctx: Message, regex: str, content: str = None) -> ListNode:
+async def utils_regex_group(ctx: Message, regex: StrNode, content: StrNode = None) -> ListNode:
     """
     Recherche une expression régulière et retourne les groupes capturés.
     
@@ -274,4 +283,4 @@ async def utils_regex_group(ctx: Message, regex: str, content: str = None) -> Li
         _validate_required_string(content, 'content', 'regex_group')
 
     result = search(regex, content if content is not None else ctx.content)
-    return ListNode(list(result.groups())) if result else ListNode([])
+    return ListNode([StrNode(i) for i in result.groups()]) if result else ListNode([])

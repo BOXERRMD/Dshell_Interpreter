@@ -6,8 +6,9 @@ from Dshell.full_import import Union
 
 from Dshell.full_import import search
 
+from ...DshellParser.ast_nodes import StrNode
 
-async def utils_get_thread(ctx: Message, thread: Union[int, str]) -> Thread:
+async def utils_get_thread(ctx: Message, thread: Union[int, StrNode]) -> Thread:
     """
     Returns the thread object of the specified thread ID or link.
     Thread is only available in the same server as the command and in the same channel.
@@ -17,7 +18,7 @@ async def utils_get_thread(ctx: Message, thread: Union[int, str]) -> Thread:
     if isinstance(thread, int):
         return ctx.channel.get_thread(thread)
 
-    elif isinstance(thread, str):
+    elif isinstance(thread, StrNode):
         match = search(r'https://discord\.com/channels/(\d+)/(\d+)(/\d+)?', thread)
         if not match:
             raise Exception("Invalid thread link format. Use a valid Discord thread link.")

@@ -3,7 +3,7 @@ from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from ..DshellTokenizer.dshell_token_type import DTT_DATA
 
-from ..DshellParser.ast_nodes import IfNode, ParamNode, ListNode
+from ..DshellParser.ast_nodes import IfNode, ParamNode, ListNode, StrNode
 from ..DshellParser.dshell_parser import to_postfix
 
 from Dshell.full_import import sub, escape
@@ -39,9 +39,9 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
         # If the current token is the last one and is a parameter marker, add it with empty value
         if index == n - 1 and body[index].type in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
             if body[index].type == DTT.PARAMETER:
-                instance_dhsell_arguments.set_parameter(body[index].value, '', DTT.PARAMETER)
+                instance_dhsell_arguments.set_parameter(body[index].value, StrNode(''), DTT.PARAMETER)
             elif body[index].type == DTT.STR_PARAMETER:
-                instance_dhsell_arguments.set_parameter(body[index].value, '', DTT.STR_PARAMETER)
+                instance_dhsell_arguments.set_parameter(body[index].value, StrNode(''), DTT.STR_PARAMETER)
             else:  # DTT.PARAMETERS
                 instance_dhsell_arguments.set_parameter(body[index].value, ListNode([]), DTT.PARAMETERS)
             index += 1
@@ -69,7 +69,7 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
 
                 final_argument += body[index + 1].value + ''
                 index += 1
-                instance_dhsell_arguments.set_parameter(body[current_index].value, final_argument, type_=DTT.STR_PARAMETER)
+                instance_dhsell_arguments.set_parameter(body[current_index].value, StrNode(final_argument), type_=DTT.STR_PARAMETER)
 
             index += 1
 
@@ -91,18 +91,18 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
 
     return instance_dhsell_arguments
 
-async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict[str, Any]:
+async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict[StrNode, Any]:
     """
     Get the parameters from a ParamNode.
     :param node: The ParamNode to get the parameters from.
     :param interpreter: The Dshell interpreter instance.
     :return: A dictionary of parameters.
     """
-    def replace_match(match) -> str:
+    def replace_match(match) -> StrNode:
         special_char = match.group(1)
         if special_char:
             return ''
-        return match.group(4)
+        return StrNode(match.group(4))
 
     variables = interpreter.vars
     regrouped_parameters: DshellArguments = await regroupe_commandes(node.body, interpreter)
@@ -126,18 +126,18 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
             parameter_type = regrouped_parameters.get_parameter(var).type
 
             if parameter_type == DTT.PARAMETER and index_variable < len(variables_non_specified_parameters):
-                regrouped_parameters.set_parameter(var, variables_non_specified_parameters[index_variable], parameter_type)  # variables_post_regrouped[index_variable] is not a token so cannot be evaluated! causes problems in commands that require something other than str
+                regrouped_parameters.set_parameter(StrNode(var), variables_non_specified_parameters[index_variable], parameter_type)  # variables_post_regrouped[index_variable] is not a token so cannot be evaluated! causes problems in commands that require something other than str
                 index_variable += 1
 
             elif parameter_type == DTT.STR_PARAMETER:
-                variables_post_regrouped: list[str] = variables.strip().split(' ') if variables else []  # set only for full str parameters
+                variables_post_regrouped: list[StrNode] = StrNode(variables.strip().split(' ')) if variables else []  # set only for full str parameters
                 str_parameters_set_for_variables = variables_post_regrouped[index_variable:]
                 # the line below allows setting a full str parameter with multiple words. If the remaining variables are empty, we use the default value (must use str function because otherwise it puts a DshellArgumentsData)
-                regrouped_parameters.set_parameter(var, ' '.join(str_parameters_set_for_variables if str_parameters_set_for_variables else [str(regrouped_parameters.parameters.get(var, ''))]), parameter_type)
+                regrouped_parameters.set_parameter(StrNode(var), StrNode(' '.join(str_parameters_set_for_variables) if str_parameters_set_for_variables else [StrNode(regrouped_parameters.parameters.get(var, ''))]), parameter_type)
                 break
 
             elif parameter_type == DTT.PARAMETERS:
-                regrouped_parameters.set_parameter(var, ListNode(variables_non_specified_parameters[index_variable:]), parameter_type)
+                regrouped_parameters.set_parameter(StrNode(var), ListNode(variables_non_specified_parameters[index_variable:]), parameter_type)
                 break
 
     for param_name, param_data in regrouped_parameters.parameters.items():

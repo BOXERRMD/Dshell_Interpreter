@@ -1,6 +1,6 @@
-from Dshell.full_import import (Message, MISSING, PermissionOverwrite, _MissingSentinel, Union)
+from Dshell.full_import import (Message, MISSING, PermissionOverwrite, _MissingSentinel, Union, Optional)
 
-from ..DshellParser.ast_nodes import ListNode
+from ..DshellParser.ast_nodes import ListNode, StrNode
 from .utils.utils_global import utils_build_colour
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
@@ -17,12 +17,12 @@ __all__ = [
 ]
 
 async def dshell_create_role(ctx: Message,
-                             name: str = MISSING,
+                             name: StrNode = MISSING,
                              permissions: dict[None, PermissionOverwrite] = MISSING,
                              color: Union[ListNode, int] = MISSING,
                              hoist: bool = MISSING,
                              mentionable: bool = MISSING,
-                             reason: str = None):
+                             reason: Optional[StrNode] = None):
     """
     Crée un nouveau rôle sur le serveur Discord.
     
@@ -58,7 +58,7 @@ async def dshell_create_role(ctx: Message,
     """
     _CMD = "cr"
 
-    _validate_missing_or_type(name, "Name", str, _CMD)
+    _validate_missing_or_type(name, "Name", StrNode, _CMD)
 
     _validate_missing_or_type(permissions, "Permissions", dict, _CMD)
 
@@ -87,7 +87,7 @@ async def dshell_create_role(ctx: Message,
     return created_role.id
 
 
-async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reason: str=None):
+async def dshell_delete_roles(ctx: Message, roles: Union[ListNode, int], reason: Optional[StrNode]=None):
     """
     Supprime un ou plusieurs rôles du serveur Discord.
     
@@ -134,20 +134,20 @@ async def dshell_delete_roles(ctx: Message, roles: Union["ListNode", int], reaso
         if role_to_delete is None:
             raise Exception(f'Role {i} not found in the server !')
 
-        await role_to_delete.delete(reason=str(reason))
+        await role_to_delete.delete(reason=StrNode(reason))
 
     return role_to_delete.id
 
 
 async def dshell_edit_role(ctx: Message,
                            role: int,
-                           name: str=None,
-                           permissions: dict[None, PermissionOverwrite]=None,
-                           color: Union["ListNode", int]=None,
-                           hoist: bool=None,
-                           mentionable: bool=None,
-                           position: int=None,
-                           reason: str=None,):
+                           name: Optional[StrNode]=None,
+                           permissions: Optional[dict[None, PermissionOverwrite]]=None,
+                           color: Union[ListNode, int]=None,
+                           hoist: Optional[bool]=None,
+                           mentionable: Optional[bool]=None,
+                           position: Optional[int]=None,
+                           reason: Optional[StrNode]=None,):
     """
     Modifie les propriétés d'un rôle existant sur le serveur Discord.
     

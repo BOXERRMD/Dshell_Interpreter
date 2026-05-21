@@ -1,4 +1,4 @@
-from ...DshellParser.ast_nodes import FileNode, ListNode
+from ...DshellParser.ast_nodes import FileNode, ListNode, StrNode
 from ...full_import import File, Optional, Union
 from .utils_type_validation import _validate_required_file_node
 
@@ -8,7 +8,7 @@ __all__ = [
     "utils_check_files_arguments"
 ]
 
-def utils_check_files_arguments(_CMD: str, files: Optional[Union[FileNode, ListNode]]) -> Optional[list[File]]:
+def utils_check_files_arguments(_CMD: StrNode, files: Optional[Union[FileNode, ListNode]]) -> Optional[list[File]]:
     """
     Check if the files argument is valid, and convert it to a list of File if it's a FileNode or a ListNode
     If the final_files list is empty, return None

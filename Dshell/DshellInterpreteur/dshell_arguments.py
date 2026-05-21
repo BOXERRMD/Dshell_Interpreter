@@ -1,5 +1,6 @@
 from Dshell.full_import import Any, Union
 from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
+from ..DshellParser.ast_nodes import StrNode
 
 class DshellArgumentsData:
     """
@@ -20,8 +21,8 @@ class DshellArgumentsData:
     def __repr__(self) -> str:
         return f"DshellArgumentsData(value={self.value}, obligatory={self.obligatory})"
 
-    def __str__(self) -> str:
-        return str(self.value)
+    def __str__(self) -> StrNode:
+        return StrNode(self.value)
 
 class DshellArguments:
     """
@@ -35,7 +36,7 @@ class DshellArguments:
             '*': DshellArgumentsData([], False, DTT.LIST)  # Non-specified parameters
         }
 
-    def set_parameter(self, name: str, value: Any, type_: DTT, obligatory: bool = False) -> None:
+    def set_parameter(self, name: StrNode, value: Any, type_: DTT, obligatory: bool = False) -> None:
         """
         Set a parameter with its type and value.
         :param name: Name of the parameter

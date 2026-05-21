@@ -1,6 +1,6 @@
 from ..DshellTokenizer.dshell_token_type import Token
 
-from ..DshellParser.ast_nodes import FieldEmbedNode
+from ..DshellParser.ast_nodes import FieldEmbedNode, StrNode
 
 from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 

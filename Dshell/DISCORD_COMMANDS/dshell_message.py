@@ -2,7 +2,7 @@ from Dshell.full_import import (Message,
                            PartialMessage,
                                 File)
 
-from ..DshellParser.ast_nodes import ListNode, FileNode
+from ..DshellParser.ast_nodes import ListNode, StrNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
@@ -16,7 +16,8 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_required_bool,
                                           _validate_required_int,
                                           _validate_not_none,
-                                          _validate_optional_eval_group_node)
+                                          _validate_optional_eval_group_node,
+                                          _validate_required_string)
 from ..DshellInterpreteur.cached_messages import dshell_cached_messages
 
 from Dshell.full_import import Optional, Union, compile, DOTALL
@@ -48,7 +49,7 @@ __all__ = [
 
 
 async def dshell_send_message(ctx: Message,
-                              message=None,
+                              message: Optional[StrNode]=None,
                               delete=None,
                               channel=None,
                               global_mentions: bool = None,
@@ -100,8 +101,8 @@ async def dshell_send_message(ctx: Message,
 
 
 async def dshell_respond_message(ctx: Message,
-                                 message=None,
-                                 content: str = None,
+                                 message: Optional[StrNode]=None,
+                                 content: Optional[StrNode] = None,
                                  global_mentions: bool = None,
                                  everyone_mention: bool = True,
                                  roles_mentions: bool = True,
@@ -134,7 +135,7 @@ async def dshell_respond_message(ctx: Message,
     embeds = utils_check_embeds_arguments(_CMD, embeds)
 
     sended_message = await respond_message.reply(
-                                     content=str(content),
+                                     content=StrNode(content),
                                      mention_author=mention_author,
                                      allowed_mentions=autorised_mentions,
                                      delete_after=delete,
@@ -147,14 +148,20 @@ async def dshell_respond_message(ctx: Message,
 
     return sended_message.id
 
-async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0):
+async def dshell_delete_message(ctx: Message,
+                                message: Optional[StrNode]=None,
+                                reason: Optional[StrNode]=None,
+                                delay=0):
     """
     Deletes a message
     """
+    _CMD = "dm"
 
     delete_message = ctx if message is None else utils_get_message(ctx, message)
 
-    _validate_optional_int(delay, "Delay", "dm")
+    _validate_optional_int(delay, "delay", _CMD)
+    _validate_optional_string(reason, "reason", _CMD)
+    _validate_optional_string(reason, "message", _CMD)
 
     if delay > 3600:
         raise Exception(f'The message deletion delay is too long! ({delay} seconds)')
@@ -162,7 +169,11 @@ async def dshell_delete_message(ctx: Message, message=None, reason=None, delay=0
     await delete_message.delete(delay=delay, reason=reason)
 
 
-async def dshell_purge_message(ctx: Message, message_number: int, channel: Optional[int]=None, reason: Optional[str]=None, check: Optional[str] = None):
+async def dshell_purge_message(ctx: Message,
+                               message_number: int,
+                               channel: Optional[int]=None,
+                               reason: Optional[StrNode]=None,
+                               check: Optional[StrNode] = None):
     """
     Purges messages from a channel
     """
@@ -170,6 +181,8 @@ async def dshell_purge_message(ctx: Message, message_number: int, channel: Optio
 
     _validate_required_int(message_number, "Message number", _CMD)
     _validate_optional_eval_group_node(check, "check", _CMD)
+    _validate_optional_string(reason, "reason", _CMD)
+    _validate_optional_string(check, "check", _CMD)
 
     purge_channel = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
 
@@ -179,7 +192,12 @@ async def dshell_purge_message(ctx: Message, message_number: int, channel: Optio
     await purge_channel.purge(limit=message_number, reason=reason)
 
 
-async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=None, view=None, files=None) -> int:
+async def dshell_edit_message(ctx: Message,
+                              message,
+                              new_content: Optional[StrNode]=None,
+                              embeds=None,
+                              view=None,
+                              files=None) -> int:
     """
     Edits a message
     """
@@ -187,8 +205,9 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
 
     edit_message = utils_get_message(ctx, message)
 
-    _validate_optional_embed(embeds, "Embeds", _CMD)
-    _validate_optional_view(view, "View", _CMD)
+    _validate_optional_embed(embeds, "embeds", _CMD)
+    _validate_optional_view(view, "view", _CMD)
+    _validate_optional_string(new_content, "new_content", _CMD)
 
     final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
@@ -198,31 +217,35 @@ async def dshell_edit_message(ctx: Message, message, new_content=None, embeds=No
 
     return edit_message.id
 
-async def dshell_add_reactions(ctx: Message, reactions, message=None):
+async def dshell_add_reactions(ctx: Message, reactions: Union[StrNode, ListNode], message: Optional[Union[StrNode, int]]=None):
     """
     Adds reactions to a message
     """
+    _CMD = "ar"
     message = ctx if message is None else utils_get_message(ctx, message)
 
-    if isinstance(reactions, str):
+    if isinstance(reactions, StrNode):
         reactions = (reactions,)
 
     for reaction in reactions:
+        _validate_required_string(reaction, "reactions", _CMD)
         await message.add_reaction(reaction)
 
     return message.id
 
 
-async def dshell_remove_reactions(ctx: Message, reactions, message=None):
+async def dshell_remove_reactions(ctx: Message, reactions: Union[ListNode, StrNode], message=None):
     """
     Removes reactions from a message
     """
+    _CMD = "rr"
     message = ctx if message is None else utils_get_message(ctx, message)
 
-    if isinstance(reactions, str):
+    if isinstance(reactions, StrNode):
         reactions = [reactions]
 
     for reaction in reactions:
+        _validate_required_string(reaction, "reactions", _CMD)
         await message.clear_reaction(reaction)
 
     return message.id
@@ -240,13 +263,13 @@ async def dshell_clear_message_reactions(ctx: Message, message):
 
     return message.id
 
-async def dshell_clear_one_reactions(ctx: Message, message, emoji):
+async def dshell_clear_one_reactions(ctx: Message, message, emoji: StrNode):
     """
     Clear one emoji on the target message
     """
 
-    if not isinstance(emoji, str):
-        raise Exception(f'Emoji must be string, not {type(emoji)}')
+    if not isinstance(emoji, StrNode):
+        raise Exception(f'Emoji must be StrNode, not {type(emoji)}')
 
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
@@ -265,7 +288,7 @@ async def dshell_pin_message(ctx: Message, message=None):
 
     return target_message.id
 
-async def dshell_unpin_message(ctx: Message, message=None, reason=None):
+async def dshell_unpin_message(ctx: Message, message=None, reason: Optional[StrNode]=None):
     """
     Unpin a message
     """
@@ -324,10 +347,10 @@ async def dshell_get_content_message(ctx: Message, message=None):
     else:
         fetch_target_message = target_message
 
-    return fetch_target_message.content
+    return StrNode(fetch_target_message.content)
 
 
-async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = None):
+async def dshell_get_author_id_message(ctx: Message, message: Optional[Union[int, StrNode]] = None):
     """
     Return author ID of the message given (or ctx if message=None)
     :param ctx:
@@ -335,8 +358,6 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = No
     :return:
     """
     _CMD = "gma"
-
-    _validate_optional_int(message, "Message parameter", _CMD)
 
     target_message = ctx
     if message is not None:
@@ -350,21 +371,19 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[int] = No
 
     return target_message.author.id
 
-async def dshell_get_message_link(ctx: Message, message: int):
+async def dshell_get_message_link(ctx: Message, message: Union[int, StrNode]):
     """
     Return the link of a message given its ID
     :param ctx:
     :param message: message ID
     :return:
     """
-    if not isinstance(message, int):
-        raise Exception(f'Message parameter must be an integer, not {type(message)} !')
 
     target_message = utils_get_message(ctx, message)
 
-    return target_message.jump_url
+    return StrNode(target_message.jump_url)
 
-async def dshell_get_message_category_id(ctx: Message, message: int = None):
+async def dshell_get_message_category_id(ctx: Message, message: Optional[Union[int, StrNode]] = None):
     """
     Return the category ID of a message given its ID
     :param ctx:
@@ -372,8 +391,6 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
     :return:
     """
     _CMD = "gmc"
-
-    _validate_optional_int(message, "Message parameter", _CMD)
 
     target_message = ctx
     if message is not None:
@@ -387,7 +404,7 @@ async def dshell_get_message_category_id(ctx: Message, message: int = None):
 
     return target_message.channel.category.id if target_message.channel.category is not None else 0
 
-async def dshell_get_message_attachments(ctx: Message, message: int = None):
+async def dshell_get_message_attachments(ctx: Message, message: Optional[Union[int, StrNode]] = None):
     """
     Return the attachments of a message given its ID
     :param ctx:
@@ -407,8 +424,6 @@ async def dshell_get_message_attachments(ctx: Message, message: int = None):
                 target_message = await target_message.fetch()
             except:
                 raise Exception(f"[attachments_message] Message ID to get is not found !")
-
-
 
     attachments = ListNode([])
 
@@ -438,7 +453,7 @@ async def dshell_get_channel_pined_messages(ctx: Message, channel=None):
 
     return messages_list
 
-async def dshell_is_message_system(ctx: Message, message: int = None):
+async def dshell_is_message_system(ctx: Message, message: Optional[Union[int, StrNode]] = None):
     """
     Return if the message is a system message
     :param ctx:
@@ -464,7 +479,7 @@ async def dshell_is_message_system(ctx: Message, message: int = None):
 
 async def dshell_scan_message(ctx: Message,
                               channel: Optional[int] = None,
-                              regex: Optional[str] = None,
+                              regex: Optional[StrNode] = None,
                               member: Optional[int] = None,
                               timeout: int = 60) -> Union[int, None]:
     """

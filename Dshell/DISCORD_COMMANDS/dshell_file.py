@@ -1,5 +1,5 @@
 from ..full_import import Message, Union, PartialMessage, Optional
-from ..DshellParser.ast_nodes import ListNode, FileNode
+from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode
 
 from .utils.utils_message import utils_get_message
 from .utils.utils_type_validation import (_validate_required_file_node,
@@ -13,7 +13,7 @@ __all__ = [
     "dshell_read_file",
 ]
 
-async def dshell_get_message_files(ctx: Message, message: Union[str, int]) -> ListNode:
+async def dshell_get_message_files(ctx: Message, message: Union[StrNode, int]) -> ListNode:
     """
     Récupère les fichiers d'un message
     :param ctx:
@@ -51,7 +51,7 @@ async def dshell_read_file(ctx: Message, file: FileNode) -> str:
     return file.read()
 
 async def dshell_write_file(ctx: Message,
-                            message: str = "",
+                            message: StrNode,
                             append: bool = False,
                             file: Optional[FileNode] = None,
                             filename: Optional[str] = None,

@@ -10,15 +10,15 @@ __all__ = [
     "utils_list_get_value",
 ]
 
-from ...DshellParser.ast_nodes import ListNode, UiButtonNode, UiSelectNode, CodeNode
-from ...full_import import Any, Union
+from ...DshellParser.ast_nodes import ListNode, UiButtonNode, UiSelectNode, CodeNode, StrNode
+from ...full_import import Union
 from .utils_type_validation import (_validate_required_list_node,
                                     _validate_required_int,
                                     _validate_required_bool,
                                     _validate_optional_bool)
 
 async def utils_convert_to_list(ctx,
-                                value: Union[str, int, float, UiButtonNode, UiSelectNode, CodeNode],
+                                value: Union[StrNode, int, float, UiButtonNode, UiSelectNode, CodeNode],
                                 split: bool = False):
     """
     Make a list with any value
@@ -30,7 +30,7 @@ async def utils_convert_to_list(ctx,
     _CMD = 'list'
     _validate_optional_bool(split, "split", _CMD)
 
-    if isinstance(value, str):
+    if isinstance(value, StrNode):
         if split:
             return ListNode([i for i in value])
         return ListNode([value])

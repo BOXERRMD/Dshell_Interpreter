@@ -1,8 +1,6 @@
-from Dshell.full_import import (Any, randint, Optional, Union, Attachment,
-                                HTTPException, Forbidden)
+from Dshell.full_import import (Any, randint, Optional, Union)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE
-from sys import getsizeof
 
 __all__ = [
     'ASTNode',
@@ -43,6 +41,55 @@ class ASTNode:
         self.line = line
 
 
+class StrNode(str, ASTNode):
+
+    def __new__(cls, value: str):
+        return super().__new__(cls, value)
+
+    def __len__(self):
+        return super().__len__()
+
+    def __add__(self, other: "StrNode"):
+        if not isinstance(other, StrNode):
+            raise Exception(f"Cannot add '{type(other).__name__}' type to StrNode !")
+        if len(self) + len(other) > MAX_STR_SIZE:
+            raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} characters ! [+ operator]")
+        return StrNode(super().__add__(other))
+
+    def __mul__(self, other: int):
+        if not isinstance(other, int):
+            raise Exception(f"Cannot mul '{type(other).__name__}' type to StrNode !")
+        if len(self) * other > MAX_STR_SIZE:
+            raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} characters ! [* operator]")
+        return StrNode(super().__mul__(other))
+
+    def __int__(self):
+        try:
+            return int(self)
+        except ValueError:
+            raise Exception(f"Cannot convert StrNode to int: '{self}' is not a valid integer string !")
+
+    def __float__(self):
+        try:
+            return float(self)
+        except ValueError:
+            raise Exception(f"Cannot convert StrNode to float: '{self}' is not a valid float string !")
+
+    def __getitem__(self, item: int):
+        try:
+            return super().__getitem__(item)
+        except IndexError:
+            raise IndexError(f"StrNode index out of range: {item} for string of length {len(self)} !")
+
+    def replace(self, old: str, new: str):
+        if not isinstance(old, StrNode) and not isinstance(new, StrNode):
+            raise Exception(f"Cannot replace '{type(old).__name__}' type with '{type(new).__name__}' type !")
+        if len(self) - self.count(old) * len(old) + self.count(old) * len(new) > MAX_STR_SIZE:
+            raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} characters ! [replace method]")
+        return StrNode(super().replace(old, new))
+
+    def __repr__(self):
+        return f"<StrNode> - {super().__repr__()}"
 
 class StartNode(ASTNode):
     """

@@ -54,43 +54,43 @@ class DshellInterpreteur:
             '__loop__': None,  # used to store the current loop variable in loop nodes if the loop identifier is not specified
 
             '__author__': message.author.id,
-            '__author_name__': message.author.name,
-            '__author_display_name__': message.author.display_name,
-            '__author_avatar__': message.author.display_avatar.url if message.author.display_avatar else None,
-            '__author_discriminator__': message.author.discriminator,
+            '__author_name__': StrNode(message.author.name),
+            '__author_display_name__': StrNode(message.author.display_name),
+            '__author_avatar__': StrNode(message.author.display_avatar.url) if message.author.display_avatar else None,
+            '__author_discriminator__': StrNode(message.author.discriminator),
             '__author_bot__': message.author.bot,
-            '__author_nick__': message.author.nick if hasattr(message.author, 'nick') else None,
+            '__author_nick__': StrNode(message.author.nick) if hasattr(message.author, 'nick') else None,
             '__author_id__': message.author.id,
             '__author_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the author on message add event reaction
             '__author_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the author on message remove event reaction
 
-            '__message__': message.content,
-            '__message_content__': message.content,
+            '__message__': StrNode(message.content),
+            '__message_content__': StrNode(message.content),
             '__message_id__': message.id,
             '__message_author__': message.author.id,
-            '__message_before__': message.content,  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
-            '__message_created_at__': str(message.created_at),
-            '__message_edited_at__': str(message.edited_at),
-            '__message_reactions__': ListNode([str(reaction.emoji) for reaction in message.reactions]),
+            '__message_before__': StrNode(message.content),  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
+            '__message_created_at__': StrNode(message.created_at),
+            '__message_edited_at__': StrNode(message.edited_at),
+            '__message_reactions__': ListNode([StrNode(reaction.emoji) for reaction in message.reactions]),
             '__message_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction added on message add event reaction
             '__message_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction removed on message remove event reaction
-            '__message_url__': message.jump_url if hasattr(message, 'jump_url') else None,
+            '__message_url__': StrNode(message.jump_url) if hasattr(message, 'jump_url') else None,
             '__last_message__': message.channel.last_message_id,
 
             '__channel__': message.channel.id,
-            '__channel_name__': message.channel.name,
-            '__channel_type__': message.channel.type.name if hasattr(message.channel, 'type') else None,
+            '__channel_name__': StrNode(message.channel.name),
+            '__channel_type__': StrNode(message.channel.type.name) if hasattr(message.channel, 'type') else None,
             '__channel_id__': message.channel.id,
             '__private_channel__': isinstance(message.channel, PrivateChannel),
 
             '__guild__': message.channel.guild.id,
-            '__guild_name__': message.channel.guild.name,
+            '__guild_name__': StrNode(message.channel.guild.name),
             '__guild_id__': message.channel.guild.id,
             '__guild_members__': ListNode([member.id for member in message.channel.guild.members]),
             '__guild_member_count__': message.channel.guild.member_count,
-            '__guild_icon__': message.channel.guild.icon.url if message.channel.guild.icon else None,
+            '__guild_icon__': StrNode(message.channel.guild.icon.url) if message.channel.guild.icon else None,
             '__guild_owner_id__': message.channel.guild.owner_id,
-            '__guild_description__': message.channel.guild.description,
+            '__guild_description__': StrNode(message.channel.guild.description),
             '__guild_roles__': ListNode([role.id for role in message.channel.guild.roles]),
             '__guild_roles_count__': len(message.channel.guild.roles),
             '__guild_emojis__': ListNode([emoji.id for emoji in message.channel.guild.emojis]),
@@ -295,7 +295,7 @@ class DshellInterpreteur:
             temp = token.value
             for match in findall(rf"\$({'|'.join(self.env.keys())})", temp):
                 temp = temp.replace('$' + match, str(self.env.get(match)))
-            return temp
+            return StrNode(temp)
         else:
             return token.value  # fallback
 
@@ -350,7 +350,7 @@ class DshellIterator:
     """
 
     def __init__(self, data):
-        self.data = data if isinstance(data, (str, list, ListNode)) else range(int(data))
+        self.data = data if isinstance(data, (StrNode, list, ListNode)) else range(int(data))
         self.current = 0
 
     def __iter__(self):

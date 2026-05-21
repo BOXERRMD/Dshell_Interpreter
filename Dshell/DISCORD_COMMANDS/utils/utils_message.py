@@ -1,17 +1,17 @@
 from Dshell.full_import import (Message,
                             PartialMessage,
-                            AllowedMentions)
-
-from Dshell.full_import import search
+                            AllowedMentions,
+                                search)
 
 from ...DshellInterpreteur.cached_messages import dshell_cached_messages
+from ...DshellParser.ast_nodes import StrNode
 
 from Dshell.full_import import Union
 
 from .utils_type_validation import (_validate_optional_bool,
                                     _validate_required_bool)
 
-def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMessage, Message]:
+def utils_get_message(ctx: Message, message: Union[int, StrNode]) -> Union[PartialMessage, Message]:
     """
     Récupère l'objet message Discord à partir d'un ID ou d'un lien.
     
@@ -45,7 +45,7 @@ def utils_get_message(ctx: Message, message: Union[int, str]) -> Union[PartialMe
         dshell_cached_messages.set(cached_messages)
         return cached_messages[message]
 
-    elif isinstance(message, str):
+    elif isinstance(message, StrNode):
         match = search(r'https://discord\.com/channels/(\d+)/(\d+)/(\d+)', message)
         if not match:
             raise Exception("Invalid message link format. Use a valid Discord message link.")

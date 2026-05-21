@@ -1,17 +1,19 @@
-from discord import VoiceChannel
-
 from Dshell.full_import import (Message,
                            Embed,
                            MISSING,
                            Member,
                            Permissions,
-                           Role)
+                           Role,
+                                Optional,
+                                File)
 
-from ..DshellParser.ast_nodes import ListNode
+from ..DshellParser.ast_nodes import ListNode, StrNode
 
 from Dshell.full_import import (datetime,
                            timedelta,
                            UTC)
+
+from .utils.utils_file import utils_check_files_arguments
 
 from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_string,
@@ -35,7 +37,12 @@ __all__ = [
     "dshell_remove_member_roles"
 ]
 
-async def dshell_send_private_message(ctx: Message, message: str = None, member: int = None, delete: int = None, embeds = None, ):
+async def dshell_send_private_message(ctx: Message,
+                                      message: Optional[StrNode] = None,
+                                      member: int = None,
+                                      delete: int = None,
+                                      embeds = None,
+                                      files: Optional[ListNode] = None):
     """
     Envoie un message privé à un membre Discord.
     
@@ -78,7 +85,7 @@ async def dshell_send_private_message(ctx: Message, message: str = None, member:
     if member_to_send is None:
         raise Exception(f'Member {member} not found!')
 
-
+    final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
     if embeds is None:
         embeds = ListNode([])
@@ -89,12 +96,12 @@ async def dshell_send_private_message(ctx: Message, message: str = None, member:
     else:
         raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
 
-    sended_message = await member_to_send.send(message, delete_after=delete, embeds=embeds)
+    sended_message = await member_to_send.send(message, delete_after=delete, embeds=embeds, files=final_files)
 
     return sended_message.id
 
 
-async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
+async def dshell_ban_member(ctx: Message, member: int, reason: StrNode = MISSING):
     """
     Bannit un membre du serveur Discord.
     
@@ -119,7 +126,7 @@ async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     _CMD = "bm"
 
     _validate_required_int(member, "Member", _CMD)
-    _validate_missing_or_type(reason, "Reason", str, _CMD)
+    _validate_missing_or_type(reason, "Reason", StrNode, _CMD)
     
     banned_member = ctx.channel.guild.get_member(member)
 
@@ -131,7 +138,7 @@ async def dshell_ban_member(ctx: Message, member: int, reason: str = MISSING):
     return banned_member.id
 
 
-async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
+async def dshell_unban_member(ctx: Message, user: int, reason: StrNode = MISSING):
     """
     Débannit un utilisateur du serveur Discord.
     
@@ -156,7 +163,7 @@ async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
     _CMD = "um"
 
     _validate_required_int(user, "User", _CMD)
-    _validate_missing_or_type(reason, "Reason", str, _CMD)
+    _validate_missing_or_type(reason, "Reason", StrNode, _CMD)
     
     banned_users = ctx.channel.guild.bans()
     user_to_unban = None
@@ -174,7 +181,7 @@ async def dshell_unban_member(ctx: Message, user: int, reason: str = MISSING):
     return user_to_unban.id
 
 
-async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
+async def dshell_kick_member(ctx: Message, member: int, reason: StrNode = MISSING):
     """
     Expulse un membre du serveur Discord.
     
@@ -199,7 +206,7 @@ async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     _CMD = "km"
 
     _validate_required_int(member, "Member", _CMD)
-    _validate_missing_or_type(reason, "Reason", str, _CMD)
+    _validate_missing_or_type(reason, "Reason", StrNode, _CMD)
     
     kicked_member = ctx.channel.guild.get_member(member)
 
@@ -211,7 +218,7 @@ async def dshell_kick_member(ctx: Message, member: int, reason: str = MISSING):
     return kicked_member.id
 
 
-async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason: str = MISSING):
+async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason: StrNode = MISSING):
     """
     Met un membre en timeout (temps mort) pour une durée spécifiée.
     
@@ -241,7 +248,7 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
 
     _validate_required_int(duration, "Duration", _CMD)
     _validate_optional_int(member, "Member", _CMD)
-    _validate_missing_or_type(reason, "Reason", str, _CMD)
+    _validate_missing_or_type(reason, "Reason", StrNode, _CMD)
     
     target_member = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
@@ -259,7 +266,7 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
     return target_member.id
 
 
-async def dshell_rename_member(ctx: Message, new_name, member=None):
+async def dshell_rename_member(ctx: Message, new_name: StrNode, member=None):
     """
     Renomme un membre sur le serveur (change son surnom).
     
@@ -340,7 +347,11 @@ async def dshell_check_permissions(ctx: Message, permissions, member=None):
     return False
 
 
-async def dshell_move_member(ctx: Message, channel=None, member=None, disconnect: bool = False, reason=None):
+async def dshell_move_member(ctx: Message,
+                             channel=None,
+                             member=None,
+                             disconnect: bool = False,
+                             reason: Optional[StrNode]=None):
     """
     Déplace un membre vers un autre canal vocal ou le déconnecte.
     
@@ -398,7 +409,10 @@ async def dshell_move_member(ctx: Message, channel=None, member=None, disconnect
     return target_member.id
 
 
-async def dshell_give_member_roles(ctx: Message, roles, member=None, reason=None):
+async def dshell_give_member_roles(ctx: Message,
+                                   roles,
+                                   member=None,
+                                   reason: Optional[StrNode]=None):
     """
     Attribue un ou plusieurs rôles à un membre.
     
@@ -456,7 +470,10 @@ async def dshell_give_member_roles(ctx: Message, roles, member=None, reason=None
     return target_member.id
 
 
-async def dshell_remove_member_roles(ctx: Message, roles, member=None, reason=None):
+async def dshell_remove_member_roles(ctx: Message,
+                                     roles,
+                                     member=None,
+                                     reason: Optional[StrNode]=None):
     """
     Retire un ou plusieurs rôles d'un membre.
     

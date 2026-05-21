@@ -8,7 +8,7 @@ __all__ = [
 from Dshell.full_import import (Interaction,
                            Embed, Optional, File, Union)
 
-from ..DshellParser.ast_nodes import ListNode, FileNode
+from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode
 from .utils.utils_message import utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
 from .utils.utils_embed import utils_check_embeds_arguments
@@ -20,7 +20,7 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_required_bool)
 
 async def dshell_respond_interaction(ctx: Interaction,
-                                     content: str = None,
+                                     content: Optional[StrNode] = None,
                                      delete=None,
                                      global_mentions: bool = None,
                                      everyone_mention: bool = True,
@@ -98,7 +98,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
     sended_message = await ctx.response.send_message(
-                                     content=str(content),
+                                     content=StrNode(content),
                                      ephemeral=hide,
                                      allowed_mentions=allowed_mentions,
                                      delete_after=delete,
