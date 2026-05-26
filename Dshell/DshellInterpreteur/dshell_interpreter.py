@@ -110,7 +110,7 @@ class DshellInterpreteur:
         elif isinstance(vars_env, dict): # add the variables to the environment
             self.env.update(vars_env)
 
-        self.vars = vars or ''
+        self.vars = StrNode(vars) if vars is not None else StrNode('')
         self.ctx: context = ctx
 
         dshell_cached_messages.set(dict()) # save all messages view in the current scoop
@@ -282,20 +282,21 @@ class DshellInterpreteur:
             return ListNode(
                 [await self.eval_data_token(tok) for tok in token.value])  # token.value already contains a list of Tokens
         elif tokentype == DTT.IDENT:
+            tmp = token.value
             try:
-                return self.env.get(token.value)
+                return self.env.get(tmp)
             except KeyError:
-                return token.value
+                return StrNode(tmp)
         elif tokentype == DTT.EVAL_GROUP:
             await self.execute(parse([token.value], StartNode([], line=0))[0])  # must parse because it's not already an AST
             return self.env.get('__ret__')
         elif tokentype == DTT.EVAL_EXPRESSION:
             return await eval_expression(token.value, self)
         elif tokentype == DTT.STR:
-            temp = token.value
+            temp = StrNode(token.value)
             for match in findall(rf"\$({'|'.join(self.env.keys())})", temp):
-                temp = temp.replace('$' + match, str(self.env.get(match)))
-            return StrNode(temp)
+                temp = temp.replace(StrNode('$' + match), StrNode(self.env.get(match)))
+            return temp
         else:
             return token.value  # fallback
 

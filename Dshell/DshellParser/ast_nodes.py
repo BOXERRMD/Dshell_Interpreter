@@ -1,6 +1,8 @@
-from Dshell.full_import import (Any, randint, Optional, Union)
+from Dshell.full_import import (Any, randint, Optional, Union, Embed)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE
+
+from sys import getsizeof
 
 __all__ = [
     'ASTNode',
@@ -49,6 +51,9 @@ class StrNode(str, ASTNode):
     def __len__(self):
         return super().__len__()
 
+    def __sizeof__(self):
+        return len(self)*getsizeof(str)
+
     def __add__(self, other: "StrNode"):
         if not isinstance(other, StrNode):
             raise Exception(f"Cannot add '{type(other).__name__}' type to StrNode !")
@@ -77,11 +82,11 @@ class StrNode(str, ASTNode):
 
     def __getitem__(self, item: int):
         try:
-            return super().__getitem__(item)
+            return StrNode(super().__getitem__(item))
         except IndexError:
             raise IndexError(f"StrNode index out of range: {item} for string of length {len(self)} !")
 
-    def replace(self, old: str, new: str):
+    def replace(self, old: "StrNode", new: "StrNode"):
         if not isinstance(old, StrNode) and not isinstance(new, StrNode):
             raise Exception(f"Cannot replace '{type(old).__name__}' type with '{type(new).__name__}' type !")
         if len(self) - self.count(old) * len(old) + self.count(old) * len(new) > MAX_STR_SIZE:
@@ -707,7 +712,7 @@ class OptionUiSelectNode(ASTNode):
         }
 
 class FileNode(ASTNode):
-    def __init__(self, name: Optional[str] = None, description: Optional[str] = None, spoiler: bool = False):
+    def __init__(self, name: Optional[StrNode] = None, description: Optional[StrNode] = None, spoiler: bool = False):
         super().__init__(0)
         self.name = name
         self.description = description
@@ -734,7 +739,7 @@ class FileNode(ASTNode):
         return len(self.read())
     
     def __sizeof__(self):
-        return self.size()
+        return self.size()*getsizeof(str)
 
 class ListNode(ASTNode):
     """
@@ -770,6 +775,13 @@ class ListNode(ASTNode):
         :return:
         """
 
+        if isinstance(value, StrNode):
+            self.size += getsizeof(value)
+        elif isinstance(value, ListNode):
+            self.size += value.size
+        elif isinstance(value, Embed):
+            self.size += len(value)*getsizeof(str)
+
 
     def add(self, value: Any):
         """
@@ -780,6 +792,7 @@ class ListNode(ASTNode):
 
         self.iterable.append(value)
         self.len_iterable += 1
+        self.size_add(value)
 
     def remove(self, value: Any, number: int = 1):
         """
