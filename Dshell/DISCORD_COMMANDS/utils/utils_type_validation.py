@@ -2,14 +2,15 @@
 Type validation utility functions for Discord commands.
 These functions provide reusable type checking for optional parameters.
 """
-from ...DshellParser.ast_nodes import StrNode
+from ...DshellParser.ast_nodes import StrNode, IntNode, FloatNode, BoolNode, EmbedNode, PermissionNode
+from ...full_import import _MissingSentinel
 
 __all__ = [
     "_validate_optional_string",
+    "_validate_optional_permission",
     "_validate_optional_int",
     "_validate_optional_bool",
     "_validate_optional_number",
-    "_validate_optional_dict",
     "_validate_optional_embed",
     "_validate_optional_view",
     "_validate_optional_code_node",
@@ -17,10 +18,10 @@ __all__ = [
     "_validate_optional_eval_group_node",
     "_validate_optional_file_node",
     "_validate_required_bool",
+    "_validate_required_permission",
     "_validate_required_list_node",
     "_validate_required_int",
     "_validate_required_string",
-    "_validate_required_dict",
     "_validate_required_file_node",
     "_validate_required_embed",
     "_validate_missing_or_type",
@@ -49,7 +50,7 @@ def _validate_optional_int(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not an integer
     """
-    if value is not None and not isinstance(value, int):
+    if value is not None and not isinstance(value, IntNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be an integer, not {type(value).__name__} !")
 
 
@@ -61,7 +62,7 @@ def _validate_optional_bool(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not a boolean
     """
-    if value is not None and not isinstance(value, bool):
+    if value is not None and not isinstance(value, BoolNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a boolean, not {type(value).__name__} !")
 
 
@@ -73,20 +74,9 @@ def _validate_optional_number(value, param_name: StrNode, command_name: StrNode)
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not a number
     """
-    if value is not None and not isinstance(value, (int, float)):
+    if value is not None and not isinstance(value, (IntNode, FloatNode)):
         raise TypeError(f"[{command_name}] -> {param_name} parameter must be a number (seconds) or None, not {type(value).__name__} !")
 
-
-def _validate_optional_dict(value, param_name: StrNode, command_name: StrNode):
-    """
-    Validate that an optional value is a dict type.
-    :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :param command_name: The command name for error messages (optional)
-    :raises Exception: If the value is not None and not a dict
-    """
-    if value is not None and not isinstance(value, dict):
-        raise TypeError(f"[{command_name}] -> {param_name} must be a PermissionNode, not {type(value).__name__} !")
 
 
 def _validate_optional_embed(value, param_name: StrNode, command_name: StrNode):
@@ -97,11 +87,15 @@ def _validate_optional_embed(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not an Embed or ListNode
     """
-    from Dshell.full_import import Embed
     from ...DshellParser.ast_nodes import ListNode
     
-    if value is not None and not isinstance(value, (ListNode, Embed)):
-        raise TypeError(f"[{command_name}] -> {param_name} must be a list of Embed objects or a single Embed object, not {type(value).__name__} !")
+    if value is not None and not isinstance(value, _MissingSentinel):
+        if isinstance(value, ListNode):
+            for i in value:
+                if not isinstance(i, EmbedNode):
+                    raise TypeError(f"[{command_name}] -> {param_name} must be a list of EmbedNode only, not '{type(value).__name__}' inside !")
+        elif not isinstance(value, EmbedNode):
+            raise TypeError(f"[{command_name}] -> {param_name} must be a list of EmbedNode or a single EmbedNode, not {type(value).__name__} !")
 
 
 def _validate_optional_view(value, param_name: StrNode, command_name: StrNode):
@@ -116,6 +110,17 @@ def _validate_optional_view(value, param_name: StrNode, command_name: StrNode):
     
     if value is not None and not isinstance(value, EasyModifiedViews):
         raise TypeError(f"[{command_name}] -> {param_name} must be an UI or None, not {type(value).__name__} !")
+
+def _validate_optional_permission(value, param_name: StrNode, command_name: StrNode):
+    """
+    Validate that an optional value is a PermissionNode type.
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param command_name: The command name for error messages (optional)
+    :raises TypeError: If the value is not None and not a PermissionNode
+    """
+    if value is not None and not isinstance(value, PermissionNode):
+        raise TypeError(f"[{command_name}] -> {param_name} must be a PermissionNode or None, not {type(value).__name__}")
 
 
 def _validate_optional_code_node(value, param_name: StrNode, command_name: StrNode):
@@ -173,6 +178,17 @@ def _validate_optional_file_node(value, param_name: StrNode, command_name: StrNo
 
 # Required parameter validation functions
 
+def _validate_required_permission(value, param_name: StrNode, command_name: StrNode):
+    """
+    Validate that an optional value is a PermissionNode type.
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param command_name: The command name for error messages (optional)
+    :raises TypeError: If the value is not None and not a PermissionNode
+    """
+    if not isinstance(value, PermissionNode):
+        raise TypeError(f"[{command_name}] -> {param_name} must be a PermissionNode or None, not {type(value).__name__}")
+
 def _validate_required_bool(value, param_name: StrNode, command_name: StrNode):
     """
     Validate that a required value is a boolean type.
@@ -181,7 +197,7 @@ def _validate_required_bool(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not a boolean
     """
-    if not isinstance(value, bool):
+    if not isinstance(value, BoolNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a boolean, not {type(value).__name__} !")
 
 
@@ -207,7 +223,7 @@ def _validate_required_int(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not an integer
     """
-    if not isinstance(value, int):
+    if not isinstance(value, IntNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be an int, not {type(value).__name__}")
 
 
@@ -222,17 +238,6 @@ def _validate_required_string(value, param_name: StrNode, command_name: StrNode)
     if not isinstance(value, StrNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a StrNode, not {type(value).__name__}")
 
-
-def _validate_required_dict(value, param_name: StrNode, command_name: StrNode):
-    """
-    Validate that a required value is a dict type.
-    :param value: The value to validate
-    :param param_name: The parameter name for error messages
-    :param command_name: The command name for error messages (optional)
-    :raises TypeError: If the value is not a dict
-    """
-    if not isinstance(value, dict):
-        raise TypeError(f"[{command_name}] -> {param_name} must be a dict, not {type(value).__name__}")
 
 def _validate_required_file_node(value, param_name: StrNode, command_name: StrNode):
     """
@@ -259,12 +264,16 @@ def _validate_required_embed(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not an Embed or ListNode
     """
-    from Dshell.full_import import Embed
     from ...DshellParser.ast_nodes import ListNode
 
-    if not isinstance(value, (ListNode, Embed)):
+    if isinstance(value, ListNode):
+        for i in value:
+            if not isinstance(i, EmbedNode):
+                raise TypeError(
+                    f"[{command_name}] -> {param_name} must be a list of EmbedNode only, not '{type(value).__name__}' inside !")
+    elif not isinstance(value, EmbedNode):
         raise TypeError(
-            f"[{command_name}] -> {param_name} must be a list of Embed objects or a single Embed object, not {type(value).__name__} !")
+            f"[{command_name}] -> {param_name} must be a list of EmbedNode or a single EmbedNode, not {type(value).__name__} !")
 
 
 # Validation functions for _MissingSentinel or other types

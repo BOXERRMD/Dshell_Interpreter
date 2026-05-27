@@ -7,7 +7,7 @@ from Dshell.full_import import (Member,
 
 from Dshell.full_import import Union, TYPE_CHECKING
 
-from ...DshellParser.ast_nodes import ListNode
+from ...DshellParser.ast_nodes import ListNode, PermissionNode
 
 from ...DshellTokenizer.dshell_token_type import Token
 from ...DshellInterpreteur.dshell_arguments import DshellArguments
@@ -15,14 +15,14 @@ from ...DshellInterpreteur.utils_interpreter import regroupe_commandes
 
 from .utils_global import utils_what_discord_type_is, DiscordType
 
-from .utils_type_validation import _validate_required_dict
+from .utils_type_validation import _validate_required_permission
 
 if TYPE_CHECKING:
     from ...DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
 async def utils_update_permissions(ctx: Message,
-                                   permission1: dict[Union[Member, Role, None], PermissionOverwrite],
-                                   permission2: dict[Union[Member, Role, None], PermissionOverwrite]) -> dict:
+                                   permission1: PermissionNode,
+                                   permission2: PermissionNode) -> PermissionNode:
     """
     Fusionne deux dictionnaires de permissions Discord.
     
@@ -46,17 +46,16 @@ async def utils_update_permissions(ctx: Message,
         {member1: ..., member2: ...}
     """
     _CMD = "update_perms"
-    _validate_required_dict(permission1, "permission1", _CMD)
+    _validate_required_permission(permission1, "permission1", _CMD)
 
-    _validate_required_dict(permission2, "permission2", _CMD)
+    _validate_required_permission(permission2, "permission2", _CMD)
 
     permission1.update(permission2)
 
     return permission1
 
 
-async def build_permission(body: list[Token], interpreter: "DshellInterpreteur") -> dict[
-    Union[Member, Role], PermissionOverwrite]:
+async def build_permission(body: list[Token], interpreter: "DshellInterpreteur") -> PermissionNode:
     """
     Builds a dictionary of PermissionOverwrite objects from the command information.
     """
@@ -65,7 +64,7 @@ async def build_permission(body: list[Token], interpreter: "DshellInterpreteur")
     x = args_permissions.get_dict_parameters()
     x.pop('*', None)
 
-    return DshellPermissions(x).get_permission_overwrite(interpreter.ctx.channel.guild)
+    return PermissionNode(DshellPermissions(x).get_permission_overwrite(interpreter.ctx.channel.guild))
 
 
 class DshellPermissions:

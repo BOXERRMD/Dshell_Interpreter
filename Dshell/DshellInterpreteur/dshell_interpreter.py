@@ -156,16 +156,16 @@ class DshellInterpreteur:
         if isinstance(first_node, IfNode):
             self.env.set(node.name.value, await eval_expression_inline(first_node, self))
 
-        elif isinstance(first_node, EmbedNode):
+        elif isinstance(first_node, ConstructEmbedNode):
             # rebuild the embed if it already exists
             if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), Embed):
                 self.env.set(node.name.value, await rebuild_embed(self.env.get(node.name.value), first_node.body, first_node.fields, self))
             else:
                 self.env.set(node.name.value, await build_embed(first_node.body, first_node.fields, self))
 
-        elif isinstance(first_node, PermissionNode):
+        elif isinstance(first_node, ConstructPermissionNode):
             # rebuild the permissions if it already exists
-            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), dict):
+            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), PermissionNode):
                 self.env.get(node.name.value).update(await build_permission(first_node.body, self))
             else:
                 self.env.set(node.name.value, await build_permission(first_node.body, self))
@@ -269,11 +269,11 @@ class DshellInterpreteur:
         tokentype = token.type
 
         if tokentype in (DTT.INT, DTT.MENTION):
-            return int(token.value)
+            return IntNode(token.value)
         elif tokentype == DTT.HEXA:
-            return int(token.value, 16)
+            return IntNode(token.value, 16)
         elif tokentype == DTT.FLOAT:
-            return float(token.value)
+            return FloatNode(token.value)
         elif tokentype == DTT.BOOL:
             return token.value.lower() == "true"
         elif tokentype == DTT.NONE:
@@ -298,7 +298,7 @@ class DshellInterpreteur:
                 temp = temp.replace(StrNode('$' + match), StrNode(self.env.get(match)))
             return temp
         else:
-            return token.value  # fallback
+            return StrNode(token.value)  # fallback
 
     def clear(self):
         """

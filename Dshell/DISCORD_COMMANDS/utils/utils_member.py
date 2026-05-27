@@ -6,10 +6,11 @@ from Dshell.full_import import (Message,
                             PermissionOverwrite)
 
 from .utils_global import DiscordType, utils_what_discord_type_is
-from .utils_type_validation import (_validate_required_int,
-                                    _validate_required_dict)
+from .utils_type_validation import (_validate_required_int, _validate_required_permission)
 
-async def utils_has_permissions(ctx: Message, member: int, permission: dict[None, PermissionOverwrite]) -> bool:
+from ...DshellParser.ast_nodes import PermissionNode
+
+async def utils_has_permissions(ctx: Message, member: int, permission: PermissionNode) -> bool:
     """
     Vérifie si un membre possède les permissions spécifiées.
     
@@ -21,7 +22,7 @@ async def utils_has_permissions(ctx: Message, member: int, permission: dict[None
     :param member: L'ID du membre à vérifier
     :type member: int
     :param permission: Dictionnaire de permissions avec None comme clé et PermissionOverwrite comme valeur
-    :type permission: dict[None, PermissionOverwrite]
+    :type permission: PermissionNode
     :return: True si le membre possède les permissions, False sinon
     :rtype: bool
     :raises ValueError: Si le membre n'est pas trouvé ou si le format des permissions est invalide
@@ -35,7 +36,7 @@ async def utils_has_permissions(ctx: Message, member: int, permission: dict[None
     _CMD = "has_perms"
     _validate_required_int(member, "member", _CMD)
 
-    _validate_required_dict(permission, "permissions", _CMD)
+    _validate_required_permission(permission, "permissions", _CMD)
 
     if None not in permission:
         raise ValueError(f"permissions must have simple 'allow' permission in has_perms command, not {permission.keys()}")

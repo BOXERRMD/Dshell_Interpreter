@@ -1,6 +1,6 @@
 from ..DshellTokenizer.dshell_token_type import Token
 
-from ..DshellParser.ast_nodes import FieldEmbedNode, StrNode
+from ..DshellParser.ast_nodes import FieldEmbedNode, EmbedNode
 
 from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
@@ -36,7 +36,7 @@ async def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], inte
     return args_main_embed, args_fields
 
 
-async def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: "DshellInterpreteur") -> Embed:
+async def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpreter: "DshellInterpreteur") -> EmbedNode:
     """
     Builds an embed from the command information.
     """
@@ -46,9 +46,9 @@ async def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpret
     for field in args_fields:
         embed.add_field(**field)  # add all fields
 
-    return embed
+    return EmbedNode(embed)
 
-async def rebuild_embed(embed: Embed, body: list[Token], fields: list[FieldEmbedNode], interpreter: "DshellInterpreteur") -> Embed:
+async def rebuild_embed(embed: EmbedNode, body: list[Token], fields: list[FieldEmbedNode], interpreter: "DshellInterpreteur") -> EmbedNode:
     """
     Rebuilds an embed from an existing embed and the command information.
     """

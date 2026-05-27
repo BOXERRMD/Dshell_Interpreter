@@ -241,14 +241,14 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[EMBED] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                embed_node = EmbedNode(body=[], fields=[], line=line)
+                embed_node = ConstructEmbedNode(body=[], fields=[], line=line)
                 var_node = VarNode(tokens_by_line[1], body=[embed_node], line=line)
                 last_block.body.append(var_node)
                 _, p = parse(token_lines[pointer + 1:], embed_node)
                 pointer += p + 1
 
             elif first_token_line.value == '#embed':
-                if not isinstance(last_block, EmbedNode):
+                if not isinstance(last_block, ConstructEmbedNode):
                     raise SyntaxError(f'[#EMBED] No embed open on line {first_token_line.position} !')
                 blocks.pop()
                 return blocks, pointer
@@ -268,14 +268,14 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                     raise TypeError(f'[PERM] the variable given must be a ident, '
                                     f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
 
-                perm_node = PermissionNode(body=[], line=line)
+                perm_node = ConstructPermissionNode(body=[], line=line)
                 var_node = VarNode(tokens_by_line[1], body=[perm_node], line=line)
                 last_block.body.append(var_node)
                 _, p = parse(token_lines[pointer + 1:], perm_node)
                 pointer += p + 1
 
             elif first_token_line.value in ('#perm', '#permission'):
-                if not isinstance(last_block, PermissionNode):
+                if not isinstance(last_block, ConstructPermissionNode):
                     raise SyntaxError(f'[#PERM] No permission open on line {first_token_line.position} !')
                 blocks.pop()
                 return blocks, pointer

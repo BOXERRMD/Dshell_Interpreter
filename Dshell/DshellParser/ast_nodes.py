@@ -1,4 +1,4 @@
-from Dshell.full_import import (Any, randint, Optional, Union, Embed)
+from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE
 
@@ -7,6 +7,9 @@ from sys import getsizeof
 __all__ = [
     'ASTNode',
     'StrNode',
+    'IntNode',
+    'FloatNode',
+    'BoolNode',
     'LengthNode',
     'StartNode',
     'ElseNode',
@@ -18,9 +21,11 @@ __all__ = [
     'VarNode',
     'EndNode',
     'FieldEmbedNode',
+    'ConstructEmbedNode',
     'EmbedNode',
     'SleepNode',
     'ListNode',
+    'ConstructPermissionNode',
     'PermissionNode',
     'EvalGroupNode',
     'ParamNode',
@@ -41,6 +46,9 @@ class ASTNode:
     """
     def __init__(self, line: int):
         self.line = line
+
+    def __getattr__(self, item):
+        raise AttributeError(f"'{type(self).__name__}' node has no attribute '{item}'")
 
 
 class StrNode(str, ASTNode):
@@ -95,6 +103,27 @@ class StrNode(str, ASTNode):
 
     def __repr__(self):
         return f"<StrNode> - {super().__repr__()}"
+
+class IntNode(int, ASTNode):
+    def __new__(cls, value: int, base: int = 10):
+        return super().__new__(cls, value, base=base)
+
+    def __repr__(self):
+        return f"<IntNode> - {super().__repr__()}"
+
+class FloatNode(float, ASTNode):
+    def __new__(cls, value: float):
+        return super().__new__(cls, value)
+
+    def __repr__(self):
+        return f"<FloatNode> - {super().__repr__()}"
+
+class BoolNode(int, ASTNode):
+    def __new__(cls, value: int):
+        return super().__new__(cls, int(bool(value)))
+
+    def __repr__(self):
+        return f"<BoolNode> - {super().__repr__()}"
 
 class StartNode(ASTNode):
     """
@@ -420,7 +449,7 @@ class FieldEmbedNode(ASTNode):
         }
 
 
-class EmbedNode(ASTNode):
+class ConstructEmbedNode(ASTNode):
     """
     Node representing an embed structure in the AST.
     """
@@ -448,8 +477,18 @@ class EmbedNode(ASTNode):
             "fields": [field.to_dict() for field in self.fields]
         }
 
+class EmbedNode(ASTNode):
+    def __init__(self, value: Embed):
+        super().__init__(-1)
+        self.value = value
 
-class PermissionNode(ASTNode):
+    def __sizeof__(self):
+        return len(self.value)
+
+    def __repr__(self):
+        return f"<EMBED> - {self.value.title}"
+
+class ConstructPermissionNode(ASTNode):
     """
     Node representing a permission structure in the AST.
     """
@@ -474,6 +513,24 @@ class PermissionNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class PermissionNode(ASTNode):
+    def __init__(self, value: dict[Union[Member, Role, None], PermissionOverwrite]):
+        super().__init__(-1)
+        self.value = value
+
+    def members(self):
+        return PermissionNode({member: permission for member, permission in self.value.items() if isinstance(member, Member)})
+
+    def roles(self):
+        return PermissionNode({role: permission for role, permission in self.value.items() if isinstance(role, Role)})
+
+    def none(self):
+        return PermissionNode({None: permission for member, permission in self.value.items() if member is None})
+
+    def update(self, other: "PermissionNode"):
+        if not isinstance(other, PermissionNode):
+            raise Exception(f"Cannot update PermissionNode with '{type(other).__name__}' type !")
+        self.value.update(other.value)
 
 class SleepNode(ASTNode):
     """

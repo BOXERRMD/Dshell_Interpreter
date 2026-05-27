@@ -1,11 +1,11 @@
 from Dshell.full_import import (Message, MISSING, PermissionOverwrite, _MissingSentinel, Union, Optional)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, PermissionNode
 from .utils.utils_global import utils_build_colour
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
                                           _validate_optional_bool,
-                                          _validate_optional_dict,
+                                          _validate_optional_permission,
                                           _validate_required_int,
                                           _validate_missing_or_type)
 
@@ -18,7 +18,7 @@ __all__ = [
 
 async def dshell_create_role(ctx: Message,
                              name: StrNode = MISSING,
-                             permissions: dict[None, PermissionOverwrite] = MISSING,
+                             permissions: PermissionOverwrite = MISSING,
                              color: Union[ListNode, int] = MISSING,
                              hoist: bool = MISSING,
                              mentionable: bool = MISSING,
@@ -60,7 +60,7 @@ async def dshell_create_role(ctx: Message,
 
     _validate_missing_or_type(name, "Name", StrNode, _CMD)
 
-    _validate_missing_or_type(permissions, "Permissions", dict, _CMD)
+    _validate_optional_permission(permissions, "Permissions", _CMD)
 
     _validate_missing_or_type(color, "Color", ListNode, int, _CMD)
     if not isinstance(color, _MissingSentinel):
@@ -72,9 +72,9 @@ async def dshell_create_role(ctx: Message,
     
     _validate_optional_string(reason, "Reason", _CMD)
 
-    if isinstance(permissions, dict):
+    if isinstance(permissions, PermissionNode):
         if None in permissions:
-            allow, deny = permissions[None].pair()
+            allow, deny = permissions.none().value.pair()
             permissions = allow
 
     created_role = await ctx.guild.create_role(name=name,
@@ -189,14 +189,14 @@ async def dshell_edit_role(ctx: Message,
 
     _validate_required_int(role, "Role", _CMD)
     _validate_optional_string(name, "Name", _CMD)
-    _validate_optional_dict(permissions, "Permissions", _CMD)
+    _validate_optional_permission(permissions, "Permissions", _CMD)
     _validate_optional_string(reason, "Reason", _CMD)
     
     role_to_edit = ctx.guild.get_role(role)
 
-    if isinstance(permissions, dict):
+    if isinstance(permissions, PermissionNode):
         if None in permissions:
-            allow, deny = permissions[None].pair()
+            allow, deny = permissions.none().value.pair()
             permissions = allow
 
     if color is not None:
