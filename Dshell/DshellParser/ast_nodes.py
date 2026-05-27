@@ -1,6 +1,6 @@
 from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite)
 from ..DshellTokenizer.dshell_token_type import Token
-from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE
+from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE
 
 from sys import getsizeof
 
@@ -483,7 +483,7 @@ class EmbedNode(ASTNode):
         self.value = value
 
     def __sizeof__(self):
-        return len(self.value)
+        return len(self.value)*getsizeof(str)
 
     def __repr__(self):
         return f"<EMBED> - {self.value.title}"
@@ -531,6 +531,9 @@ class PermissionNode(ASTNode):
         if not isinstance(other, PermissionNode):
             raise Exception(f"Cannot update PermissionNode with '{type(other).__name__}' type !")
         self.value.update(other.value)
+
+    def __sizeof__(self):
+        return len(self.value)*getsizeof(PermissionOverwrite)*getsizeof(str)
 
 class SleepNode(ASTNode):
     """
@@ -831,14 +834,15 @@ class ListNode(ASTNode):
         :param value:
         :return:
         """
+        self.size += getsizeof(value)
 
-        if isinstance(value, StrNode):
-            self.size += getsizeof(value)
-        elif isinstance(value, ListNode):
-            self.size += value.size
-        elif isinstance(value, Embed):
-            self.size += len(value)*getsizeof(str)
-
+    def size_remove(self, value):
+        """
+        Remove the size value object from self.value
+        :param value:
+        :return:
+        """
+        self.size -= getsizeof(value)
 
     def add(self, value: Any):
         """
@@ -846,6 +850,9 @@ class ListNode(ASTNode):
         """
         if self.len_iterable > 1000:
             raise PermissionError('The list is too long, it must not exceed 1000 elements !')
+
+        if self.size + getsizeof(value) > MAX_LIST_SIZE:
+            raise Exception(f"The list size cannot exceed {MAX_LIST_SIZE} bytes !")
 
         self.iterable.append(value)
         self.len_iterable += 1
@@ -864,6 +871,7 @@ class ListNode(ASTNode):
                 self.iterable.pop(count)
                 self.len_iterable -= 1
                 number -= 1
+                self.size_remove(value)
                 continue
             count += 1
 
@@ -878,6 +886,7 @@ class ListNode(ASTNode):
             raise IndexError("pop index out of range")
 
         self.len_iterable -= 1
+        self.size_remove(self.iterable[index])
         return self.iterable.pop(index)
 
     def set(self, index: int, value: Any):
@@ -889,6 +898,8 @@ class ListNode(ASTNode):
         if 0 > index >= self.len_iterable or -self.len_iterable > index < 0:
             raise IndexError("set index out of range")
 
+        self.size_remove(self.iterable[index])
+        self.size_add(value)
         self.iterable[index] = value
 
     def count(self):
@@ -905,6 +916,7 @@ class ListNode(ASTNode):
         self.iterable = []
         self.len_iterable = 0
         self.iterator_count = 0
+        self.size = 0
 
     def sort(self, reverse: bool = False):
         """
@@ -964,6 +976,9 @@ class ListNode(ASTNode):
 
     def __bool__(self):
         return bool(self.iterable)
+
+    def __sizeof__(self):
+        return self.size
 
     def __repr__(self):
         return f"<LIST> - {self.iterable}"

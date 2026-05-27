@@ -2,9 +2,9 @@
 Type validation utility functions for Discord commands.
 These functions provide reusable type checking for optional parameters.
 """
-from ...DshellParser.ast_nodes import StrNode, IntNode, FloatNode, BoolNode, EmbedNode, PermissionNode
+from ...DshellParser.ast_nodes import *
 from ...full_import import _MissingSentinel
-
+from pycordViews import EasyModifiedViews
 __all__ = [
     "_validate_optional_string",
     "_validate_optional_permission",
@@ -87,7 +87,6 @@ def _validate_optional_embed(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not an Embed or ListNode
     """
-    from ...DshellParser.ast_nodes import ListNode
     
     if value is not None and not isinstance(value, _MissingSentinel):
         if isinstance(value, ListNode):
@@ -106,7 +105,6 @@ def _validate_optional_view(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not an EasyModifiedViews
     """
-    from Dshell.full_import import EasyModifiedViews
     
     if value is not None and not isinstance(value, EasyModifiedViews):
         raise TypeError(f"[{command_name}] -> {param_name} must be an UI or None, not {type(value).__name__} !")
@@ -131,7 +129,6 @@ def _validate_optional_code_node(value, param_name: StrNode, command_name: StrNo
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not None and not a CodeNode
     """
-    from ...DshellParser.ast_nodes import CodeNode
     
     if value is not None and not isinstance(value, CodeNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a CodeNode or None, not {type(value).__name__}")
@@ -144,7 +141,6 @@ def _validate_optional_eval_group_node(value, param_name: StrNode, command_name:
     :param command_name:
     :return:
     """
-    from ...DshellParser.ast_nodes import EvalGroupNode
 
     if value is not None and not isinstance(value, EvalGroupNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be an EvalGroupNode or None, not {type(value).__name__}")
@@ -157,7 +153,6 @@ def _validate_optional_list_node(value, param_name: StrNode, command_name: StrNo
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not None and not a ListNode
     """
-    from ...DshellParser.ast_nodes import ListNode
     
     if value is not None and not isinstance(value, ListNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a list, not {type(value).__name__}")
@@ -170,7 +165,6 @@ def _validate_optional_file_node(value, param_name: StrNode, command_name: StrNo
         :param command_name: The command name for error messages (optional)
         :raises TypeError: If the value is not a FileNode
         """
-        from ...DshellParser.ast_nodes import FileNode
 
         if value is not None and not isinstance(value, FileNode):
             raise TypeError(f"[{command_name}] -> {param_name} must be a FileNode, not {type(value).__name__}")
@@ -209,7 +203,6 @@ def _validate_required_list_node(value, param_name: StrNode, command_name: StrNo
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not a ListNode
     """
-    from ...DshellParser.ast_nodes import ListNode
     
     if not isinstance(value, ListNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a list, not {type(value).__name__}")
@@ -247,7 +240,6 @@ def _validate_required_file_node(value, param_name: StrNode, command_name: StrNo
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not a FileNode
     """
-    from ...DshellParser.ast_nodes import FileNode
 
     if not isinstance(value, FileNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a FileNode, not {type(value).__name__}")
@@ -264,7 +256,6 @@ def _validate_required_embed(value, param_name: StrNode, command_name: StrNode):
     :param command_name: The command name for error messages (optional)
     :raises Exception: If the value is not None and not an Embed or ListNode
     """
-    from ...DshellParser.ast_nodes import ListNode
 
     if isinstance(value, ListNode):
         for i in value:
@@ -295,7 +286,6 @@ def _validate_missing_or_type(value, value_name: StrNode, *types_and_command):
         _validate_missing_or_type(position, "Position", int, "command_name")
         _validate_missing_or_type(value, "Value", int, StrNode, float, "command_name")
     """
-    from Dshell.full_import import _MissingSentinel
     
     # Check if last parameter is a StrNodeing (command_name), otherwise it's a type
     types = types_and_command
