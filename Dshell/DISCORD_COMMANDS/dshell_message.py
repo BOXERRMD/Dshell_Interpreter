@@ -151,7 +151,7 @@ async def dshell_respond_message(ctx: Message,
 async def dshell_delete_message(ctx: Message,
                                 message: Optional[StrNode]=None,
                                 reason: Optional[StrNode]=None,
-                                delay= IntNode(0)):
+                                delay= IntNode('0')):
     """
     Deletes a message
     """

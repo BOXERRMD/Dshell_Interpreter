@@ -158,7 +158,7 @@ class DshellInterpreteur:
 
         elif isinstance(first_node, ConstructEmbedNode):
             # rebuild the embed if it already exists
-            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), Embed):
+            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), EmbedNode):
                 self.env.set(node.name.value, await rebuild_embed(self.env.get(node.name.value), first_node.body, first_node.fields, self))
             else:
                 self.env.set(node.name.value, await build_embed(first_node.body, first_node.fields, self))
@@ -279,8 +279,10 @@ class DshellInterpreteur:
         elif tokentype == DTT.NONE:
             return None
         elif tokentype == DTT.LIST:
-            return ListNode(
-                [await self.eval_data_token(tok) for tok in token.value])  # token.value already contains a list of Tokens
+            l = ListNode([])
+            for i in token.value:
+                l.add(i)
+            return l
         elif tokentype == DTT.IDENT:
             tmp = token.value
             try:

@@ -10,7 +10,7 @@ __all__ = [
     "DiscordType"
 ]
 
-from Dshell.full_import import StrEnum
+from Dshell.full_import import *
 
 from Dshell.full_import import (Union,
                             Optional)
@@ -30,7 +30,7 @@ from Dshell.full_import import (Message,
 from Dshell.full_import import (random,
                             choice)
 
-from ...DshellParser.ast_nodes import ListNode, StrNode
+from ...DshellParser.ast_nodes import ListNode, StrNode, IntNode, FloatNode
 
 from .utils_type_validation import (_validate_optional_list_node,
                                     _validate_required_int,
@@ -47,7 +47,7 @@ class DiscordType(StrEnum):
     THREAD = "thread"
     UNKNOWN = "unknown"
 
-def utils_what_discord_type_is(ctx: Union[Message, Guild], value: int) -> tuple[StrNode, Union[Member, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, None]]:
+def utils_what_discord_type_is(ctx: Union[Message, Guild], value: IntNode) -> tuple[StrNode, Union[Member, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, None]]:
     """
     Identifie le type Discord d'un ID et retourne l'objet correspondant.
     
@@ -98,7 +98,7 @@ def utils_what_discord_type_is(ctx: Union[Message, Guild], value: int) -> tuple[
 
     return StrNode(DiscordType.UNKNOWN), None
 
-async def utils_make_mention(ctx: Message, value: int) -> StrNode:
+async def utils_make_mention(ctx: Message, value: IntNode) -> StrNode:
     """
     Crée une mention Discord à partir d'un ID.
 
@@ -121,9 +121,9 @@ async def utils_make_mention(ctx: Message, value: int) -> StrNode:
     _validate_required_int(value, "value", "make_mention")
 
     if (target := utils_what_discord_type_is(ctx, value)) != DiscordType.UNKNOWN:
-        return target[1].mention
+        return StrNode(target[1].mention)
     else:
-        return ""
+        return StrNode("")
 
 async def utils_len(ctx: Message, value):
     """
@@ -149,7 +149,7 @@ async def utils_len(ctx: Message, value):
     if not isinstance(value, (StrNode, ListNode)):
         raise TypeError(f"value must be a list or a string in len command, not {type(value)}")
 
-    return len(value)
+    return IntNode(len(value))
 
 async def utils_random(ctx: Message, value: Optional[ListNode] = None):
     """
@@ -175,7 +175,7 @@ async def utils_random(ctx: Message, value: Optional[ListNode] = None):
     _validate_optional_list_node(value, "value", _CMD)
 
     if value is None:
-        return random()
+        return FloatNode(random())
     return choice(value)
 
 async def utils_get_name(ctx : Message, value: int) -> Union[StrNode, None]:
@@ -214,7 +214,7 @@ async def utils_get_name(ctx : Message, value: int) -> Union[StrNode, None]:
 
     return StrNode(result)
 
-async def utils_get_id(ctx : Message, value: StrNode) -> Union[int, None]:
+async def utils_get_id(ctx : Message, value: StrNode) -> Union[IntNode, None]:
     """
     Récupère l'ID d'un rôle, membre ou canal à partir de son nom.
     
@@ -240,17 +240,17 @@ async def utils_get_id(ctx : Message, value: StrNode) -> Union[int, None]:
     result = None
 
     if role := get(guild.roles, name=value):
-        result = role.id
+        result = IntNode(role.id)
 
     elif member := get(guild.members, name=value):
-        result = member.id
+        result = IntNode(member.id)
 
-    if channel := get(guild.channels, name=value) :
-        result = channel.id
+    if channel := get(guild.channels, name=value):
+        result = IntNode(channel.id)
 
     return result
 
-async def utils_get_roles(ctx: Message, value: int):
+async def utils_get_roles(ctx: Message, value: IntNode) -> ListNode:
     """
     Récupère la liste des rôles d'un membre.
     
@@ -283,16 +283,16 @@ async def utils_get_roles(ctx: Message, value: int):
     if what_is != DiscordType.MEMBER:
         raise TypeError(f"value must be a member id in roles command, not {what_is}")
 
-    return ListNode([i.id for i in member.roles])
+    return ListNode([IntNode(i.id) for i in member.roles])
 
 
-def utils_build_colour(color: Union[int, ListNode]) -> Union[Colour, int]:
+def utils_build_colour(color: Union[IntNode, ListNode]) -> Union[Colour, IntNode]:
     """
     Builds a Colour object from an integer or a ListNode.
     :param color: The color to build.
     :return: A Colour object.
     """
-    if isinstance(color, int):
+    if isinstance(color, IntNode):
         return color
     elif isinstance(color, (ListNode, list)):
         r, g, b = color[0], color[1], color[2]
@@ -314,4 +314,4 @@ def utils_refactor_emoji(emoji: Union[StrNode, None]) -> Union[StrNode, None]:
     :param emoji: La chaine de caractère à refactoriser.
     :return: La chaine de caractère refactorisée, ou None si l'emoji est None.
     """
-    return StrNode(emoji.replace(" ", "")) if emoji else None
+    return StrNode(emoji).replace(" ", "") if emoji else None

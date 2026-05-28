@@ -8,7 +8,7 @@ from Dshell.full_import import (Message,
                            VoiceChannel,
                            PartialMessage)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, IntNode, PermissionNode, BoolNode
 
 from Dshell.full_import import search
 
@@ -20,7 +20,6 @@ from .utils.utils_message import utils_get_message
 from .utils.utils_thread import utils_get_thread
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
-                                          _validate_optional_bool,
                                           _validate_missing_or_type,
                                           _validate_not_none,
                                           _validate_has_attribute,
@@ -61,12 +60,12 @@ async def dshell_get_channel(ctx: Message, name: StrNode):
     """
     # name peut être str ou int, validation manuelle dans le corps
     if isinstance(name, StrNode):
-        return next((c.id for c in ctx.channel.guild.channels if c.name == name), None)
+        return next((IntNode(c.id) for c in ctx.channel.guild.channels if c.name == name), None)
 
     raise Exception(f"Channel must be an integer or a string, not {type(name)} !")
 
 
-async def dshell_get_channels(ctx: Message, name: Optional[StrNode]=None, regex: Optional[StrNode]=None):
+async def dshell_get_channels(ctx: Message, name: Optional[StrNode]=None, regex: Optional[StrNode]=None) -> ListNode:
     """
     Returns a list of channels with the same name and/or matching the same regex.
     If neither is set, it will return all channels in the server.
@@ -80,10 +79,10 @@ async def dshell_get_channels(ctx: Message, name: Optional[StrNode]=None, regex:
 
     for channel in ctx.channel.guild.channels:
         if name is not None and channel.name == StrNode(name):
-            channels.add(channel.id)
+            channels.add(IntNode(channel.id))
 
         elif regex is not None and search(regex, channel.name):
-            channels.add(channel.id)
+            channels.add(IntNode(channel.id))
 
     return channels
 
@@ -116,10 +115,10 @@ async def dshell_get_channels_in_category(ctx: Message,
 
     for channel in category_channel.channels:
         if name is not None and channel.name == str(name):
-            channels.add(channel.id)
+            channels.add(IntNode(channel.id))
 
         elif regex is not None and search(regex, channel.name):
-            channels.add(channel.id)
+            channels.add(IntNode(channel.id))
 
     return channels
 
@@ -130,7 +129,7 @@ async def dshell_create_text_channel(ctx: Message,
                                      slowmode=MISSING,
                                      topic=MISSING,
                                      nsfw=MISSING,
-                                     permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                     permissions: PermissionNode = MISSING,
                                      reason=None):
     """
     Creates a text channel on the server
@@ -142,15 +141,15 @@ async def dshell_create_text_channel(ctx: Message,
 
     _validate_optional_int(category, "Category", _CMD)
 
-    _validate_missing_or_type(position, "Position", int, _CMD)
+    _validate_missing_or_type(position, "Position", IntNode, _CMD)
 
-    _validate_missing_or_type(slowmode, "Slowmode", int, _CMD)
+    _validate_missing_or_type(slowmode, "Slowmode", IntNode, _CMD)
 
     _validate_missing_or_type(topic, "Topic", StrNode, _CMD)
 
-    _validate_missing_or_type(nsfw, "NSFW", bool, _CMD)
+    _validate_missing_or_type(nsfw, "NSFW", BoolNode, _CMD)
 
-    _validate_missing_or_type(permissions, "Permissions", dict, _CMD)
+    _validate_missing_or_type(permissions, "Permissions", PermissionNode, _CMD)
     
     _validate_optional_string(reason, "Reason", _CMD)
 
@@ -162,10 +161,10 @@ async def dshell_create_text_channel(ctx: Message,
                                                           slowmode_delay=slowmode,
                                                           topic=topic,
                                                           nsfw=nsfw,
-                                                          overwrites=permissions,
+                                                          overwrites=permissions.value,
                                                           reason=reason)
 
-    return created_channel.id
+    return IntNode(created_channel.id)
 
 
 async def dshell_create_voice_channel(ctx: Message,
@@ -173,7 +172,7 @@ async def dshell_create_voice_channel(ctx: Message,
                                       category=None,
                                       position=MISSING,
                                       bitrate=MISSING,
-                                      permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                      permissions: PermissionNode = MISSING,
                                       reason=None):
     """
     Creates a voice channel on the server
@@ -184,11 +183,11 @@ async def dshell_create_voice_channel(ctx: Message,
 
     _validate_optional_int(category, "Category", _CMD)
 
-    _validate_missing_or_type(position, "Position", int, _CMD)
+    _validate_missing_or_type(position, "Position", IntNode, _CMD)
 
-    _validate_missing_or_type(bitrate, "Bitrate", int, _CMD)
+    _validate_missing_or_type(bitrate, "Bitrate", IntNode, _CMD)
     
-    _validate_missing_or_type(permissions, "Permissions", dict, _CMD)
+    _validate_missing_or_type(permissions, "Permissions", PermissionNode, _CMD)
     
     _validate_optional_string(reason, "Reason", _CMD)
 
@@ -198,16 +197,16 @@ async def dshell_create_voice_channel(ctx: Message,
                                                            category=channel_category,
                                                            position=position,
                                                            bitrate=bitrate,
-                                                           overwrites=permissions,
+                                                           overwrites=permissions.value,
                                                            reason=reason)
 
-    return created_channel.id
+    return IntNode(created_channel.id)
 
 
 async def dshell_delete_channel(ctx: Message,
                                 channel=None,
                                 reason=None,
-                                timeout=0):
+                                timeout: IntNode = IntNode(0)):
     """
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
@@ -226,13 +225,13 @@ async def dshell_delete_channel(ctx: Message,
 
     await channel_to_delete.delete(reason=reason)
 
-    return channel_to_delete.id
+    return IntNode(channel_to_delete.id)
 
 
 async def dshell_delete_channels(ctx: Message,
                                  name: Optional[StrNode]=None,
                                  regex: Optional[StrNode]=None,
-                                 reason: Optional[StrNode]=None):
+                                 reason: Optional[StrNode]=None) -> None:
     """
     Deletes all channels with the same name and/or matching the same regex.
     If neither is set, it will delete all channels with the same name as the one where the command was executed.
@@ -251,6 +250,8 @@ async def dshell_delete_channels(ctx: Message,
         elif regex is not None and search(regex, channel.name):
             await channel.delete(reason=reason)
 
+    return None
+
 
 async def dshell_edit_text_channel(ctx: Message,
                                    channel=None,
@@ -260,7 +261,7 @@ async def dshell_edit_text_channel(ctx: Message,
                                    slowmode=MISSING,
                                    topic=MISSING,
                                    nsfw=MISSING,
-                                   permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                   permissions: PermissionNode = MISSING,
                                    reason=None):
     """
     Edits a text channel on the server
@@ -269,17 +270,17 @@ async def dshell_edit_text_channel(ctx: Message,
 
     _validate_optional_string(name, "Name", _CMD)
 
-    _validate_missing_or_type(position, "Position", int, _CMD)
+    _validate_missing_or_type(position, "Position", IntNode, _CMD)
 
-    _validate_missing_or_type(category, "Category", int, _CMD)
+    _validate_missing_or_type(category, "Category", IntNode, _CMD)
 
-    _validate_missing_or_type(slowmode, "Slowmode", int, _CMD)
+    _validate_missing_or_type(slowmode, "Slowmode", IntNode, _CMD)
 
-    _validate_missing_or_type(topic, "Topic", str, _CMD)
+    _validate_missing_or_type(topic, "Topic", StrNode, _CMD)
 
-    _validate_missing_or_type(nsfw, "NSFW", bool, _CMD)
+    _validate_missing_or_type(nsfw, "NSFW", BoolNode, _CMD)
 
-    _validate_missing_or_type(permissions, "Permissions", dict, _CMD)
+    _validate_missing_or_type(permissions, "Permissions", PermissionNode, _CMD)
 
     _validate_optional_string(reason, "Reason", _CMD)
 
@@ -295,10 +296,10 @@ async def dshell_edit_text_channel(ctx: Message,
                                slowmode_delay=slowmode if slowmode is not MISSING else channel_to_edit.slowmode_delay,
                                topic=topic if topic is not MISSING else channel_to_edit.topic,
                                nsfw=nsfw if nsfw is not MISSING else channel_to_edit.nsfw,
-                               overwrites=permissions if permissions is not MISSING else channel_to_edit.overwrites,
+                               overwrites=permissions.value if permissions is not MISSING else channel_to_edit.overwrites,
                                reason=reason)
 
-    return channel_to_edit.id
+    return IntNode(channel_to_edit.id)
 
 
 async def dshell_edit_voice_channel(ctx: Message,
@@ -307,7 +308,7 @@ async def dshell_edit_voice_channel(ctx: Message,
                                     category=MISSING,
                                     position=MISSING,
                                     bitrate=MISSING,
-                                    permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                    permissions: PermissionNode = MISSING,
                                     reason=None):
     """
     Edits a voice channel on the server
@@ -318,13 +319,13 @@ async def dshell_edit_voice_channel(ctx: Message,
 
     _validate_optional_string(name, "Name", _CMD)
 
-    _validate_missing_or_type(position, "Position", int, _CMD)
+    _validate_missing_or_type(position, "Position", IntNode, _CMD)
 
-    _validate_missing_or_type(category, "Category", int, _CMD)
+    _validate_missing_or_type(category, "Category", IntNode, _CMD)
 
-    _validate_missing_or_type(bitrate, "Bitrate", int, _CMD)
+    _validate_missing_or_type(bitrate, "Bitrate", IntNode, _CMD)
 
-    _validate_missing_or_type(permissions, "Permissions", dict, _CMD)
+    _validate_missing_or_type(permissions, "Permissions", PermissionNode, _CMD)
 
     _validate_optional_string(reason, "Reason", _CMD)
 
@@ -338,17 +339,17 @@ async def dshell_edit_voice_channel(ctx: Message,
                                position=position if position is not MISSING else channel_to_edit.position,
                                category=new_categoy,
                                bitrate=bitrate if bitrate is not MISSING else channel_to_edit.bitrate,
-                               overwrites=permissions if permissions is not MISSING else channel_to_edit.overwrites,
+                               overwrites=permissions.value if permissions is not MISSING else channel_to_edit.overwrites,
                                reason=reason)
 
-    return channel_to_edit.id
+    return IntNode(channel_to_edit.id)
 
 
 async def dshell_create_thread_message(ctx: Message,
                                        name: StrNode,
-                                       message: Union[int, StrNode] = None,
-                                       archive=MISSING,
-                                       slowmode=MISSING):
+                                       message: Optional[Union[IntNode, StrNode]] = None,
+                                       archive: IntNode=MISSING,
+                                       slowmode: IntNode=MISSING):
     """
     Creates a thread from a message.
     """
@@ -362,16 +363,16 @@ async def dshell_create_thread_message(ctx: Message,
 
     _validate_required_string(name, "Name", _CMD)
 
-    _validate_missing_or_type(archive, "Auto archive duration", int, _CMD)
+    _validate_missing_or_type(archive, "Auto archive duration", IntNode, _CMD)
 
-    if isinstance(archive, int) and archive not in (60, 1440, 4320, 10080):
+    if isinstance(archive, IntNode) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int, _CMD)
+    _validate_missing_or_type(slowmode, "Slowmode delay", IntNode, _CMD)
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int, _CMD)
+    _validate_missing_or_type(slowmode, "Slowmode delay", IntNode, _CMD)
 
-    if isinstance(slowmode, int) and slowmode < 0:
+    if isinstance(slowmode, IntNode) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
     if isinstance(message, PartialMessage):
@@ -383,14 +384,14 @@ async def dshell_create_thread_message(ctx: Message,
                     auto_archive_duration=archive,
                     slowmode_delay=slowmode)
 
-    return thread.id
+    return IntNode(thread.id)
 
 async def dshell_edit_thread(ctx: Message,
-                             thread: Union[int, StrNode] = None,
+                             thread: Union[IntNode, StrNode] = None,
                              name: Optional[StrNode]=None,
                              archive=MISSING,
-                             slowmode=MISSING,
-                             reason: Optional[StrNode]=None):
+                             slowmode: IntNode=MISSING,
+                             reason: Optional[StrNode]=None) -> IntNode:
     """ Edits a thread.
     """
     _CMD = "et"
@@ -405,16 +406,16 @@ async def dshell_edit_thread(ctx: Message,
 
     _validate_missing_or_type(name, "Name", StrNode, _CMD)
 
-    _validate_missing_or_type(archive, "Auto archive duration", int, _CMD)
+    _validate_missing_or_type(archive, "Auto archive duration", IntNode, _CMD)
 
-    if isinstance(archive, int) and archive not in (60, 1440, 4320, 10080):
+    if isinstance(archive, IntNode) and archive not in (60, 1440, 4320, 10080):
         raise Exception("Auto archive duration must be one of the following values: 60, 1440, 4320, 10080 !")
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int, _CMD)
+    _validate_missing_or_type(slowmode, "Slowmode delay", IntNode, _CMD)
 
-    _validate_missing_or_type(slowmode, "Slowmode delay", int, _CMD)
+    _validate_missing_or_type(slowmode, "Slowmode delay", IntNode, _CMD)
 
-    if isinstance(slowmode, int) and slowmode < 0:
+    if isinstance(slowmode, IntNode) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
     await thread.edit(name=name if name is not None else thread.name,
@@ -422,8 +423,10 @@ async def dshell_edit_thread(ctx: Message,
                       slowmode_delay=slowmode if slowmode is not MISSING else thread.slowmode_delay,
                       reason=reason)
 
+    return IntNode(thread.id)
 
-async def dshell_get_thread(ctx: Message, message: Union[int, StrNode] = None):
+
+async def dshell_get_thread(ctx: Message, message: Optional[Union[IntNode, StrNode]] = None):
     """
     Returns the thread object of the specified thread ID.
     """
@@ -448,10 +451,12 @@ async def dshell_get_thread(ctx: Message, message: Union[int, StrNode] = None):
     if thread is None:
         return None
 
-    return thread.id
+    return IntNode(thread.id)
 
 
-async def dshell_delete_thread(ctx: Message, thread: Union[int, StrNode] = None, reason=None):
+async def dshell_delete_thread(ctx: Message,
+                               thread: Optional[Union[IntNode, StrNode]] = None,
+                               reason: Optional[StrNode]=None):
     """
     Deletes a thread.
     """
@@ -467,19 +472,20 @@ async def dshell_delete_thread(ctx: Message, thread: Union[int, StrNode] = None,
     else:
         thread = target_message
 
-    _validate_has_attribute(thread, 'thread', "[{_CMD}] The specified message does not have a thread !")
+    _validate_has_attribute(thread, 'thread', f"[{_CMD}] The specified message does not have a thread !")
+    _validate_optional_string(reason, "reason", _CMD)
 
     if thread.thread is None:
         raise Exception("The specified message does not have a thread !")
 
     await thread.thread.delete(reason=reason)
 
-    return thread.thread.id
+    return IntNode(thread.thread.id)
 
 async def dshell_create_category(ctx: Message,
                                    name: StrNode,
                                    position=MISSING,
-                                   permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                   permissions: PermissionNode = MISSING,
                                    reason: Optional[StrNode]=None):
     """
     Creates a category on the server
@@ -487,27 +493,35 @@ async def dshell_create_category(ctx: Message,
 
     _CMD = "cca"
 
-    _validate_missing_or_type(position, "Position", int, _CMD)
+    _validate_missing_or_type(position, "Position", PermissionNode, _CMD)
+    _validate_optional_string(name, "Name", _CMD)
+    _validate_optional_string(reason, "Reason", _CMD)
+    _validate_missing_or_type(permissions, "Permissions", PermissionNode, _CMD)
+    _validate_missing_or_type(position, "Position", IntNode, _CMD)
 
     created_category = await ctx.guild.create_category(StrNode(name),
                                                       position=position,
-                                                      overwrites=permissions,
+                                                      overwrites=permissions.value,
                                                       reason=reason)
 
-    return created_category.id
+    return IntNode(created_category.id)
 
 async def dshell_edit_category(ctx: Message,
                                 category,
                                 name: Optional[StrNode]=None,
                                 position=MISSING,
-                                permissions: dict[Union[Member, Role], PermissionOverwrite] = MISSING,
+                                permissions: PermissionNode = MISSING,
                                 reason: Optional[StrNode]=None):
     """
     Edits a category on the server
     """
     _CMD = "eca"
 
-    _validate_missing_or_type(position, "Position", int, _CMD)
+    _validate_missing_or_type(position, "Position", PermissionNode, _CMD)
+    _validate_optional_string(name, "Name", _CMD)
+    _validate_optional_int(category, "Category", _CMD)
+    _validate_optional_string(reason, "Reason", _CMD)
+    _validate_missing_or_type(permissions, "Permissions", PermissionNode, _CMD)
 
     category_to_edit = ctx.channel.guild.get_channel(category)
 
@@ -516,12 +530,14 @@ async def dshell_edit_category(ctx: Message,
 
     await category_to_edit.edit(name=name if name is not None else category_to_edit.name,
                                 position=position if position is not MISSING else category_to_edit.position,
-                                overwrites=permissions if permissions is not MISSING else category_to_edit.overwrites,
+                                overwrites=permissions.value if permissions is not MISSING else category_to_edit.overwrites,
                                 reason=reason)
 
-    return category_to_edit.id
+    return IntNode(category_to_edit.id)
 
-async def dshell_delete_category(ctx: Message, category=None, reason: Optional[StrNode]=None):
+async def dshell_delete_category(ctx: Message,
+                                 category: Optional[IntNode]=None,
+                                 reason: Optional[StrNode]=None):
     """
     Deletes a category.
     """
@@ -535,13 +551,16 @@ async def dshell_delete_category(ctx: Message, category=None, reason: Optional[S
     if category_to_delete is None or not isinstance(category_to_delete, CategoryChannel):
         raise Exception(f"Category {category} not found or is not a category !")
 
+    _validate_optional_string(reason, "reason", _CMD)
+
     await category_to_delete.delete(reason=reason)
 
-    return category_to_delete.id
+    return IntNode(category_to_delete.id)
 
 ############################# CHANNEL INFO ##############################
 
-async def dshell_get_channel_category_id(ctx: Message, channel=None):
+async def dshell_get_channel_category_id(ctx: Message,
+                                         channel: Optional[IntNode]=None):
     """
     Returns the category ID of a channel.
     """
@@ -555,9 +574,9 @@ async def dshell_get_channel_category_id(ctx: Message, channel=None):
     if channel_to_check.category is None:
         return None
 
-    return channel_to_check.category.id if channel_to_check.category is not None else 0
+    return IntNode(channel_to_check.category.id) if channel_to_check.category is not None else IntNode(0)
 
-async def dshell_get_channel_nsfw(ctx: Message, channel=None):
+async def dshell_get_channel_nsfw(ctx: Message, channel: Optional[IntNode]=None) -> BoolNode:
     """
     Returns if the channel is NSFW.
     """
@@ -568,9 +587,9 @@ async def dshell_get_channel_nsfw(ctx: Message, channel=None):
 
     _validate_not_none(channel_to_check, f"[{_CMD}] Channel {channel} not found !")
 
-    return channel_to_check.nsfw
+    return BoolNode(channel_to_check.nsfw)
 
-async def dshell_get_channel_slowmode(ctx: Message, channel=None):
+async def dshell_get_channel_slowmode(ctx: Message, channel: Optional[IntNode]=None):
     """
     Returns the slowmode delay of a channel.
     """
@@ -583,9 +602,9 @@ async def dshell_get_channel_slowmode(ctx: Message, channel=None):
 
     _validate_has_attribute(channel_to_check, 'slowmode_delay', f"[{_CMD}] Channel {channel} is not a text channel !")
 
-    return channel_to_check.slowmode_delay
+    return IntNode(channel_to_check.slowmode_delay)
 
-async def dshell_get_channel_topic(ctx: Message, channel=None) -> StrNode:
+async def dshell_get_channel_topic(ctx: Message, channel: Optional[IntNode]=None) -> StrNode:
     """
     Returns the topic of a channel.
     """
@@ -600,7 +619,7 @@ async def dshell_get_channel_topic(ctx: Message, channel=None) -> StrNode:
 
     return StrNode(channel_to_check.topic)
 
-async def dshell_get_channel_threads(ctx: Message, channel=None):
+async def dshell_get_channel_threads(ctx: Message, channel: Optional[IntNode]=None):
     """
     Returns the list of threads in a channel.
     """
@@ -617,11 +636,11 @@ async def dshell_get_channel_threads(ctx: Message, channel=None):
     threads = ListNode([])
 
     for thread in channel_to_check.threads:
-        threads.add(thread.id)
+        threads.add(IntNode(thread.id))
 
     return threads
 
-async def dshell_get_channel_position(ctx: Message, channel=None):
+async def dshell_get_channel_position(ctx: Message, channel: Optional[IntNode]=None):
     """
     Returns the position of a channel.
     """
@@ -632,9 +651,9 @@ async def dshell_get_channel_position(ctx: Message, channel=None):
 
     _validate_not_none(channel_to_check, f"[{_CMD}] Channel {channel} not found !")
 
-    return channel_to_check.position
+    return IntNode(channel_to_check.position)
 
-async def dshell_get_channel_url(ctx: Message, channel=None):
+async def dshell_get_channel_url(ctx: Message, channel: Optional[IntNode]=None) -> StrNode:
     """
     Returns the URL of a channel.
     """
@@ -665,13 +684,13 @@ async def dshell_get_channel_voice_members(ctx: Message, channel=None):
     members = ListNode([])
 
     for member in channel_to_check.members:
-        members.add(member.id)
+        members.add(IntNode(member.id))
 
     return members
 
 async def dshell_clone_channel(ctx: Message,
-                               channel=None,
-                               catagory=None,
+                               channel: Optional[IntNode]=None,
+                               catagory: Optional[IntNode]=None,
                                name: Optional[StrNode]=None,
                                reason: Optional[StrNode]=None):
     """
@@ -685,10 +704,12 @@ async def dshell_clone_channel(ctx: Message,
     _validate_optional_int(catagory, "category", _CMD)
     category_to_put = ctx.channel.category if catagory is None else ctx.channel.guild.get_channel(catagory)
 
+    _validate_optional_string(name, "Name", _CMD)
+    _validate_optional_string(reason, "Reason", _CMD)
+
     cloned_channel = await channel_to_clone.clone(name=name if name is not None else channel_to_clone.name,
                                                   reason=reason)
-
     if category_to_put is not None:
         await cloned_channel.edit(category=category_to_put, reason=reason)
 
-    return cloned_channel.id
+    return IntNode(cloned_channel.id)

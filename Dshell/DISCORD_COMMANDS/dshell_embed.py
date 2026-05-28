@@ -42,11 +42,11 @@ async def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpret
     """
 
     args_main_embed, args_fields = await build_embed_args(body, fields, interpreter)
-    embed = Embed(**args_main_embed)  # build the main embed
+    embed = EmbedNode(**args_main_embed)  # build the main embed
     for field in args_fields:
         embed.add_field(**field)  # add all fields
 
-    return EmbedNode(embed)
+    return embed
 
 async def rebuild_embed(embed: EmbedNode, body: list[Token], fields: list[FieldEmbedNode], interpreter: "DshellInterpreteur") -> EmbedNode:
     """

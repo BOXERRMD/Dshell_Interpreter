@@ -8,9 +8,9 @@ from Dshell.full_import import (Message,
 from .utils_global import DiscordType, utils_what_discord_type_is
 from .utils_type_validation import (_validate_required_int, _validate_required_permission)
 
-from ...DshellParser.ast_nodes import PermissionNode
+from ...DshellParser.ast_nodes import PermissionNode, IntNode, BoolNode
 
-async def utils_has_permissions(ctx: Message, member: int, permission: PermissionNode) -> bool:
+async def utils_has_permissions(ctx: Message, member: IntNode, permission: PermissionNode) -> BoolNode:
     """
     Vérifie si un membre possède les permissions spécifiées.
     
@@ -24,7 +24,7 @@ async def utils_has_permissions(ctx: Message, member: int, permission: Permissio
     :param permission: Dictionnaire de permissions avec None comme clé et PermissionOverwrite comme valeur
     :type permission: PermissionNode
     :return: True si le membre possède les permissions, False sinon
-    :rtype: bool
+    :rtype: BoolNode
     :raises ValueError: Si le membre n'est pas trouvé ou si le format des permissions est invalide
     :raises TypeError: Si les types des paramètres sont incorrects
     
@@ -46,4 +46,4 @@ async def utils_has_permissions(ctx: Message, member: int, permission: Permissio
     if discord_type != DiscordType.MEMBER:
         raise ValueError(f"No member found with ID {member} in has_perms command.")
 
-    return (member.guild_permissions & permission[None].pair()[0]) == permission[None].pair()[0]
+    return BoolNode((member.guild_permissions & permission[None].pair()[0]) == permission[None].pair()[0])

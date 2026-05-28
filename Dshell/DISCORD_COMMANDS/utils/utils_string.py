@@ -16,7 +16,8 @@ from Dshell.full_import import Message, Any
 from ...DshellParser.ast_nodes import ListNode, StrNode
 from Dshell.full_import import (search,
                             sub,
-                            findall)
+                            findall,
+                                Optional)
 from .utils_type_validation import _validate_required_string
 
 async def utils_convert_to_string(ct: Message, value: Any):
@@ -50,7 +51,7 @@ async def utils_split_string(ctx: Message, value: StrNode, separator: StrNode = 
     """
     _validate_required_string(value, 'value', 'split')
     _validate_required_string(separator, 'separator', 'split')
-    return ListNode(value.split(separator))
+    return ListNode([StrNode(i) for i in value.split(separator)])
 
 
 async def utils_upper_string(ctx: Message, value: StrNode) -> StrNode:
@@ -197,7 +198,7 @@ async def utils_regex_findall(ctx: Message, regex: StrNode, content: StrNode = N
             final_list.add(ListNode([]))
     return final_list
 
-async def utils_regex_sub(ctx: Message, regex: StrNode, replace: StrNode, content: StrNode = None) -> StrNode:
+async def utils_regex_sub(ctx: Message, regex: StrNode, replace: StrNode, content: Optional[StrNode] = None) -> StrNode:
     """
     Remplace toutes les occurrences d'une expression régulière par une chaîne.
     
@@ -228,7 +229,7 @@ async def utils_regex_sub(ctx: Message, regex: StrNode, replace: StrNode, conten
     return StrNode(sub(regex, replace, content if content is not None else ctx.content))
 
 
-async def utils_regex_search(ctx: Message, regex: StrNode, content: StrNode = None) -> StrNode:
+async def utils_regex_search(ctx: Message, regex: StrNode, content: Optional[StrNode] = None) -> StrNode:
     """
     Recherche la première occurrence d'une expression régulière.
     
@@ -257,7 +258,7 @@ async def utils_regex_search(ctx: Message, regex: StrNode, content: StrNode = No
     return StrNode(result.group() if result else '')
 
 
-async def utils_regex_group(ctx: Message, regex: StrNode, content: StrNode = None) -> ListNode:
+async def utils_regex_group(ctx: Message, regex: StrNode, content: Optional[StrNode] = None) -> ListNode:
     """
     Recherche une expression régulière et retourne les groupes capturés.
     

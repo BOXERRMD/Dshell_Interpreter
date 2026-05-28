@@ -1,12 +1,13 @@
 
-from ...full_import import Embed, Optional, Union
-from ...DshellParser.ast_nodes import ListNode, StrNode
+from ...full_import import Optional, Union
+from ...DshellParser.ast_nodes import ListNode, StrNode, EmbedNode
 
 __all__ = [
     "utils_check_embeds_arguments"
 ]
 
-def utils_check_embeds_arguments(_CMD: StrNode, embeds: Optional[Union[Embed, ListNode]]) -> Union[list[Optional[Embed]], ListNode]:
+def utils_check_embeds_arguments(_CMD: StrNode,
+                                 embeds: Optional[Union[EmbedNode, ListNode]]) -> Union[list[Optional[EmbedNode]], ListNode]:
     """
     Check if the embeds argument is valid. Return a list of optional embeds arguments
     :param _CMD:
@@ -14,10 +15,10 @@ def utils_check_embeds_arguments(_CMD: StrNode, embeds: Optional[Union[Embed, Li
     :return:
     """
 
-    final_embeds: Union[list[Optional[Embed]], ListNode] = []
+    final_embeds: Union[list[Optional[EmbedNode]], ListNode] = ListNode([])
 
     if embeds is not None:
-        if isinstance(embeds, Embed):
+        if isinstance(embeds, EmbedNode):
             final_embeds.append(embeds)
         elif isinstance(embeds, ListNode):
             if (embed_list_size := len(embeds)) > 10:

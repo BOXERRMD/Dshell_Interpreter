@@ -4,8 +4,9 @@ __all__ = [
 ]
 
 from ...full_import import Any, Message
+from ...DshellParser.ast_nodes import IntNode, FloatNode
 
-async def utils_convert_to_int(ctx: Message, value: Any) -> int:
+async def utils_convert_to_int(ctx: Message, value: Any) -> IntNode:
     """
     Convert any value to an integer
     :param ctx:
@@ -13,11 +14,11 @@ async def utils_convert_to_int(ctx: Message, value: Any) -> int:
     :return:
     """
     try:
-        return int(value)
+        return IntNode(value)
     except ValueError:
         raise ValueError(f"Cannot convert '{value}' to an integer")
 
-async def utils_convert_to_float(ctx: Message, value: Any) -> float:
+async def utils_convert_to_float(ctx: Message, value: Any) -> FloatNode:
     """
     Convert any value to a float
     :param ctx:
@@ -25,6 +26,6 @@ async def utils_convert_to_float(ctx: Message, value: Any) -> float:
     :return:
     """
     try:
-        return float(value)
+        return FloatNode(value)
     except ValueError:
         raise ValueError(f"Cannot convert '{value}' to a float")

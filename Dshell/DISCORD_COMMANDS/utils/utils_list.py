@@ -10,7 +10,7 @@ __all__ = [
     "utils_list_get_value",
 ]
 
-from ...DshellParser.ast_nodes import ListNode, UiButtonNode, UiSelectNode, CodeNode, StrNode
+from ...DshellParser.ast_nodes import ListNode, UiButtonNode, UiSelectNode, CodeNode, StrNode, IntNode, FloatNode, BoolNode
 from ...full_import import Union
 from .utils_type_validation import (_validate_required_list_node,
                                     _validate_required_int,
@@ -18,8 +18,8 @@ from .utils_type_validation import (_validate_required_list_node,
                                     _validate_optional_bool)
 
 async def utils_convert_to_list(ctx,
-                                value: Union[StrNode, int, float, UiButtonNode, UiSelectNode, CodeNode],
-                                split: bool = False):
+                                value: Union[StrNode, IntNode, FloatNode, UiButtonNode, UiSelectNode, CodeNode],
+                                split: BoolNode = BoolNode(0)):
     """
     Make a list with any value
     :param ctx:
@@ -35,7 +35,7 @@ async def utils_convert_to_list(ctx,
             return ListNode([i for i in value])
         return ListNode([value])
 
-    elif isinstance(value, int):
+    elif isinstance(value, IntNode):
         if split:
             l = ListNode([])
             while value != 0:
@@ -77,7 +77,7 @@ async def utils_list_add(ctx, value: ListNode, *elements):
 
     return value
 
-async def utils_list_remove(ctx, value: ListNode, element, count: int = 1):
+async def utils_list_remove(ctx, value: ListNode, element, count: IntNode = IntNode(1)):
     """
     Retire une ou plusieurs occurrences d'un élément d'une liste Dshell.
     
@@ -111,7 +111,7 @@ async def utils_list_clear(ctx, value: ListNode):
     value.clear()
     return value
 
-async def utils_list_pop(ctx, value: ListNode, index: int = -1):
+async def utils_list_pop(ctx, value: ListNode, index: IntNode = IntNode(-1)):
     """
     Retire et retourne un élément d'une liste à l'index spécifié.
     
@@ -127,7 +127,7 @@ async def utils_list_pop(ctx, value: ListNode, index: int = -1):
     _validate_required_int(index, "index", _CMD)
     return value.pop(index)
 
-async def utils_list_sort(ctx, value: ListNode, reverse: bool = False):
+async def utils_list_sort(ctx, value: ListNode, reverse: BoolNode = BoolNode(0)):
     """
     Trie une liste Dshell en place.
     
@@ -160,7 +160,7 @@ async def utils_list_reverse(ctx, value: ListNode):
     value.reverse()
     return value
 
-async def utils_list_get_value(ctx, value: ListNode, index: int = 0):
+async def utils_list_get_value(ctx, value: ListNode, index: IntNode = IntNode(0)):
     """
     Récupère un élément d'une liste Dshell à l'index spécifié.
     
@@ -177,7 +177,7 @@ async def utils_list_get_value(ctx, value: ListNode, index: int = 0):
     _validate_required_int(index, "index", _CMD)
     return value[index]
 
-async def utils_list_set_value(ctx, value: ListNode, index: int, new_value):
+async def utils_list_set_value(ctx, value: ListNode, index: IntNode, new_value):
     """
     Set an element in a list
     :param ctx:

@@ -1,17 +1,18 @@
 from Dshell.full_import import (Message,
                             PartialMessage,
                             AllowedMentions,
-                                search)
+                                search,
+                                Optional)
 
 from ...DshellInterpreteur.cached_messages import dshell_cached_messages
-from ...DshellParser.ast_nodes import StrNode
+from ...DshellParser.ast_nodes import StrNode, BoolNode, IntNode
 
 from Dshell.full_import import Union
 
 from .utils_type_validation import (_validate_optional_bool,
                                     _validate_required_bool)
 
-def utils_get_message(ctx: Message, message: Union[int, StrNode]) -> Union[PartialMessage, Message]:
+def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> Union[PartialMessage, Message]:
     """
     Récupère l'objet message Discord à partir d'un ID ou d'un lien.
     
@@ -37,7 +38,7 @@ def utils_get_message(ctx: Message, message: Union[int, StrNode]) -> Union[Parti
     """
     cached_messages = dshell_cached_messages.get()
 
-    if isinstance(message, int):
+    if isinstance(message, IntNode):
         if message in cached_messages:
             return cached_messages[message]
 
@@ -66,11 +67,11 @@ def utils_get_message(ctx: Message, message: Union[int, StrNode]) -> Union[Parti
     raise Exception(f"Message must be an integer or a string, not {type(message)} !")
 
 
-def utils_autorised_mentions(global_mentions: bool = None,
-                            everyone_mention: bool = True,
-                            roles_mentions: bool = True,
-                            users_mentions: bool = True,
-                            reply_mention: bool = False) -> Union[bool, 'AllowedMentions']:
+def utils_autorised_mentions(global_mentions: Optional[BoolNode] = None,
+                            everyone_mention: BoolNode = BoolNode(1),
+                            roles_mentions: BoolNode = BoolNode(1),
+                            users_mentions: BoolNode = BoolNode(1),
+                            reply_mention: BoolNode = BoolNode(0)) -> Union[BoolNode, 'AllowedMentions']:
     """
     Crée un objet AllowedMentions pour contrôler les mentions Discord autorisées.
     
@@ -114,10 +115,10 @@ def utils_autorised_mentions(global_mentions: bool = None,
 
     _validate_required_bool(reply_mention, "Reply mention parameter", _CMD)
 
-    if global_mentions is True:
+    if global_mentions:
         return AllowedMentions.all()
 
-    elif global_mentions is False:
+    elif not global_mentions:
         return AllowedMentions.none()
 
     else:

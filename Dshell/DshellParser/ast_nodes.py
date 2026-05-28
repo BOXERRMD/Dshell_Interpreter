@@ -44,7 +44,7 @@ class ASTNode:
     """
     Base class for all AST nodes.
     """
-    def __init__(self, line: int):
+    def __init__(self, line: int = -1, *args):
         self.line = line
 
     def __getattr__(self, item):
@@ -53,14 +53,14 @@ class ASTNode:
 
 class StrNode(str, ASTNode):
 
-    def __new__(cls, value: str):
+    def __new__(cls, value: Any):
         return super().__new__(cls, value)
 
     def __len__(self):
-        return super().__len__()
+        return IntNode(super().__len__())
 
     def __sizeof__(self):
-        return len(self)*getsizeof(str)+getsizeof(StrNode)
+        return len(self.encode("utf-8", errors="ignore"))+getsizeof(StrNode)
 
     def __add__(self, other: "StrNode"):
         if not isinstance(other, StrNode):
@@ -73,7 +73,7 @@ class StrNode(str, ASTNode):
         if not isinstance(other, int):
             raise Exception(f"Cannot mul '{type(other).__name__}' type to StrNode !")
         if len(self) * other > MAX_STR_SIZE:
-            raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} characters ! [* operator]")
+            raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} bytes ! [* operator]")
         return StrNode(super().__mul__(other))
 
     def __int__(self):
@@ -98,38 +98,40 @@ class StrNode(str, ASTNode):
         if not isinstance(old, StrNode) and not isinstance(new, StrNode):
             raise Exception(f"Cannot replace '{type(old).__name__}' type with '{type(new).__name__}' type !")
         if len(self) - self.count(old) * len(old) + self.count(old) * len(new) > MAX_STR_SIZE:
-            raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} characters ! [replace method]")
+            raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} bytes ! [replace method]")
         return StrNode(super().replace(old, new))
 
     def __repr__(self):
-        return f"<StrNode> - {super().__repr__()}"
+        return f"{super().__repr__()}"
 
 class IntNode(int, ASTNode):
-    def __new__(cls, value: int, base: int = 10):
-        return super().__new__(cls, value, base=base)
+    def __new__(cls, value: Union[str, StrNode, int, "IntNode", float, "FloatNode"], base: int = 10):
+        if isinstance(value, (int, IntNode, float, FloatNode)):
+            return super().__new__(cls, value)
+        return super().__new__(cls, value, base)
 
     def __repr__(self):
-        return f"<IntNode> - {super().__repr__()}"
+        return f"{super().__repr__()}"
 
     def __sizeof__(self):
         return getsizeof(int)+getsizeof(IntNode)
 
 class FloatNode(float, ASTNode):
-    def __new__(cls, value: float):
+    def __new__(cls, value: Union[str, StrNode, float, "FloatNode", int, IntNode]):
         return super().__new__(cls, value)
 
     def __repr__(self):
-        return f"<FloatNode> - {super().__repr__()}"
+        return f"{super().__repr__()}"
 
     def __sizeof__(self):
         return getsizeof(float)+getsizeof(FloatNode)
 
 class BoolNode(int, ASTNode):
-    def __new__(cls, value: int):
+    def __new__(cls, value: Union[str, StrNode, int, IntNode, bool, "BoolNode"]):
         return super().__new__(cls, int(bool(value)))
 
     def __repr__(self):
-        return f"<BoolNode> - {super().__repr__()}"
+        return f"{super().__repr__()}"
 
     def __sizeof__(self):
         return getsizeof(int)+getsizeof(BoolNode)
@@ -486,16 +488,15 @@ class ConstructEmbedNode(ASTNode):
             "fields": [field.to_dict() for field in self.fields]
         }
 
-class EmbedNode(ASTNode):
-    def __init__(self, value: Embed):
-        super().__init__(-1)
-        self.value = value
+class EmbedNode(Embed, ASTNode):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def __sizeof__(self):
-        return len(self.value)*getsizeof(str)
+        return super().__len__()+getsizeof(EmbedNode)
 
     def __repr__(self):
-        return f"<EMBED> - {self.value.title}"
+        return f"<EMBED> - {super().title}"
 
 class ConstructPermissionNode(ASTNode):
     """
@@ -802,13 +803,13 @@ class FileNode(ASTNode):
         return self.content.decode(encoding="utf-8", errors="ignore")
 
     def size(self):
-        return len(self.content)
+        return len(self.read())
 
     def __len__(self):
-        return len(self.read())
+        return self.size()
     
     def __sizeof__(self):
-        return self.size()*getsizeof(str)
+        return self.size()+getsizeof(FileNode)
 
 class ListNode(ASTNode):
     """
@@ -822,8 +823,10 @@ class ListNode(ASTNode):
         :param body: list of elements to initialize the ListNode with
         """
         super().__init__(-1)
-        self.iterable: list[Any] = body
-        self.len_iterable: int = len(body)
+        self.iterable: list[Any] = []
+        for i in body:
+            self.add(i)
+        self.len_iterable: int = 0
         self.iterator_count: int = 0
         self.size: int = 0
 
