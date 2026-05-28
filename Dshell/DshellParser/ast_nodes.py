@@ -60,7 +60,7 @@ class StrNode(str, ASTNode):
         return super().__len__()
 
     def __sizeof__(self):
-        return len(self)*getsizeof(str)
+        return len(self)*getsizeof(str)+getsizeof(StrNode)
 
     def __add__(self, other: "StrNode"):
         if not isinstance(other, StrNode):
@@ -111,6 +111,9 @@ class IntNode(int, ASTNode):
     def __repr__(self):
         return f"<IntNode> - {super().__repr__()}"
 
+    def __sizeof__(self):
+        return getsizeof(int)+getsizeof(IntNode)
+
 class FloatNode(float, ASTNode):
     def __new__(cls, value: float):
         return super().__new__(cls, value)
@@ -118,12 +121,18 @@ class FloatNode(float, ASTNode):
     def __repr__(self):
         return f"<FloatNode> - {super().__repr__()}"
 
+    def __sizeof__(self):
+        return getsizeof(float)+getsizeof(FloatNode)
+
 class BoolNode(int, ASTNode):
     def __new__(cls, value: int):
         return super().__new__(cls, int(bool(value)))
 
     def __repr__(self):
         return f"<BoolNode> - {super().__repr__()}"
+
+    def __sizeof__(self):
+        return getsizeof(int)+getsizeof(BoolNode)
 
 class StartNode(ASTNode):
     """

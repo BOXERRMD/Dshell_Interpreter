@@ -2,7 +2,7 @@ from Dshell.full_import import (Message,
                            PartialMessage,
                                 File)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, BoolNode, IntNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
@@ -52,11 +52,11 @@ async def dshell_send_message(ctx: Message,
                               message: Optional[StrNode]=None,
                               delete=None,
                               channel=None,
-                              global_mentions: bool = None,
-                              everyone_mention: bool = True,
-                              roles_mentions: bool = True,
-                              users_mentions: bool = True,
-                              reply_mention: bool = False,
+                              global_mentions: Optional[BoolNode] = None,
+                              everyone_mention: BoolNode = BoolNode(1),
+                              roles_mentions: BoolNode = BoolNode(1),
+                              users_mentions: BoolNode = BoolNode(1),
+                              reply_mention: BoolNode = BoolNode(0),
                               embeds=None,
                               files: Optional[ListNode] = None,
                               view=None) -> int:
@@ -103,11 +103,11 @@ async def dshell_send_message(ctx: Message,
 async def dshell_respond_message(ctx: Message,
                                  message: Optional[StrNode]=None,
                                  content: Optional[StrNode] = None,
-                                 global_mentions: bool = None,
-                                 everyone_mention: bool = True,
-                                 roles_mentions: bool = True,
-                                 users_mentions: bool = True,
-                                 reply_mention: bool = False,
+                                 global_mentions: Optional[BoolNode] = None,
+                                 everyone_mention: BoolNode = BoolNode(1),
+                                 roles_mentions: BoolNode = BoolNode(1),
+                                 users_mentions: BoolNode = BoolNode(1),
+                                 reply_mention: BoolNode = BoolNode(0),
                                  delete=None,
                                  files: Optional[ListNode] = None,
                                  embeds=None):
@@ -151,7 +151,7 @@ async def dshell_respond_message(ctx: Message,
 async def dshell_delete_message(ctx: Message,
                                 message: Optional[StrNode]=None,
                                 reason: Optional[StrNode]=None,
-                                delay=0):
+                                delay= IntNode(0)):
     """
     Deletes a message
     """
