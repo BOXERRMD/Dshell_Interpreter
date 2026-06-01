@@ -69,8 +69,8 @@ class StrNode(str, ASTNode):
             raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} characters ! [+ operator]")
         return StrNode(super().__add__(other))
 
-    def __mul__(self, other: int):
-        if not isinstance(other, int):
+    def __mul__(self, other: "IntNode"):
+        if not isinstance(other, IntNode):
             raise Exception(f"Cannot mul '{type(other).__name__}' type to StrNode !")
         if len(self) * other > MAX_STR_SIZE:
             raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} bytes ! [* operator]")
@@ -78,13 +78,13 @@ class StrNode(str, ASTNode):
 
     def __int__(self):
         try:
-            return int(self)
+            return IntNode(self)
         except ValueError:
             raise Exception(f"Cannot convert StrNode to int: '{self}' is not a valid integer string !")
 
     def __float__(self):
         try:
-            return float(self)
+            return FloatNode(self)
         except ValueError:
             raise Exception(f"Cannot convert StrNode to float: '{self}' is not a valid float string !")
 
@@ -824,11 +824,11 @@ class ListNode(ASTNode):
         """
         super().__init__(-1)
         self.iterable: list[Any] = []
-        for i in body:
-            self.add(i)
         self.len_iterable: int = 0
         self.iterator_count: int = 0
         self.size: int = 0
+        for i in body:
+            self.add(i)
 
     def to_dict(self):
         """

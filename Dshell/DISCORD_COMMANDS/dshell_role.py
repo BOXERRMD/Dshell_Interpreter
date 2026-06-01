@@ -1,6 +1,6 @@
 from Dshell.full_import import (Message, MISSING, PermissionOverwrite, _MissingSentinel, Union, Optional)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode, PermissionNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, PermissionNode, IntNode, BoolNode
 from .utils.utils_global import utils_build_colour
 from .utils.utils_type_validation import (_validate_optional_string,
                                           _validate_optional_int,
@@ -19,10 +19,10 @@ __all__ = [
 async def dshell_create_role(ctx: Message,
                              name: StrNode = MISSING,
                              permissions: PermissionOverwrite = MISSING,
-                             color: Union[ListNode, int] = MISSING,
-                             hoist: bool = MISSING,
-                             mentionable: bool = MISSING,
-                             reason: Optional[StrNode] = None):
+                             color: Union[ListNode, IntNode] = MISSING,
+                             hoist: BoolNode = MISSING,
+                             mentionable: BoolNode = MISSING,
+                             reason: Optional[StrNode] = None) -> IntNode:
     """
     Crée un nouveau rôle sur le serveur Discord.
     
@@ -62,13 +62,13 @@ async def dshell_create_role(ctx: Message,
 
     _validate_optional_permission(permissions, "Permissions", _CMD)
 
-    _validate_missing_or_type(color, "Color", ListNode, int, _CMD)
+    _validate_missing_or_type(color, "Color", ListNode, IntNode, _CMD)
     if not isinstance(color, _MissingSentinel):
         color = utils_build_colour(color)
 
-    _validate_missing_or_type(hoist, "Hoist", bool, _CMD)
+    _validate_missing_or_type(hoist, "Hoist", BoolNode, _CMD)
 
-    _validate_missing_or_type(mentionable, "Mentionable", bool, _CMD)
+    _validate_missing_or_type(mentionable, "Mentionable", BoolNode, _CMD)
     
     _validate_optional_string(reason, "Reason", _CMD)
 
@@ -82,12 +82,12 @@ async def dshell_create_role(ctx: Message,
                                                colour=color,
                                                hoist=hoist,
                                                mentionable=mentionable,
-                                               reason=str(reason))
+                                               reason=StrNode(reason))
 
-    return created_role.id
+    return IntNode(created_role.id)
 
 
-async def dshell_delete_roles(ctx: Message, roles: Union[ListNode, int], reason: Optional[StrNode]=None):
+async def dshell_delete_roles(ctx: Message, roles: Union[ListNode, IntNode], reason: Optional[StrNode]=None) -> IntNode:
     """
     Supprime un ou plusieurs rôles du serveur Discord.
     
@@ -116,16 +116,16 @@ async def dshell_delete_roles(ctx: Message, roles: Union[ListNode, int], reason:
     """
     _CMD = "dr"
 
-    if roles is not None and not isinstance(roles, (int, ListNode)):
+    if roles is not None and not isinstance(roles, (IntNode, ListNode)):
         raise Exception(f"Roles must be a int, role mention or NodeList of both, not {type(roles)} !")
 
     _validate_optional_string(reason, "Reason", _CMD)
 
-    roles: Union[int, ListNode]
-    if not isinstance(roles, (int, ListNode)):
+    roles: Union[IntNode, ListNode]
+    if not isinstance(roles, (IntNode, ListNode)):
         raise Exception(f"Role must be a int, role mention or NodeList of both, not {type(roles)} !")
 
-    if isinstance(roles, int):
+    if isinstance(roles, IntNode):
         roles: tuple = (roles, )
 
     for i in roles:
@@ -136,18 +136,18 @@ async def dshell_delete_roles(ctx: Message, roles: Union[ListNode, int], reason:
 
         await role_to_delete.delete(reason=StrNode(reason))
 
-    return role_to_delete.id
+    return IntNode(role_to_delete.id)
 
 
 async def dshell_edit_role(ctx: Message,
-                           role: int,
+                           role: IntNode,
                            name: Optional[StrNode]=None,
-                           permissions: Optional[dict[None, PermissionOverwrite]]=None,
-                           color: Union[ListNode, int]=None,
-                           hoist: Optional[bool]=None,
-                           mentionable: Optional[bool]=None,
-                           position: Optional[int]=None,
-                           reason: Optional[StrNode]=None,):
+                           permissions: Optional[PermissionNode]=None,
+                           color: Optional[Union[ListNode, IntNode]]=None,
+                           hoist: Optional[BoolNode]=None,
+                           mentionable: Optional[BoolNode]=None,
+                           position: Optional[IntNode]=None,
+                           reason: Optional[StrNode]=None) -> IntNode:
     """
     Modifie les propriétés d'un rôle existant sur le serveur Discord.
     
@@ -214,6 +214,6 @@ async def dshell_edit_role(ctx: Message,
                             hoist=hoist if hoist is not None else role_to_edit.hoist,
                             mentionable=mentionable if mentionable is not None else role_to_edit.mentionable,
                             position=position if position is not None else role_to_edit.position,
-                            reason=str(reason))
+                            reason=StrNode(reason))
 
-    return role_to_edit.id
+    return IntNode(role_to_edit.id)

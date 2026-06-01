@@ -2,7 +2,7 @@ from Dshell.full_import import (Message,
                            PartialMessage,
                                 File)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode, BoolNode, IntNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, BoolNode, IntNode, EmbedNode, FileNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
@@ -59,7 +59,7 @@ async def dshell_send_message(ctx: Message,
                               reply_mention: BoolNode = BoolNode(0),
                               embeds=None,
                               files: Optional[ListNode] = None,
-                              view=None) -> int:
+                              view=None) -> IntNode:
     """
     Sends a message on Discord
     """
@@ -97,7 +97,7 @@ async def dshell_send_message(ctx: Message,
     cached_messages[sended_message.id] = sended_message
     dshell_cached_messages.set(cached_messages)
 
-    return sended_message.id
+    return IntNode(sended_message.id)
 
 
 async def dshell_respond_message(ctx: Message,
@@ -110,7 +110,7 @@ async def dshell_respond_message(ctx: Message,
                                  reply_mention: BoolNode = BoolNode(0),
                                  delete=None,
                                  files: Optional[ListNode] = None,
-                                 embeds=None):
+                                 embeds=None) -> IntNode:
     """
     Responds to a message on Discord
     """
@@ -146,12 +146,12 @@ async def dshell_respond_message(ctx: Message,
     cached_messages[sended_message.id] = sended_message
     dshell_cached_messages.set(cached_messages)
 
-    return sended_message.id
+    return IntNode(sended_message.id)
 
 async def dshell_delete_message(ctx: Message,
                                 message: Optional[StrNode]=None,
                                 reason: Optional[StrNode]=None,
-                                delay= IntNode('0')):
+                                delay: IntNode= IntNode('0')) -> BoolNode:
     """
     Deletes a message
     """
@@ -168,12 +168,14 @@ async def dshell_delete_message(ctx: Message,
 
     await delete_message.delete(delay=delay, reason=reason)
 
+    return BoolNode(True)
+
 
 async def dshell_purge_message(ctx: Message,
-                               message_number: int,
-                               channel: Optional[int]=None,
+                               message_number: IntNode,
+                               channel: Optional[IntNode]=None,
                                reason: Optional[StrNode]=None,
-                               check: Optional[StrNode] = None):
+                               check: Optional[StrNode] = None) -> IntNode:
     """
     Purges messages from a channel
     """
@@ -191,13 +193,15 @@ async def dshell_purge_message(ctx: Message,
 
     await purge_channel.purge(limit=message_number, reason=reason)
 
+    return IntNode(purge_channel.id)
+
 
 async def dshell_edit_message(ctx: Message,
                               message,
                               new_content: Optional[StrNode]=None,
-                              embeds=None,
+                              embeds: Optional[EmbedNode]=None,
                               view=None,
-                              files=None) -> int:
+                              files: Optional[FileNode]=None) -> IntNode:
     """
     Edits a message
     """
@@ -215,9 +219,9 @@ async def dshell_edit_message(ctx: Message,
 
     await edit_message.edit(content=new_content, embeds=embeds, view=view, files=final_files)
 
-    return edit_message.id
+    return IntNode(edit_message.id)
 
-async def dshell_add_reactions(ctx: Message, reactions: Union[StrNode, ListNode], message: Optional[Union[StrNode, int]]=None):
+async def dshell_add_reactions(ctx: Message, reactions: Union[StrNode, ListNode], message: Optional[Union[StrNode, IntNode]]=None) -> IntNode:
     """
     Adds reactions to a message
     """
@@ -231,10 +235,10 @@ async def dshell_add_reactions(ctx: Message, reactions: Union[StrNode, ListNode]
         _validate_required_string(reaction, "reactions", _CMD)
         await message.add_reaction(reaction)
 
-    return message.id
+    return IntNode(message.id)
 
 
-async def dshell_remove_reactions(ctx: Message, reactions: Union[ListNode, StrNode], message=None):
+async def dshell_remove_reactions(ctx: Message, reactions: Union[ListNode, StrNode], message: Optional[Union[IntNode, StrNode]]=None) -> IntNode:
     """
     Removes reactions from a message
     """
@@ -248,9 +252,9 @@ async def dshell_remove_reactions(ctx: Message, reactions: Union[ListNode, StrNo
         _validate_required_string(reaction, "reactions", _CMD)
         await message.clear_reaction(reaction)
 
-    return message.id
+    return IntNode(message.id)
 
-async def dshell_clear_message_reactions(ctx: Message, message):
+async def dshell_clear_message_reactions(ctx: Message, message: Optional[Union[IntNode, StrNode]]=None) -> IntNode:
     """
     Clear all reaction on the target message
     """
@@ -261,9 +265,9 @@ async def dshell_clear_message_reactions(ctx: Message, message):
 
     await message.clear_reactions()
 
-    return message.id
+    return IntNode(message.id)
 
-async def dshell_clear_one_reactions(ctx: Message, message, emoji: StrNode):
+async def dshell_clear_one_reactions(ctx: Message, message: Union[IntNode, StrNode], emoji: StrNode) -> IntNode:
     """
     Clear one emoji on the target message
     """
@@ -275,9 +279,9 @@ async def dshell_clear_one_reactions(ctx: Message, message, emoji: StrNode):
 
     await target_message.clear_reaction(emoji)
 
-    return target_message.id
+    return IntNode(target_message.id)
 
-async def dshell_pin_message(ctx: Message, message=None):
+async def dshell_pin_message(ctx: Message, message: Union[IntNode, StrNode]=None) -> IntNode:
     """
     Pin a message
     """
@@ -286,9 +290,9 @@ async def dshell_pin_message(ctx: Message, message=None):
 
     await target_message.pin()
 
-    return target_message.id
+    return IntNode(target_message.id)
 
-async def dshell_unpin_message(ctx: Message, message=None, reason: Optional[StrNode]=None):
+async def dshell_unpin_message(ctx: Message, message: Optional[Union[IntNode, StrNode]]=None, reason: Optional[StrNode]=None) -> IntNode:
     """
     Unpin a message
     """
@@ -301,14 +305,14 @@ async def dshell_unpin_message(ctx: Message, message=None, reason: Optional[StrN
 
     await target_message.unpin()
 
-    return target_message.id
+    return IntNode(target_message.id)
 
 
 ################################# GET MESSAGE INFO #################################
 
 async def dshell_get_history_messages(ctx: Message,
-                                      channel=None,
-                                      limit=None) -> "ListNode":
+                                      channel: Optional[IntNode]=None,
+                                      limit: Optional[IntNode]=None) -> "ListNode":
     """
     Searches for messages matching a regex in a channel
     """
@@ -326,13 +330,13 @@ async def dshell_get_history_messages(ctx: Message,
     messages = ListNode([])
     async for message in search_channel.history(limit=limit):
         message_id = message.id
-        messages.add(message_id)
+        messages.add(IntNode(message_id))
         cached_messages[message_id] = message
 
     dshell_cached_messages.set(cached_messages)
     return messages
 
-async def dshell_get_content_message(ctx: Message, message=None):
+async def dshell_get_content_message(ctx: Message, message: Optional[Union[IntNode, StrNode]]=None):
     """
     Get the content of a message
     """
@@ -350,7 +354,7 @@ async def dshell_get_content_message(ctx: Message, message=None):
     return StrNode(fetch_target_message.content)
 
 
-async def dshell_get_author_id_message(ctx: Message, message: Optional[Union[int, StrNode]] = None):
+async def dshell_get_author_id_message(ctx: Message, message: Optional[Union[IntNode, StrNode]] = None):
     """
     Return author ID of the message given (or ctx if message=None)
     :param ctx:
@@ -369,9 +373,9 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[Union[int
             except:
                 raise Exception(f"[message_author] Author ID message to get is not found !")
 
-    return target_message.author.id
+    return IntNode(target_message.author.id)
 
-async def dshell_get_message_link(ctx: Message, message: Union[int, StrNode]):
+async def dshell_get_message_link(ctx: Message, message: Union[IntNode, StrNode]):
     """
     Return the link of a message given its ID
     :param ctx:
@@ -383,7 +387,7 @@ async def dshell_get_message_link(ctx: Message, message: Union[int, StrNode]):
 
     return StrNode(target_message.jump_url)
 
-async def dshell_get_message_category_id(ctx: Message, message: Optional[Union[int, StrNode]] = None):
+async def dshell_get_message_category_id(ctx: Message, message: Optional[Union[IntNode, StrNode]] = None):
     """
     Return the category ID of a message given its ID
     :param ctx:
@@ -402,9 +406,9 @@ async def dshell_get_message_category_id(ctx: Message, message: Optional[Union[i
             except:
                 raise Exception(f"[category_message] Message ID to get is not found !")
 
-    return target_message.channel.category.id if target_message.channel.category is not None else 0
+    return IntNode(target_message.channel.category.id) if target_message.channel.category is not None else IntNode(0)
 
-async def dshell_get_message_attachments(ctx: Message, message: Optional[Union[int, StrNode]] = None):
+async def dshell_get_message_attachments(ctx: Message, message: Optional[Union[InterruptedError, StrNode]] = None):
     """
     Return the attachments of a message given its ID
     :param ctx:
@@ -428,11 +432,11 @@ async def dshell_get_message_attachments(ctx: Message, message: Optional[Union[i
     attachments = ListNode([])
 
     for attachment in target_message.attachments:
-        attachments.add(attachment.url)
+        attachments.add(StrNode(attachment.url))
 
     return attachments
 
-async def dshell_get_channel_pined_messages(ctx: Message, channel=None):
+async def dshell_get_channel_pined_messages(ctx: Message, channel: Optional[IntNode]=None):
     """
     Returns a list of pined messages IDs in a channel.
     """
@@ -448,12 +452,12 @@ async def dshell_get_channel_pined_messages(ctx: Message, channel=None):
 
     cached_messages = dshell_cached_messages.get()
     for message in pinned_messages:
-        messages_list.add(message.id)
+        messages_list.add(IntNode(message.id))
         cached_messages[message.id] = message
 
     return messages_list
 
-async def dshell_is_message_system(ctx: Message, message: Optional[Union[int, StrNode]] = None):
+async def dshell_is_message_system(ctx: Message, message: Optional[Union[IntNode, StrNode]] = None):
     """
     Return if the message is a system message
     :param ctx:
@@ -474,14 +478,14 @@ async def dshell_is_message_system(ctx: Message, message: Optional[Union[int, St
             except:
                 raise Exception(f"[is_system_message] Message ID to get is not found !")
 
-    return target_message.is_system()
+    return BoolNode(target_message.is_system())
 
 
 async def dshell_scan_message(ctx: Message,
-                              channel: Optional[int] = None,
+                              channel: Optional[IntNode] = None,
                               regex: Optional[StrNode] = None,
-                              member: Optional[int] = None,
-                              timeout: int = 60) -> Union[int, None]:
+                              member: Optional[IntNode] = None,
+                              timeout: IntNode = 60) -> Union[IntNode, None]:
     """
     Attend un message dans un salon spécifique qui correspond à une expression régulière (si spécifié), et retourne son ID.
     :param ctx:
@@ -534,7 +538,7 @@ async def dshell_scan_message(ctx: Message,
         cached_messages[last_message.id] = last_message
         dshell_cached_messages.set(cached_messages)
 
-        return last_message.id
+        return IntNode(last_message.id)
 
     except TimeoutError:
         return None

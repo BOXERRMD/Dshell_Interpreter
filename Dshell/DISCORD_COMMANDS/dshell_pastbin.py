@@ -23,6 +23,6 @@ async def dshell_get_pastbin(ctx: Message, code: StrNode) -> ListNode:
             raise Exception(f"Failed to retrieve pastbin with code {code} !")
 
         for line in response.iter_lines(decode_unicode=True, chunk_size=512):
-            content.add(line)
+            content.add(StrNode(line))
 
     return content

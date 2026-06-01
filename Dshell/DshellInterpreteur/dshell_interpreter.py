@@ -281,7 +281,7 @@ class DshellInterpreteur:
         elif tokentype == DTT.LIST:
             l = ListNode([])
             for i in token.value:
-                l.add(i)
+                l.add(self.eval_data_token(i))
             return l
         elif tokentype == DTT.IDENT:
             tmp = token.value
