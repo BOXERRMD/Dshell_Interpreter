@@ -485,7 +485,7 @@ async def dshell_scan_message(ctx: Message,
                               channel: Optional[IntNode] = None,
                               regex: Optional[StrNode] = None,
                               member: Optional[IntNode] = None,
-                              timeout: IntNode = 60) -> Union[IntNode, None]:
+                              timeout: IntNode = IntNode(60)) -> Union[IntNode, None]:
     """
     Attend un message dans un salon spécifique qui correspond à une expression régulière (si spécifié), et retourne son ID.
     :param ctx:

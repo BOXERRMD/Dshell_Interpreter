@@ -275,7 +275,7 @@ class DshellInterpreteur:
         elif tokentype == DTT.FLOAT:
             return FloatNode(token.value)
         elif tokentype == DTT.BOOL:
-            return token.value.lower() == "true"
+            return BoolNode(token.value.lower() == "true")
         elif tokentype == DTT.NONE:
             return None
         elif tokentype == DTT.LIST:

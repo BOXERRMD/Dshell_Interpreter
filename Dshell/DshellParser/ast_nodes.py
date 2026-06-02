@@ -94,8 +94,8 @@ class StrNode(str, ASTNode):
         except IndexError:
             raise IndexError(f"StrNode index out of range: {item} for string of length {len(self)} !")
 
-    def replace(self, old: "StrNode", new: "StrNode"):
-        if not isinstance(old, StrNode) and not isinstance(new, StrNode):
+    def replace(self, old: Union[str, "StrNode"], new: Union[str, "StrNode"]):
+        if not isinstance(old, (str, StrNode)) and not isinstance(new, (str, StrNode)):
             raise Exception(f"Cannot replace '{type(old).__name__}' type with '{type(new).__name__}' type !")
         if len(self) - self.count(old) * len(old) + self.count(old) * len(new) > MAX_STR_SIZE:
             raise Exception(f"Str type cannot exceed {MAX_STR_SIZE} bytes ! [replace method]")

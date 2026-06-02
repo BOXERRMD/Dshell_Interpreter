@@ -1,14 +1,11 @@
 from Dshell.full_import import (Message,
                            MISSING,
                            _MissingSentinel,
-                           Member,
-                           Role,
-                           PermissionOverwrite,
                            CategoryChannel,
                            VoiceChannel,
                            PartialMessage)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode, IntNode, PermissionNode, BoolNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, IntNode, PermissionNode, BoolNode, FloatNode
 
 from Dshell.full_import import search
 
@@ -87,7 +84,7 @@ async def dshell_get_channels(ctx: Message, name: Optional[StrNode]=None, regex:
     return channels
 
 async def dshell_get_channels_in_category(ctx: Message,
-                                          category=None,
+                                          category: Optional[IntNode] = None,
                                           name: Optional[StrNode]=None,
                                           regex: Optional[StrNode]=None):
     """
@@ -123,14 +120,14 @@ async def dshell_get_channels_in_category(ctx: Message,
     return channels
 
 async def dshell_create_text_channel(ctx: Message,
-                                     name,
-                                     category=None,
-                                     position=MISSING,
-                                     slowmode=MISSING,
-                                     topic=MISSING,
-                                     nsfw=MISSING,
+                                     name: StrNode,
+                                     category: Optional[IntNode] = None,
+                                     position: IntNode = MISSING,
+                                     slowmode: IntNode = MISSING,
+                                     topic: StrNode = MISSING,
+                                     nsfw: BoolNode = MISSING,
                                      permissions: PermissionNode = MISSING,
-                                     reason=None):
+                                     reason: Optional[StrNode] = None):
     """
     Creates a text channel on the server
     """
@@ -169,11 +166,11 @@ async def dshell_create_text_channel(ctx: Message,
 
 async def dshell_create_voice_channel(ctx: Message,
                                       name: StrNode,
-                                      category=None,
-                                      position=MISSING,
-                                      bitrate=MISSING,
+                                      category: Optional[IntNode] = None,
+                                      position: IntNode = MISSING,
+                                      bitrate: IntNode = MISSING,
                                       permissions: PermissionNode = MISSING,
-                                      reason=None):
+                                      reason: Optional[StrNode] = None):
     """
     Creates a voice channel on the server
     """
@@ -206,7 +203,7 @@ async def dshell_create_voice_channel(ctx: Message,
 async def dshell_delete_channel(ctx: Message,
                                 channel=None,
                                 reason=None,
-                                timeout: IntNode = IntNode(0)):
+                                timeout: FloatNode = FloatNode(0)):
     """
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
@@ -254,15 +251,15 @@ async def dshell_delete_channels(ctx: Message,
 
 
 async def dshell_edit_text_channel(ctx: Message,
-                                   channel=None,
+                                   channel: Optional[IntNode] = None,
                                    name: Optional[StrNode]=None,
-                                   category=MISSING,
-                                   position=MISSING,
-                                   slowmode=MISSING,
-                                   topic=MISSING,
-                                   nsfw=MISSING,
+                                   category: IntNode = MISSING,
+                                   position: IntNode = MISSING,
+                                   slowmode: IntNode = MISSING,
+                                   topic: StrNode = MISSING,
+                                   nsfw: BoolNode = MISSING,
                                    permissions: PermissionNode = MISSING,
-                                   reason=None):
+                                   reason: Optional[StrNode] = None):
     """
     Edits a text channel on the server
     """
@@ -305,9 +302,9 @@ async def dshell_edit_text_channel(ctx: Message,
 async def dshell_edit_voice_channel(ctx: Message,
                                     channel=None,
                                     name: Optional[StrNode]=None,
-                                    category=MISSING,
-                                    position=MISSING,
-                                    bitrate=MISSING,
+                                    category: IntNode = MISSING,
+                                    position: IntNode = MISSING,
+                                    bitrate: IntNode = MISSING,
                                     permissions: PermissionNode = MISSING,
                                     reason=None):
     """

@@ -1,5 +1,5 @@
 from ..full_import import Message, Union, PartialMessage, Optional
-from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode
+from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode
 
 from .utils.utils_message import utils_get_message
 from .utils.utils_type_validation import (_validate_required_file_node,
@@ -13,7 +13,7 @@ __all__ = [
     "dshell_read_file",
 ]
 
-async def dshell_get_message_files(ctx: Message, message: Union[StrNode, int]) -> ListNode:
+async def dshell_get_message_files(ctx: Message, message: Union[StrNode, IntNode]) -> ListNode:
     """
     Récupère les fichiers d'un message
     :param ctx:
@@ -38,7 +38,7 @@ async def dshell_get_message_files(ctx: Message, message: Union[StrNode, int]) -
 
     return attachments_list
 
-async def dshell_read_file(ctx: Message, file: FileNode) -> str:
+async def dshell_read_file(ctx: Message, file: FileNode) -> StrNode:
     """
     Lit en entier un fichier
     :param ctx:
@@ -52,11 +52,11 @@ async def dshell_read_file(ctx: Message, file: FileNode) -> str:
 
 async def dshell_write_file(ctx: Message,
                             message: StrNode,
-                            append: bool = False,
+                            append: BoolNode = BoolNode(False),
                             file: Optional[FileNode] = None,
-                            filename: Optional[str] = None,
-                            description: Optional[str] = None,
-                            spoiler: bool = False) -> FileNode:
+                            filename: Optional[StrNode] = None,
+                            description: Optional[StrNode] = None,
+                            spoiler: BoolNode = BoolNode(False)) -> FileNode:
 
     """
     Ecrit dans un fichier
@@ -71,7 +71,7 @@ async def dshell_write_file(ctx: Message,
     _validate_required_bool(append, 'append', 'wf')
     _validate_optional_string(filename, 'filename', 'wf')
 
-    target_file = file if isinstance(file, FileNode) else FileNode(filename if filename is None else "unnamed_file.txt")
+    target_file = file if isinstance(file, FileNode) else FileNode(filename if filename is not None else "unnamed_file.txt")
 
     target_file.description = description if description is not None else target_file.description
     target_file.spoiler = spoiler if spoiler is not None else target_file.spoiler
