@@ -818,7 +818,7 @@ class ListNode(ASTNode):
     This class also lets you interact with the list via specific methods not built in by python.
     """
 
-    def __init__(self, body: list[Any]):
+    def __init__(self, body: list[Any], bypass_limit_elt: bool = False):
         """
         :param body: list of elements to initialize the ListNode with
         """
@@ -827,6 +827,7 @@ class ListNode(ASTNode):
         self.len_iterable: int = 0
         self.iterator_count: int = 0
         self.size: int = 0
+        self.bypass_limit_elt: bool = bypass_limit_elt
         for i in body:
             self.add(i)
 
@@ -860,10 +861,10 @@ class ListNode(ASTNode):
         """
         Add a value to the list.
         """
-        if self.len_iterable > 1000:
+        if not self.bypass_limit_elt and self.len_iterable > 1000:
             raise PermissionError('The list is too long, it must not exceed 1000 elements !')
 
-        if self.size + getsizeof(value) > MAX_LIST_SIZE:
+        if not self.bypass_limit_elt and self.size + getsizeof(value) > MAX_LIST_SIZE:
             raise Exception(f"The list size cannot exceed {MAX_LIST_SIZE} bytes !")
 
         self.iterable.append(value)
