@@ -48,7 +48,7 @@ async def dshell_read_file(ctx: Message, file: FileNode) -> StrNode:
     _CMD = "rf"
     _validate_required_file_node(file, 'file', _CMD)
 
-    return file.read()
+    return StrNode(file.read())
 
 async def dshell_write_file(ctx: Message,
                             message: StrNode,
