@@ -71,7 +71,7 @@ class DshellInterpreteur:
             '__message_before__': StrNode(message.content),  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
             '__message_created_at__': StrNode(message.created_at),
             '__message_edited_at__': StrNode(message.edited_at),
-            '__message_reactions__': ListNode([StrNode(reaction.emoji) for reaction in message.reactions]),
+            '__message_reactions__': ListNode([StrNode(reaction.emoji) for reaction in message.reactions], bypass_limit_elt=True),
             '__message_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction added on message add event reaction
             '__message_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction removed on message remove event reaction
             '__message_url__': StrNode(message.jump_url) if hasattr(message, 'jump_url') else None,
@@ -91,16 +91,16 @@ class DshellInterpreteur:
             '__guild_icon__': StrNode(message.channel.guild.icon.url) if message.channel.guild.icon else None,
             '__guild_owner_id__': IntNode(message.channel.guild.owner_id),
             '__guild_description__': StrNode(message.channel.guild.description),
-            '__guild_roles__': ListNode([IntNode(role.id) for role in message.channel.guild.roles]),
+            '__guild_roles__': ListNode([IntNode(role.id) for role in message.channel.guild.roles], bypass_limit_elt=True),
             '__guild_roles_count__': IntNode(len(message.channel.guild.roles)),
-            '__guild_emojis__': ListNode([IntNode(emoji.id) for emoji in message.channel.guild.emojis]),
+            '__guild_emojis__': ListNode([IntNode(emoji.id) for emoji in message.channel.guild.emojis], bypass_limit_elt=True),
             '__guild_emojis_count__': IntNode(len(message.channel.guild.emojis)),
-            '__guild_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.channels]),
-            '__guild_text_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.text_channels]),
-            '__guild_voice_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.voice_channels]),
-            '__guild_categories__': ListNode([IntNode(channel.id) for channel in message.channel.guild.categories]),
-            '__guild_stage_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.stage_channels]),
-            '__guild_forum_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.forum_channels]),
+            '__guild_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.channels], bypass_limit_elt=True),
+            '__guild_text_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.text_channels], bypass_limit_elt=True),
+            '__guild_voice_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.voice_channels], bypass_limit_elt=True),
+            '__guild_categories__': ListNode([IntNode(channel.id) for channel in message.channel.guild.categories], bypass_limit_elt=True),
+            '__guild_stage_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.stage_channels], bypass_limit_elt=True),
+            '__guild_forum_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.forum_channels], bypass_limit_elt=True),
             '__guild_channels_count__': IntNode(len(message.channel.guild.channels)),
 
         } if message is not None and not debug else {'__ret__': None}) # {} is used in debug mode, when ctx is None
