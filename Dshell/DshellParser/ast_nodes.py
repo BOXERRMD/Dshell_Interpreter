@@ -1,6 +1,6 @@
 from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite)
 from ..DshellTokenizer.dshell_token_type import Token
-from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE
+from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE, MAX_FILE_SIZE
 
 from sys import getsizeof
 
@@ -791,8 +791,8 @@ class FileNode(ASTNode):
 
     def write(self, content: bytearray, append: bool):
 
-        if self.size() + len(content) > 5 * 1024:
-            raise Exception("The file content cannot exceed 5 Ko !")
+        if self.size() + len(content) > MAX_FILE_SIZE:
+            raise Exception(f"The file content cannot exceed {MAX_FILE_SIZE} bytes !")
 
         if append:
             self.content += content
