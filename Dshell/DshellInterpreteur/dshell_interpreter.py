@@ -3,7 +3,7 @@ from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from ..DshellInterpreteur.errors import DshellInterpreterStopExecution
 from Dshell.full_import import TypeVar, Union, Optional, Any, Callable, sleep, findall
 from ..DshellParser.ast_nodes import *
-from Dshell.full_import import AutoShardedBot, Interaction, Message, PrivateChannel, Embed
+from Dshell.full_import import AutoShardedBot, Interaction, Message, PrivateChannel
 from ..DshellParser.dshell_parser import parse, print_ast
 from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
 from .cached_messages import dshell_cached_messages
@@ -149,6 +149,7 @@ class DshellInterpreteur:
         for i in DshellIterator(await eval_expression(node.variable.body, self)):
             self.env.set(node.variable.name.value, i)
             await self.execute(node.body)
+
 
     async def _execute_var_node(self, node: VarNode):
         """Execute a variable assignment node."""
@@ -353,19 +354,43 @@ class DshellIterator:
     """
 
     def __init__(self, data):
-        self.data = data if isinstance(data, (StrNode, list, ListNode)) else range(int(data))
+        self.data = self._check_data(data)
         self.current = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.current >= len(self.data):
-            self.current = 0
+        return next(self.data)
+
+    def _check_data(self, data: Any):
+
+        if not isinstance(data, (StrNode, ListNode, FloatNode, IntNode, FileNode, FileStreamNode)):
+            raise Exception(f"{data} can't be in a loop !")
+
+        if isinstance(data, FileNode):
+            return data.stream()
+
+        elif isinstance(data, (FloatNode, IntNode)):
+            return IntIterator(IntNode(data))
+
+        else:
+            return data
+
+class IntIterator:
+
+    def __init__(self, max_iterator: IntNode):
+        self.max_iterator = max_iterator
+        self.pointer = IntNode(0)
+
+    def __iter__(self) -> "IntIterator":
+        return self
+
+    def __next__(self) -> IntNode:
+        if self.pointer >= self.max_iterator:
+            self.pointer = IntNode(0)
             raise StopIteration
 
-        value = self.data[self.current]
-        self.current += 1
-        return value
-
-
+        current = self.pointer
+        self.pointer += 1
+        return current

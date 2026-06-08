@@ -1,5 +1,6 @@
+
 from ..full_import import Message, Union, PartialMessage, Optional
-from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode
+from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode, FileStreamNode
 
 from .utils.utils_message import utils_get_message
 from .utils.utils_type_validation import (_validate_required_file_node,
@@ -11,6 +12,7 @@ __all__ = [
     "dshell_get_message_files",
     "dshell_write_file",
     "dshell_read_file",
+    "dshell_stream_file"
 ]
 
 async def dshell_get_message_files(ctx: Message, message: Union[StrNode, IntNode]) -> ListNode:
@@ -49,6 +51,25 @@ async def dshell_read_file(ctx: Message, file: FileNode) -> StrNode:
     _validate_required_file_node(file, 'file', _CMD)
 
     return StrNode(file.read())
+
+async def dshell_stream_file(ctx: Message, file: FileNode, separator: Optional[StrNode] = None) -> FileStreamNode:
+    """
+    Stream le contenue d'un fichier. Si un séparateur est passé en paramètre,
+    le stream s'arrêtera à chaque fois que le séparateur est rencontré, sinon il streamera ligne par ligne
+    (MAX_STR_SIZE de la str max renvoyé)
+    :param ctx:
+    :param file:
+    :param separator:
+    :return:
+    """
+
+    _validate_optional_string(separator, 'separator', 'sf')
+
+    if separator is not None and len(separator) > 1:
+        raise Exception(f"Separator in stream file must be a single character, not '{separator}' !")
+
+    return file.stream(separator)
+
 
 async def dshell_write_file(ctx: Message,
                             message: StrNode,

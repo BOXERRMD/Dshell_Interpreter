@@ -85,6 +85,7 @@ dshell_commands: dict[str, Callable] = {
 
     ## Files
     "rf": dshell_read_file,
+    "sf": dshell_stream_file,
     "wf": dshell_write_file,
     "gmfs": dshell_get_message_files,
 

@@ -36,7 +36,8 @@ __all__ = [
     'UiSelectNode',
     'OptionUiSelectNode',
     'ScanNode',
-    'FileNode'
+    'FileNode',
+    'FileStreamNode'
 ]
 
 
@@ -54,7 +55,16 @@ class ASTNode:
 class StrNode(str, ASTNode):
 
     def __new__(cls, value: Any):
+        cls.pointer = 0
         return super().__new__(cls, value)
+
+    def __next__(self):
+        if self.pointer >= len(self):
+            raise StopIteration
+
+        current = self[self.pointer]
+        self.pointer += 1
+        return current
 
     def __len__(self):
         return IntNode(super().__len__())
@@ -802,6 +812,10 @@ class FileNode(ASTNode):
     def read(self):
         return self.content.decode(encoding="utf-8", errors="ignore")
 
+    def stream(self, separator: Optional[StrNode] = None):
+        return FileStreamNode(self, separator)
+
+
     def size(self):
         return len(self.read())
 
@@ -810,6 +824,50 @@ class FileNode(ASTNode):
     
     def __sizeof__(self):
         return self.size()+getsizeof(FileNode)
+
+class FileStreamNode(ASTNode):
+
+    def __init__(self, file: FileNode, separator: Optional[StrNode] = None):
+        super().__init__(-1)
+        self.file: FileNode = file
+        self.content: str = file.read()
+        self.separator: Optional[StrNode] = separator
+        self.pointer: int = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+
+        if self.pointer >= len(self.content):
+            self.pointer = 0
+            raise StopIteration()
+
+        buffer = ""
+
+        if self.separator is None:
+
+            while self.pointer < len(self.content) and self.content[self.pointer] != "\n":
+                if len(buffer.encode('utf-8', errors="ignore")) + len(
+                        self.content[self.pointer].encode('utf-8', errors="ignore")) > MAX_STR_SIZE:
+                    return StrNode(buffer)
+
+                buffer += self.content[self.pointer]
+                self.pointer += 1
+
+            self.pointer += 1  # Skip the newline character
+            return StrNode(buffer)
+
+        while self.pointer < len(self.content) and self.content[self.pointer] != self.separator:
+            if len(buffer.encode('utf-8', errors="ignore")) + len(
+                    self.content[self.pointer].encode('utf-8', errors="ignore")) > MAX_STR_SIZE:
+                return StrNode(buffer)
+
+            buffer += self.content[self.pointer]
+            self.pointer += 1
+        self.pointer += 1  # Skip the newline character
+        return StrNode(buffer)
+
 
 class ListNode(ASTNode):
     """

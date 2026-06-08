@@ -1,5 +1,5 @@
 from asyncio import sleep
-from typing import TypeVar, Optional, Callable, Union, Any, TYPE_CHECKING
+from typing import *
 from copy import deepcopy
 from pycordViews import EasyModifiedViews, SelectMenu
 from pycordViews.views.errors import CustomIDNotFound
