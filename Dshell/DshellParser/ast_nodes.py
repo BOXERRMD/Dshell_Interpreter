@@ -889,7 +889,7 @@ class ListNode(ASTNode):
         self.bypass_limit_elt: bool = bypass_limit_elt
         self.editable: bool = editable
         for i in body:
-            self.add(i)
+            self.add(i, init=True)
 
     def to_dict(self):
         """
@@ -917,11 +917,11 @@ class ListNode(ASTNode):
         """
         self.size -= getsizeof(value)
 
-    def add(self, value: Any):
+    def add(self, value: Any, init: bool = False):
         """
         Add a value to the list.
         """
-        if not self.editable:
+        if not init and  not self.editable:
             raise ListNotEditableError()
 
         if not self.bypass_limit_elt and self.len_iterable > 1000:
