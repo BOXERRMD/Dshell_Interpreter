@@ -481,9 +481,9 @@ async def dshell_delete_thread(ctx: Message,
 
 async def dshell_create_category(ctx: Message,
                                    name: StrNode,
-                                   position=MISSING,
+                                   position: IntNode = MISSING,
                                    permissions: PermissionNode = MISSING,
-                                   reason: Optional[StrNode]=None):
+                                   reason: Optional[StrNode] = None):
     """
     Creates a category on the server
     """
@@ -496,9 +496,10 @@ async def dshell_create_category(ctx: Message,
     _validate_missing_or_type(permissions, "Permissions", PermissionNode, _CMD)
     _validate_missing_or_type(position, "Position", IntNode, _CMD)
 
+
     created_category = await ctx.guild.create_category(StrNode(name),
                                                       position=position,
-                                                      overwrites=permissions.value,
+                                                      overwrites=permissions.value if permissions is not MISSING else permissions,
                                                       reason=reason)
 
     return IntNode(created_category.id)
