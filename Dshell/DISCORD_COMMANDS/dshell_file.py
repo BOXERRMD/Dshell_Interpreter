@@ -25,7 +25,7 @@ async def dshell_get_message_files(ctx: Message, message: Union[StrNode, IntNode
 
     target_message = ctx if message is None else utils_get_message(ctx, message)
 
-    attachments_list: ListNode = ListNode([])
+    attachments_list: ListNode = ListNode([], bypass_limit_elt=True)
 
     if isinstance(target_message, PartialMessage):
         target_message = await target_message.fetch()

@@ -1,6 +1,7 @@
 from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE, MAX_FILE_SIZE
+from .errors import *
 
 from sys import getsizeof
 
@@ -876,7 +877,7 @@ class ListNode(ASTNode):
     This class also lets you interact with the list via specific methods not built in by python.
     """
 
-    def __init__(self, body: list[Any], bypass_limit_elt: bool = False):
+    def __init__(self, body: list[Any], bypass_limit_elt: bool = False, editable: bool = True):
         """
         :param body: list of elements to initialize the ListNode with
         """
@@ -886,6 +887,7 @@ class ListNode(ASTNode):
         self.iterator_count: int = 0
         self.size: int = 0
         self.bypass_limit_elt: bool = bypass_limit_elt
+        self.editable: bool = editable
         for i in body:
             self.add(i)
 
@@ -919,6 +921,9 @@ class ListNode(ASTNode):
         """
         Add a value to the list.
         """
+        if not self.editable:
+            raise ListNotEditableError()
+
         if not self.bypass_limit_elt and self.len_iterable > 1000:
             raise PermissionError('The list is too long, it must not exceed 1000 elements !')
 
@@ -933,6 +938,9 @@ class ListNode(ASTNode):
         """
         Remove a value from the list.
         """
+        if not self.editable:
+            raise ListNotEditableError()
+
         if number < 1:
             raise Exception(f"The number of elements to remove must be at least 1, not {number} !")
 
@@ -951,6 +959,9 @@ class ListNode(ASTNode):
         Remove and return the last element of the list.
         :return: The last element of the list.
         """
+        if not self.editable:
+            raise ListNotEditableError()
+
         if self.len_iterable == 0:
             raise IndexError("pop from empty list")
         if 0 > index >= self.len_iterable or -self.len_iterable > index < 0:
@@ -966,6 +977,9 @@ class ListNode(ASTNode):
         :param index: The index at which to set the value.
         :param value: The value to set at the specified index.
         """
+        if not self.editable:
+            raise ListNotEditableError()
+
         if 0 > index >= self.len_iterable or -self.len_iterable > index < 0:
             raise IndexError("set index out of range")
 
@@ -984,6 +998,9 @@ class ListNode(ASTNode):
         """
         Clear the list.
         """
+        if not self.editable:
+            raise ListNotEditableError()
+
         self.iterable = []
         self.len_iterable = 0
         self.iterator_count = 0
