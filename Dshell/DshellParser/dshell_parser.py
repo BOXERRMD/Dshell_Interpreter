@@ -133,6 +133,19 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 blocks.pop()
                 return blocks, pointer  # return the parsed information to the last opened loop
 
+            elif first_token_line.value == 'break':
+                last_loop_block = None
+
+                for i in blocks:
+                    if isinstance(i, LoopNode):
+                        last_loop_block = i
+
+                if last_loop_block is None:
+                    raise SyntaxError(f'[BREAK] No loop open on line {first_token_line.position} !')
+
+                break_node = BreakNode(line=line)
+                last_loop_block.body.append(break_node)
+
             elif first_token_line.value == 'var':
                 if len(tokens_by_line) <= 2:
                     raise SyntaxError(f'[VAR] Take two arguments on line {first_token_line.position} !')

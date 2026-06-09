@@ -104,7 +104,7 @@ class DshellInterpreteur:
             '__guild_forum_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.forum_channels], bypass_limit_elt=True, editable=False),
             '__guild_channels_count__': IntNode(len(message.channel.guild.channels)),
 
-        } if message is not None and not debug else {'__ret__': None}) # {} is used in debug mode, when ctx is None
+        } if message is not None and not debug else {'__ret__': None, '__break__': BoolNode(0)}) # {} is used in debug mode, when ctx is None
 
         if isinstance(vars_env, Scope):
             self.env = vars_env
@@ -239,6 +239,9 @@ class DshellInterpreteur:
 
                 elif isinstance(node, LoopNode):
                     await self._execute_loop_node(node)
+
+                elif isinstance(node, BreakNode):
+                    await self._execute_break_node(node)
 
                 elif isinstance(node, VarNode):
                     await self._execute_var_node(node)
