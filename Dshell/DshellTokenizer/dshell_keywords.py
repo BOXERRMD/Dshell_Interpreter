@@ -14,7 +14,7 @@ from Dshell.full_import import Callable
 from ..DISCORD_COMMANDS.dshell_file import dshell_read_file, dshell_write_file, dshell_get_message_files
 
 dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code', 'eval', 'return'
+    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code', 'eval', 'return', 'break'
 }
 
 dshell_discord_keyword: set[str] = {

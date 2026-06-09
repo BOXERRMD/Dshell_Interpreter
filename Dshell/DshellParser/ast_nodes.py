@@ -17,6 +17,7 @@ __all__ = [
     'ElifNode',
     'IfNode',
     'LoopNode',
+    'BreakNode',
     'ArgsCommandNode',
     'CommandNode',
     'VarNode',
@@ -293,6 +294,25 @@ class LoopNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+class BreakNode(ASTNode):
+    """
+    Node representing a break loop structure in the AST.
+    """
+
+    def __init__(self, line: int):
+        super().__init__(line)
+
+    def __repr__(self):
+        return "<Break>"
+
+    def to_dict(self):
+        """
+        Convert the BreakNode to a dictionary representation.
+        :return:
+        """
+        return {
+            "type": "Break",
+        }
 
 class ArgsCommandNode(ASTNode):
     """

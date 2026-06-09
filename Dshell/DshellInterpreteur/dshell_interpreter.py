@@ -52,6 +52,7 @@ class DshellInterpreteur:
         self.env.update({
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
             '__loop__': None,  # used to store the current loop variable in loop nodes if the loop identifier is not specified
+            '__break__': BoolNode(0), # used to break a loop
 
             '__author__': IntNode(message.author.id),
             '__author_name__': StrNode(message.author.name),
@@ -150,6 +151,13 @@ class DshellInterpreteur:
             self.env.set(node.variable.name.value, i)
             await self.execute(node.body)
 
+            if self.env.get('__break__'):
+                self.env.set('__break__', BoolNode(0))
+                break
+
+    async def _execute_break_node(self, node: BreakNode):
+        """Execute a break node."""
+        self.env.set('__break__', BoolNode(1))
 
     async def _execute_var_node(self, node: VarNode):
         """Execute a variable assignment node."""
