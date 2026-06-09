@@ -23,7 +23,7 @@ async def dshell_get_message_files(ctx: Message, message: Union[StrNode, IntNode
     :return:
     """
 
-    target_message = ctx if message is None else utils_get_message(ctx, message)
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     attachments_list: ListNode = ListNode([], bypass_limit_elt=True)
 

@@ -353,10 +353,7 @@ async def dshell_create_thread_message(ctx: Message,
 
     _CMD = "ct"
 
-    if message is None:
-        message = ctx.id
-
-    message = utils_get_message(ctx, message)
+    message = ctx if message is None else await utils_get_message(ctx, message)
 
     _validate_required_string(name, "Name", _CMD)
 
@@ -372,12 +369,7 @@ async def dshell_create_thread_message(ctx: Message,
     if isinstance(slowmode, IntNode) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
-    if isinstance(message, PartialMessage):
-        m = await message.fetch()
-    else:
-        m = message
-
-    thread = await m.create_thread(name=name,
+    thread = await message.create_thread(name=name,
                     auto_archive_duration=archive,
                     slowmode_delay=slowmode)
 
@@ -430,14 +422,7 @@ async def dshell_get_thread(ctx: Message, message: Optional[Union[IntNode, StrNo
 
     _CMD = "gt"
 
-    if message is None:
-        message = ctx.id
-
-    target_message = utils_get_message(ctx, message)
-    if isinstance(target_message, PartialMessage):
-        message = await target_message.fetch()
-    else:
-        message = target_message
+    message = ctx if message is None else await utils_get_message(ctx, message)
 
     # Return None if message doesn't have thread attribute (not raising error for this case)
     if not hasattr(message, 'thread'):
@@ -460,24 +445,17 @@ async def dshell_delete_thread(ctx: Message,
 
     _CMD = "dt"
 
-    if thread is None:
-        thread = ctx.id
-
-    target_message = utils_get_message(ctx, thread)
-    if isinstance(target_message, PartialMessage):
-        thread = await target_message.fetch()
-    else:
-        thread = target_message
+    target_message = ctx if thread is None else await utils_get_message(ctx, thread)
 
     _validate_has_attribute(thread, 'thread', f"[{_CMD}] The specified message does not have a thread !")
     _validate_optional_string(reason, "reason", _CMD)
 
-    if thread.thread is None:
+    if target_message.thread is None:
         raise Exception("The specified message does not have a thread !")
 
-    await thread.thread.delete(reason=reason)
+    await target_message.thread.delete(reason=reason)
 
-    return IntNode(thread.thread.id)
+    return IntNode(target_message.thread.id)
 
 async def dshell_create_category(ctx: Message,
                                    name: StrNode,

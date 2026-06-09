@@ -2,7 +2,10 @@ from Dshell.full_import import (Message,
                             PartialMessage,
                             AllowedMentions,
                                 search,
-                                Optional)
+                                Optional,
+                                NotFound,
+                                Forbidden,
+                                HTTPException)
 
 from ...DshellInterpreteur.cached_messages import dshell_cached_messages
 from ...DshellParser.ast_nodes import StrNode, BoolNode, IntNode
@@ -12,7 +15,7 @@ from Dshell.full_import import Union
 from .utils_type_validation import (_validate_optional_bool,
                                     _validate_required_bool)
 
-def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> Union[PartialMessage, Message]:
+async def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> Message:
     """
     Récupère l'objet message Discord à partir d'un ID ou d'un lien.
     
@@ -42,7 +45,7 @@ def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> Union[P
         if message in cached_messages:
             return cached_messages[message]
 
-        cached_messages[message] = ctx.channel.get_partial_message(message)
+        cached_messages[message] = await utils_fetch_partial_message(ctx.channel.get_partial_message(message))
         dshell_cached_messages.set(cached_messages)
         return cached_messages[message]
 
@@ -60,11 +63,35 @@ def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> Union[P
         channel = ctx.guild.get_channel(channel_id)
         if channel is None:
             raise Exception(f"Channel with ID {channel_id} not found in guild {ctx.guild.name}.")
-        cached_messages[message_id] = channel.get_partial_message(message_id)
+        cached_messages[message_id] = await utils_fetch_partial_message(channel.get_partial_message(message_id))
         dshell_cached_messages.set(cached_messages)
         return cached_messages[message_id]
 
     raise Exception(f"Message must be an integer or a string, not {type(message)} !")
+
+
+async def utils_fetch_partial_message(partial_message: Union[Message, PartialMessage]) -> Message:
+    """
+    Fetch le message et renvoie une instance de Message s'il existe
+    :param ctx:
+    :param partial_message:
+    :return:
+    """
+
+    if not isinstance(partial_message, PartialMessage):
+        if isinstance(partial_message, Message):
+            return partial_message
+        raise Exception(f"Expected a PartialMessage or Message, got '{type(partial_message)}' !")
+
+    try:
+        message = await partial_message.fetch()
+    except NotFound:
+        raise Exception(f"Message '{partial_message.id}' not found !")
+    except Forbidden:
+        raise Exception(f"I don't have the permission to fetch the message '{partial_message.id}' !")
+    except HTTPException:
+        raise Exception(f"An internal error occurred when i try to fetch the message '{partial_message.id}'. Please, contact the support if this problem persists !")
+    return message
 
 
 def utils_autorised_mentions(global_mentions: Optional[BoolNode] = None,

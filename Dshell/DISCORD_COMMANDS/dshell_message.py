@@ -1,3 +1,5 @@
+from pycordViews import EasyModifiedViews
+
 from Dshell.full_import import (Message,
                            PartialMessage,
                                 File)
@@ -124,7 +126,7 @@ async def dshell_respond_message(ctx: Message,
     _validate_required_bool(users_mentions, "Users mentions", _CMD)
     _validate_required_bool(reply_mention, "Reply mention", _CMD)
 
-    respond_message = ctx if message is None else utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
+    respond_message = ctx if message is None else await utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
     mention_author = True if reply_mention else False
 
@@ -157,7 +159,7 @@ async def dshell_delete_message(ctx: Message,
     """
     _CMD = "dm"
 
-    delete_message = ctx if message is None else utils_get_message(ctx, message)
+    delete_message = ctx if message is None else await utils_get_message(ctx, message)
 
     _validate_optional_int(delay, "delay", _CMD)
     _validate_optional_string(reason, "reason", _CMD)
@@ -198,26 +200,33 @@ async def dshell_purge_message(ctx: Message,
 
 async def dshell_edit_message(ctx: Message,
                               message,
-                              new_content: Optional[StrNode]=None,
+                              content: Optional[StrNode]=None,
                               embeds: Optional[EmbedNode]=None,
-                              view=None,
-                              files: Optional[FileNode]=None) -> IntNode:
+                              view: Optional[EasyModifiedViews]=None,
+                              files: Optional[FileNode]=None,
+                              keep: BoolNode = BoolNode(1)) -> IntNode:
     """
     Edits a message
     """
     _CMD = "em"
 
-    edit_message = utils_get_message(ctx, message)
+    edit_message = await utils_get_message(ctx, message)
+    
 
     _validate_optional_embed(embeds, "embeds", _CMD)
     _validate_optional_view(view, "view", _CMD)
-    _validate_optional_string(new_content, "new_content", _CMD)
+    _validate_optional_string(content, "content", _CMD)
+    _validate_required_bool(keep, "keep", _CMD)
 
     final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
     embeds = utils_check_embeds_arguments(_CMD, embeds)
 
-    await edit_message.edit(content=new_content, embeds=embeds, view=view, files=final_files)
+    await edit_message.edit(content=content, 
+                            embeds=embeds, 
+                            view=view, 
+                            files=final_files, 
+                            attachments=edit_message.attachments if keep else [])
 
     return IntNode(edit_message.id)
 
@@ -226,7 +235,7 @@ async def dshell_add_reactions(ctx: Message, reactions: Union[StrNode, ListNode]
     Adds reactions to a message
     """
     _CMD = "ar"
-    message = ctx if message is None else utils_get_message(ctx, message)
+    message = ctx if message is None else await utils_get_message(ctx, message)
 
     if isinstance(reactions, StrNode):
         reactions = (reactions,)
@@ -243,7 +252,7 @@ async def dshell_remove_reactions(ctx: Message, reactions: Union[ListNode, StrNo
     Removes reactions from a message
     """
     _CMD = "rr"
-    message = ctx if message is None else utils_get_message(ctx, message)
+    message = ctx if message is None else await utils_get_message(ctx, message)
 
     if isinstance(reactions, StrNode):
         reactions = [reactions]
@@ -258,10 +267,7 @@ async def dshell_clear_message_reactions(ctx: Message, message: Optional[Union[I
     """
     Clear all reaction on the target message
     """
-    message = ctx if message is None else utils_get_message(ctx, message)
-
-    if message is None:
-        raise Exception(f'Message not found !')
+    message = ctx if message is None else await utils_get_message(ctx, message)
 
     await message.clear_reactions()
 
@@ -275,7 +281,7 @@ async def dshell_clear_one_reactions(ctx: Message, message: Union[IntNode, StrNo
     if not isinstance(emoji, StrNode):
         raise Exception(f'Emoji must be StrNode, not {type(emoji)}')
 
-    target_message = ctx if message is None else utils_get_message(ctx, message)
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     await target_message.clear_reaction(emoji)
 
@@ -286,7 +292,7 @@ async def dshell_pin_message(ctx: Message, message: Union[IntNode, StrNode]=None
     Pin a message
     """
 
-    target_message = ctx if message is None else utils_get_message(ctx, message)
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     await target_message.pin()
 
@@ -299,7 +305,7 @@ async def dshell_unpin_message(ctx: Message, message: Optional[Union[IntNode, St
 
     _CMD = "upinm"
 
-    target_message = ctx if message is None else utils_get_message(ctx, message)
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     _validate_optional_string(reason, "Reason", _CMD)
 
@@ -341,17 +347,9 @@ async def dshell_get_content_message(ctx: Message, message: Optional[Union[IntNo
     Get the content of a message
     """
 
-    target_message = ctx if message is None else utils_get_message(ctx, message)
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
-    if isinstance(target_message, PartialMessage):
-        try:
-            fetch_target_message = await target_message.fetch()
-        except:
-            raise Exception(f'Message not found !')
-    else:
-        fetch_target_message = target_message
-
-    return StrNode(fetch_target_message.content)
+    return StrNode(target_message.content)
 
 
 async def dshell_get_author_id_message(ctx: Message, message: Optional[Union[IntNode, StrNode]] = None):
@@ -363,15 +361,7 @@ async def dshell_get_author_id_message(ctx: Message, message: Optional[Union[Int
     """
     _CMD = "gma"
 
-    target_message = ctx
-    if message is not None:
-        target_message = utils_get_message(ctx, message)
-
-        if isinstance(target_message, PartialMessage):
-            try:
-                target_message = await target_message.fetch()
-            except:
-                raise Exception(f"[message_author] Author ID message to get is not found !")
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     return IntNode(target_message.author.id)
 
@@ -383,7 +373,7 @@ async def dshell_get_message_link(ctx: Message, message: Union[IntNode, StrNode]
     :return:
     """
 
-    target_message = utils_get_message(ctx, message)
+    target_message = await utils_get_message(ctx, message)
 
     return StrNode(target_message.jump_url)
 
@@ -396,19 +386,11 @@ async def dshell_get_message_category_id(ctx: Message, message: Optional[Union[I
     """
     _CMD = "gmc"
 
-    target_message = ctx
-    if message is not None:
-        target_message = utils_get_message(ctx, message)
-
-        if isinstance(target_message, PartialMessage):
-            try:
-                target_message = await target_message.fetch()
-            except:
-                raise Exception(f"[category_message] Message ID to get is not found !")
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     return IntNode(target_message.channel.category.id) if target_message.channel.category is not None else IntNode(0)
 
-async def dshell_get_message_attachments(ctx: Message, message: Optional[Union[InterruptedError, StrNode]] = None):
+async def dshell_get_message_attachments(ctx: Message, message: Optional[Union[IntNode, StrNode]] = None):
     """
     Return the attachments of a message given its ID
     :param ctx:
@@ -419,15 +401,7 @@ async def dshell_get_message_attachments(ctx: Message, message: Optional[Union[I
 
     _validate_optional_int(message, "Message parameter", _CMD)
 
-    target_message = ctx
-    if message is not None:
-        target_message = utils_get_message(ctx, message)
-
-        if isinstance(target_message, PartialMessage):
-            try:
-                target_message = await target_message.fetch()
-            except:
-                raise Exception(f"[attachments_message] Message ID to get is not found !")
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     attachments = ListNode([])
 
@@ -446,7 +420,6 @@ async def dshell_get_channel_pined_messages(ctx: Message, channel: Optional[IntN
     _validate_not_none(channel_to_check, f"[gmp] Channel {channel} not found !")
 
     pinned_messages = await channel_to_check.pins()
-
 
     messages_list = ListNode([])
 
@@ -468,15 +441,7 @@ async def dshell_is_message_system(ctx: Message, message: Optional[Union[IntNode
 
     _validate_optional_int(message, "Message parameter", _CMD)
 
-    target_message = ctx
-    if message is not None:
-        target_message = utils_get_message(ctx, message)
-
-        if isinstance(target_message, PartialMessage):
-            try:
-                target_message = await target_message.fetch()
-            except:
-                raise Exception(f"[is_system_message] Message ID to get is not found !")
+    target_message = ctx if message is None else await utils_get_message(ctx, message)
 
     return BoolNode(target_message.is_system())
 
@@ -506,8 +471,7 @@ async def dshell_scan_message(ctx: Message,
 
     target_channel = ctx.channel if channel is None else ctx.guild.get_channel(channel)
 
-    if target_channel is None:
-        raise Exception(f"Channel with ID {channel} not found in guild {ctx.guild.name}.")
+    _validate_not_none(target_channel, f"Channel {channel} not found in guild {ctx.guild.name} !")
 
     if regex is not None:
         try:
