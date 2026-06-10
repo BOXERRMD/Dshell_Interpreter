@@ -1,4 +1,5 @@
 __all__ = [
+    "utils_get_size",
     "utils_make_mention",
     "utils_len",
     "utils_random",
@@ -25,7 +26,8 @@ from Dshell.full_import import (Message,
                            ForumChannel,
                            Thread,
                            Colour,
-                           get)
+                           get,
+                           getsizeof)
 
 from Dshell.full_import import (random,
                             choice)
@@ -46,6 +48,16 @@ class DiscordType(StrEnum):
     FORUM_CHANNEL = "forum_channel"
     THREAD = "thread"
     UNKNOWN = "unknown"
+
+async def utils_get_size(ctx: Message, target: Any):
+    """
+    Récupère la taille de l'objet
+    :param ctx:
+    :param target:
+    :return:
+    """
+
+    return IntNode(getsizeof(target))
 
 def utils_what_discord_type_is(ctx: Union[Message, Guild], value: IntNode) -> tuple[StrNode, Union[Member, Role, TextChannel, VoiceChannel, CategoryChannel, ForumChannel, Thread, None]]:
     """

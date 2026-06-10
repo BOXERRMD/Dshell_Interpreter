@@ -50,7 +50,7 @@ async def dshell_read_file(ctx: Message, file: FileNode) -> StrNode:
     _CMD = "rf"
     _validate_required_file_node(file, 'file', _CMD)
 
-    return StrNode(file.read())
+    return file.read()
 
 async def dshell_stream_file(ctx: Message, file: FileNode, separator: Optional[StrNode] = None) -> FileStreamNode:
     """
@@ -69,7 +69,6 @@ async def dshell_stream_file(ctx: Message, file: FileNode, separator: Optional[S
         raise Exception(f"Separator in stream file must be a single character, not '{separator}' !")
 
     return file.stream(separator)
-
 
 async def dshell_write_file(ctx: Message,
                             message: StrNode,

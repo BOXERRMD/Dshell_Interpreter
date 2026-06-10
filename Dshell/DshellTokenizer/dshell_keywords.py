@@ -38,6 +38,7 @@ dshell_commands: dict[str, Callable] = {
     "debug": dshell_debug,
     ## global utils
     'random': utils_random,
+    'size': utils_get_size,
 
     ## List utils
     'list': utils_convert_to_list,

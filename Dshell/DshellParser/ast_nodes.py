@@ -1,9 +1,7 @@
-from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite)
+from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite, getsizeof)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE, MAX_FILE_SIZE
 from .errors import *
-
-from sys import getsizeof
 
 __all__ = [
     'ASTNode',
@@ -72,7 +70,7 @@ class StrNode(str, ASTNode):
         return IntNode(super().__len__())
 
     def __sizeof__(self):
-        return len(self.encode("utf-8", errors="ignore"))+getsizeof(StrNode)
+        return len(self.encode("utf-8", errors="ignore"))
 
     def __add__(self, other: "StrNode"):
         if not isinstance(other, StrNode):
@@ -114,7 +112,7 @@ class StrNode(str, ASTNode):
         return StrNode(super().replace(old, new))
 
     def __repr__(self):
-        return f"{super().__repr__()}"
+        return StrNode(f"{super().__repr__()}")
 
 class IntNode(int, ASTNode):
     def __new__(cls, value: Union[str, StrNode, int, "IntNode", float, "FloatNode"], base: int = 10):
@@ -123,30 +121,30 @@ class IntNode(int, ASTNode):
         return super().__new__(cls, value, base)
 
     def __repr__(self):
-        return f"{super().__repr__()}"
+        return StrNode(f"{super().__repr__()}")
 
     def __sizeof__(self):
-        return getsizeof(int)+getsizeof(IntNode)
+        return getsizeof(IntNode)
 
 class FloatNode(float, ASTNode):
     def __new__(cls, value: Union[str, StrNode, float, "FloatNode", int, IntNode]):
         return super().__new__(cls, value)
 
     def __repr__(self):
-        return f"{super().__repr__()}"
+        return StrNode(f"{super().__repr__()}")
 
     def __sizeof__(self):
-        return getsizeof(float)+getsizeof(FloatNode)
+        return getsizeof(FloatNode)
 
 class BoolNode(int, ASTNode):
     def __new__(cls, value: Union[str, StrNode, int, IntNode, bool, "BoolNode"]):
         return super().__new__(cls, int(bool(value)))
 
     def __repr__(self):
-        return f"{super().__repr__()}"
+        return StrNode(f"{super().__repr__()}")
 
     def __sizeof__(self):
-        return getsizeof(int)+getsizeof(BoolNode)
+        return getsizeof(BoolNode)
 
 class StartNode(ASTNode):
     """
@@ -158,7 +156,7 @@ class StartNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<StartNode> - {self.body}"
+        return StrNode(f"<START> - {self.body}")
 
     def to_dict(self):
         """
@@ -183,7 +181,7 @@ class ElseNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<Else> - {self.body}"
+        return StrNode(f"<ELSE> - {self.body}")
 
     def to_dict(self):
         """
@@ -213,7 +211,7 @@ class ElifNode(ASTNode):
         self.parent = parent
 
     def __repr__(self):
-        return f"<Elif> - {self.condition} - {self.body}"
+        return StrNode(f"<ELIF> - {self.condition} - {self.body}")
 
     def to_dict(self):
         """
@@ -249,7 +247,7 @@ class IfNode(ASTNode):
         self.id = randint(0, 1000000)  # Unique identifier for the IfNode instance
 
     def __repr__(self):
-        return f"<If> - {self.condition} - {self.body} *- {self.elif_nodes} **- {self.else_body}"
+        return StrNode(f"<IF> - {self.condition} - {self.body} *- {self.elif_nodes} **- {self.else_body}")
 
     def to_dict(self):
         """
@@ -281,7 +279,7 @@ class LoopNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<Loop> - {self.variable.name} -> {self.variable.body} *- {self.body}"
+        return StrNode(f"<LOOP> - {self.variable.name} -> {self.variable.body} *- {self.body}")
 
     def to_dict(self):
         """
@@ -303,7 +301,7 @@ class BreakNode(ASTNode):
         super().__init__(line)
 
     def __repr__(self):
-        return "<Break>"
+        return StrNode("<BREAK>")
 
     def to_dict(self):
         """
@@ -327,7 +325,7 @@ class ArgsCommandNode(ASTNode):
         self.body: list[Token] = body
 
     def __repr__(self):
-        return f"<Args Command> - {self.body}"
+        return StrNode(f"<ARGS_COMMAND> - {self.body}")
 
     def to_dict(self):
         """
@@ -348,7 +346,7 @@ class ScanNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<SCAN> - {self.body}"
+        return StrNode(f"<SCAN> - {self.body}")
 
     def to_dict(self):
         """
@@ -375,7 +373,7 @@ class CommandNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<{self.name}> - {self.body}"
+        return StrNode(f"<{self.name}> - {self.body}")
 
     def to_dict(self):
         """
@@ -404,7 +402,7 @@ class VarNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<VAR> - {self.name} *- {self.body}"
+        return StrNode(f"<VAR> - {self.name} *- {self.body}")
 
     def to_dict(self):
         """
@@ -430,7 +428,7 @@ class LengthNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<LENGTH> - {self.body}"
+        return StrNode(f"<LENGTH> - {self.body}")
 
     def to_dict(self):
         """
@@ -447,12 +445,12 @@ class EndNode(ASTNode):
     Node representing the end of the AST.
     """
 
-    def __init__(self, line: int, error_message: Union[Token, bool] = True):
+    def __init__(self, line: int, error_message: Union[Token, BoolNode] = BoolNode(1)):
         super().__init__(line)
-        self.error_message: bool = error_message
+        self.error_message: Union[Token, BoolNode] = error_message
 
     def __repr__(self):
-        return f"<END>"
+        return StrNode(f"<END>")
 
     def to_dict(self):
         """
@@ -478,7 +476,7 @@ class FieldEmbedNode(ASTNode):
         self.body: list[Token] = body
 
     def __repr__(self):
-        return f"<EMBED_FIELD> - {self.body}"
+        return StrNode(f"<EMBED_FIELD> - {self.body}")
 
     def to_dict(self):
         """
@@ -506,7 +504,7 @@ class ConstructEmbedNode(ASTNode):
         self.fields = fields
 
     def __repr__(self):
-        return f"<EMBED> - {self.body}"
+        return StrNode(f"<EMBED> - {self.body}")
 
     def to_dict(self):
         """
@@ -524,10 +522,10 @@ class EmbedNode(Embed, ASTNode):
         super().__init__(*args, **kwargs)
 
     def __sizeof__(self):
-        return super().__len__()+getsizeof(EmbedNode)
+        return super().__len__()
 
     def __repr__(self):
-        return f"<EMBED> - {super().title}"
+        return StrNode(f"<EMBED> - {super().title}")
 
 class ConstructPermissionNode(ASTNode):
     """
@@ -542,7 +540,7 @@ class ConstructPermissionNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<PERMISSION> - {self.body}"
+        return StrNode(f"<PERMISSION> - {self.body}")
 
     def to_dict(self):
         """
@@ -574,7 +572,10 @@ class PermissionNode(ASTNode):
         self.value.update(other.value)
 
     def __sizeof__(self):
-        return len(self.value)*getsizeof(PermissionOverwrite)*getsizeof(str)
+        return len(self.value)*getsizeof(PermissionNode)
+
+    def __repr__(self):
+        return StrNode(f"<PERMISSION> - {self.value}")
 
 class SleepNode(ASTNode):
     """
@@ -589,7 +590,7 @@ class SleepNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<SLEEP> - {self.body}"
+        return StrNode(f"<SLEEP> - {self.body}")
 
     def to_dict(self):
         """
@@ -615,7 +616,7 @@ class EvalGroupNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<EVAL GROUP> - {self.body}"
+        return StrNode(f"<EVAL GROUP> - {self.body}")
 
     def to_dict(self):
         """
@@ -642,7 +643,7 @@ class ParamNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<PARAM> - {self.body}"
+        return StrNode(f"<PARAM> - {self.body}")
 
     def to_dict(self):
         """
@@ -666,7 +667,7 @@ class CodeNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<CODE> - {self.body}"
+        return StrNode(f"<CODE> - {self.body}")
 
     def to_dict(self):
         """
@@ -693,7 +694,7 @@ class EvalNode(ASTNode):
         self.argsNode = argsNode
 
     def __repr__(self):
-        return f"<EVAL> - {self.argsNode} -> {self.codeNode}"
+        return StrNode(f"<EVAL> - {self.argsNode} -> {self.codeNode}")
 
     def to_dict(self):
         """
@@ -720,7 +721,7 @@ class ReturnNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<RETURN> - {self.body}"
+        return StrNode(f"<RETURN> - {self.body}")
 
     def to_dict(self):
         """
@@ -747,7 +748,7 @@ class UiButtonNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<UI BUTTON> - {self.body}"
+        return StrNode(f"<UI BUTTON> - {self.body}")
 
     def to_dict(self):
         """
@@ -774,7 +775,7 @@ class UiSelectNode(ASTNode):
         self.options: list[OptionUiSelectNode] = []
 
     def __repr__(self):
-        return f"<UI SELECT> - {self.body} -> {self.options}"
+        return StrNode(f"<UI SELECT> - {self.body} -> {self.options}")
 
     def to_dict(self):
         """
@@ -800,7 +801,7 @@ class OptionUiSelectNode(ASTNode):
         self.body = body
 
     def __repr__(self):
-        return f"<UI SELECT OPTION> - {self.body}"
+        return StrNode(f"<UI SELECT OPTION> - {self.body}")
 
     def to_dict(self):
         """
@@ -831,20 +832,22 @@ class FileNode(ASTNode):
             self.content = content
 
     def read(self):
-        return self.content.decode(encoding="utf-8", errors="ignore")
+        return StrNode(self.content.decode(encoding="utf-8", errors="ignore"))
 
     def stream(self, separator: Optional[StrNode] = None):
         return FileStreamNode(self, separator)
 
-
     def size(self):
-        return len(self.read())
+        return IntNode(len(self.read()))
 
     def __len__(self):
         return self.size()
     
     def __sizeof__(self):
-        return self.size()+getsizeof(FileNode)
+        return self.size()
+
+    def __repr__(self):
+        return StrNode(f"<FILE> - {self.name}")
 
 class FileStreamNode(ASTNode):
 
@@ -888,6 +891,12 @@ class FileStreamNode(ASTNode):
             self.pointer += 1
         self.pointer += 1  # Skip the newline character
         return StrNode(buffer)
+
+    def __repr__(self):
+        return StrNode(f"<FILE_STREAM> - {self.file.__repr__()}")
+
+    def __sizeof__(self):
+        return self.file.size()
 
 
 class ListNode(ASTNode):
@@ -1089,5 +1098,5 @@ class ListNode(ASTNode):
         return self.size
 
     def __repr__(self):
-        return f"<LIST> - {self.iterable}"
+        return StrNode(f"<LIST> - {self.iterable}")
 
