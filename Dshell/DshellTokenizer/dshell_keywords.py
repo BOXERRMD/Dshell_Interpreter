@@ -39,6 +39,8 @@ dshell_commands: dict[str, Callable] = {
     ## global utils
     'random': utils_random,
     'size': utils_get_size,
+    'help': utils_help,
+    'h': utils_help,
 
     ## List utils
     'list': utils_convert_to_list,

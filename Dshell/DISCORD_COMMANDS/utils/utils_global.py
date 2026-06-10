@@ -1,4 +1,5 @@
 __all__ = [
+    "utils_help",
     "utils_get_size",
     "utils_make_mention",
     "utils_len",
@@ -38,7 +39,6 @@ from .utils_type_validation import (_validate_optional_list_node,
                                     _validate_required_int,
                                     _validate_required_string)
 
-
 class DiscordType(StrEnum):
     MEMBER = "member"
     ROLE = "role"
@@ -48,6 +48,35 @@ class DiscordType(StrEnum):
     FORUM_CHANNEL = "forum_channel"
     THREAD = "thread"
     UNKNOWN = "unknown"
+
+async def utils_help(ctx: Message, command: StrNode) -> StrNode:
+    """
+    Renvoie l'aide associé à une commande
+    :param ctx:
+    :param command:
+    :return:
+    """
+    _CMD = "help"
+
+    _validate_required_string(command, "command", _CMD)
+
+    from inspect import signature, Parameter
+    from ...DshellTokenizer.dshell_keywords import dshell_commands
+
+    if command not in dshell_commands:
+        raise ValueError(f"[HELP] command not found : '{command}'")
+
+    sig = signature(dshell_commands[command])
+    result = StrNode("## HELP `{command}`")
+
+    for nom, param in sig.parameters.items():
+        if nom == "ctx":
+            continue
+
+        result += StrNode(f"""
+  --{nom} [{param.default if param.default != Parameter.empty else "REQUIRED"}] -> {param.annotation}
+""")
+    return result
 
 async def utils_get_size(ctx: Message, target: Any):
     """

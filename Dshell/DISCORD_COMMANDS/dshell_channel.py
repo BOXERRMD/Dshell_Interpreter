@@ -117,6 +117,9 @@ async def dshell_get_channels_in_category(ctx: Message,
         elif regex is not None and search(regex, channel.name):
             channels.add(IntNode(channel.id))
 
+        else:
+            channels.add(IntNode(channel.id))
+
     return channels
 
 async def dshell_create_text_channel(ctx: Message,

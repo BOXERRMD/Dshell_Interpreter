@@ -52,16 +52,16 @@ __all__ = [
 
 async def dshell_send_message(ctx: Message,
                               message: Optional[StrNode]=None,
-                              delete=None,
-                              channel=None,
+                              delete: Optional[IntNode]=None,
+                              channel: Optional[IntNode]=None,
                               global_mentions: Optional[BoolNode] = None,
                               everyone_mention: BoolNode = BoolNode(1),
                               roles_mentions: BoolNode = BoolNode(1),
                               users_mentions: BoolNode = BoolNode(1),
                               reply_mention: BoolNode = BoolNode(0),
-                              embeds=None,
+                              embeds: Optional[ListNode]=None,
                               files: Optional[ListNode] = None,
-                              view=None) -> IntNode:
+                              view: Optional[EasyModifiedViews]=None) -> IntNode:
     """
     Sends a message on Discord
     """
