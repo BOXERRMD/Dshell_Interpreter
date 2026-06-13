@@ -4,11 +4,12 @@ __all__ = [
     'dshell_delete_original_message'
 ]
 
+from pycordViews import EasyModifiedViews
 
 from Dshell.full_import import (Interaction,
                            Embed, Optional, File, Union)
 
-from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode
+from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode
 from .utils.utils_message import utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
 from .utils.utils_embed import utils_check_embeds_arguments
@@ -22,15 +23,15 @@ from .utils.utils_type_validation import (_validate_optional_number,
 async def dshell_respond_interaction(ctx: Interaction,
                                      content: Optional[StrNode] = None,
                                      delete=None,
-                                     global_mentions: bool = None,
-                                     everyone_mention: bool = True,
-                                     roles_mentions: bool = True,
-                                     users_mentions: bool = True,
-                                     reply_mention: bool = False,
-                                     hide: bool = False,
-                                     embeds=None,
+                                     global_mentions: Optional[BoolNode] = None,
+                                     everyone_mention: BoolNode = BoolNode(1),
+                                     roles_mentions: BoolNode = BoolNode(1),
+                                     users_mentions: BoolNode = BoolNode(1),
+                                     reply_mention: BoolNode = BoolNode(0),
+                                     hide: BoolNode = BoolNode(0),
+                                     embeds: Optional[ListNode]=None,
                                      files: Optional[Union[ListNode, FileNode]] = None,
-                                     view=None) -> int:
+                                     view: Optional[EasyModifiedViews]=None) -> int:
     """
     Répond à une interaction Discord avec un message.
     
@@ -106,7 +107,7 @@ async def dshell_respond_interaction(ctx: Interaction,
                                      files=final_files,
                                      view=view)
 
-    return sended_message.id
+    return IntNode(sended_message.id)
 
 async def dshell_defer_interaction(ctx: Interaction) -> bool:
     """
@@ -132,7 +133,7 @@ async def dshell_defer_interaction(ctx: Interaction) -> bool:
 
     await ctx.response.defer()
 
-    return True
+    return BoolNode(1)
 
 async def dshell_delete_original_message(ctx: Interaction) -> int:
     """
@@ -157,4 +158,4 @@ async def dshell_delete_original_message(ctx: Interaction) -> int:
 
     await ctx.delete_original_message()
 
-    return ctx.message.id
+    return IntNode(ctx.message.id)

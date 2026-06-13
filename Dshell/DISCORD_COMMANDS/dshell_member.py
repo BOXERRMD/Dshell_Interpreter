@@ -1,13 +1,14 @@
 from Dshell.full_import import (Message,
                            Embed,
                            MISSING,
+                           Union,
                            Member,
                            Permissions,
                            Role,
                                 Optional,
                                 File)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, IntNode, BoolNode, EmbedNode, FileNode, PermissionNode
 
 from Dshell.full_import import (datetime,
                            timedelta,
@@ -39,10 +40,10 @@ __all__ = [
 
 async def dshell_send_private_message(ctx: Message,
                                       message: Optional[StrNode] = None,
-                                      member: int = None,
-                                      delete: int = None,
-                                      embeds = None,
-                                      files: Optional[ListNode] = None):
+                                      member: Optional[IntNode] = None,
+                                      delete: Optional[IntNode]= None,
+                                      embeds: Optional[ListNode, EmbedNode] = None,
+                                      files: Optional[Union[ListNode, FileNode]] = None):
     """
     Envoie un message privé à un membre Discord.
     
@@ -98,10 +99,10 @@ async def dshell_send_private_message(ctx: Message,
 
     sended_message = await member_to_send.send(message, delete_after=delete, embeds=embeds, files=final_files)
 
-    return sended_message.id
+    return IntNode(sended_message.id)
 
 
-async def dshell_ban_member(ctx: Message, member: int, reason: StrNode = MISSING):
+async def dshell_ban_member(ctx: Message, member: IntNode, reason: StrNode = MISSING):
     """
     Bannit un membre du serveur Discord.
     
@@ -135,10 +136,10 @@ async def dshell_ban_member(ctx: Message, member: int, reason: StrNode = MISSING
 
     await ctx.channel.guild.ban(banned_member, reason=reason)
 
-    return banned_member.id
+    return IntNode(banned_member.id)
 
 
-async def dshell_unban_member(ctx: Message, user: int, reason: StrNode = MISSING):
+async def dshell_unban_member(ctx: Message, user: IntNode, reason: StrNode = MISSING):
     """
     Débannit un utilisateur du serveur Discord.
     
@@ -178,10 +179,10 @@ async def dshell_unban_member(ctx: Message, user: int, reason: StrNode = MISSING
 
     await ctx.channel.guild.unban(user_to_unban, reason=reason)
 
-    return user_to_unban.id
+    return IntNode(user_to_unban.id)
 
 
-async def dshell_kick_member(ctx: Message, member: int, reason: StrNode = MISSING):
+async def dshell_kick_member(ctx: Message, member: IntNode, reason: StrNode = MISSING):
     """
     Expulse un membre du serveur Discord.
     
@@ -215,10 +216,10 @@ async def dshell_kick_member(ctx: Message, member: int, reason: StrNode = MISSIN
 
     await ctx.channel.guild.kick(kicked_member, reason=reason)
 
-    return kicked_member.id
+    return IntNode(kicked_member.id)
 
 
-async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason: StrNode = MISSING):
+async def dshell_timeout_member(ctx: Message, duration: IntNode, member: Optional[IntNode]=None, reason: StrNode = MISSING):
     """
     Met un membre en timeout (temps mort) pour une durée spécifiée.
     
@@ -263,10 +264,10 @@ async def dshell_timeout_member(ctx: Message, duration: int, member=None, reason
 
     await target_member.timeout(until=datetime.now(UTC) + timedelta(seconds=duration), reason=reason)
 
-    return target_member.id
+    return IntNode(target_member.id)
 
 
-async def dshell_rename_member(ctx: Message, new_name: StrNode, member=None):
+async def dshell_rename_member(ctx: Message, new_name: StrNode, member: Optional[IntNode]=None):
     """
     Renomme un membre sur le serveur (change son surnom).
     
@@ -300,10 +301,10 @@ async def dshell_rename_member(ctx: Message, new_name: StrNode, member=None):
 
     await renamed_member.edit(nick=new_name)
 
-    return renamed_member.id
+    return IntNode(renamed_member.id)
 
 
-async def dshell_check_permissions(ctx: Message, permissions, member=None):
+async def dshell_check_permissions(ctx: Message, permissions: PermissionNode, member: Optional[IntNode]=None):
     """
     Vérifie si un membre possède des permissions spécifiques sur le serveur.
     
@@ -344,13 +345,13 @@ async def dshell_check_permissions(ctx: Message, permissions, member=None):
 
     if (permissions_to_check.value & member_permissions.value) != 0:
         return True
-    return False
+    return BoolNode(0)
 
 
 async def dshell_move_member(ctx: Message,
-                             channel=None,
-                             member=None,
-                             disconnect: bool = False,
+                             channel: Optional[IntNode]=None,
+                             member: Optional[IntNode]=None,
+                             disconnect: BoolNode = BoolNode(0),
                              reason: Optional[StrNode]=None):
     """
     Déplace un membre vers un autre canal vocal ou le déconnecte.
@@ -406,12 +407,12 @@ async def dshell_move_member(ctx: Message,
     else:
         await target_member.move_to(target_channel, reason=reason)
 
-    return target_member.id
+    return IntNode(target_member.id)
 
 
 async def dshell_give_member_roles(ctx: Message,
-                                   roles,
-                                   member=None,
+                                   roles: Union[IntNode, ListNode],
+                                   member: Optional[IntNode]=None,
                                    reason: Optional[StrNode]=None):
     """
     Attribue un ou plusieurs rôles à un membre.
@@ -467,12 +468,12 @@ async def dshell_give_member_roles(ctx: Message,
 
     await target_member.edit(roles=list_roles, reason=str(reason))
 
-    return target_member.id
+    return IntNode(target_member.id)
 
 
 async def dshell_remove_member_roles(ctx: Message,
-                                     roles,
-                                     member=None,
+                                     roles: Union[IntNode, ListNode],
+                                     member: Optional[IntNode]=None,
                                      reason: Optional[StrNode]=None):
     """
     Retire un ou plusieurs rôles d'un membre.
@@ -528,4 +529,4 @@ async def dshell_remove_member_roles(ctx: Message,
 
     await target_member.edit(roles=new_set_role, reason=str(reason))
 
-    return target_member.id
+    return IntNode(target_member.id)
