@@ -42,7 +42,7 @@ async def dshell_send_private_message(ctx: Message,
                                       message: Optional[StrNode] = None,
                                       member: Optional[IntNode] = None,
                                       delete: Optional[IntNode]= None,
-                                      embeds: Optional[ListNode, EmbedNode] = None,
+                                      embeds: Optional[Union[ListNode, EmbedNode]] = None,
                                       files: Optional[Union[ListNode, FileNode]] = None):
     """
     Envoie un message privé à un membre Discord.
