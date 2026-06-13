@@ -19,7 +19,7 @@ def utils_check_embeds_arguments(_CMD: StrNode,
 
     if embeds is not None:
         if isinstance(embeds, EmbedNode):
-            final_embeds.append(embeds)
+            final_embeds.add(embeds)
         elif isinstance(embeds, ListNode):
             if (embed_list_size := len(embeds)) > 10:
                 raise Exception(f"Embeds argument has more than 10 items, not {embed_list_size} in '{_CMD}' command")
