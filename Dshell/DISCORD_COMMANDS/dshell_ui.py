@@ -1,16 +1,15 @@
 from Dshell.full_import import (ButtonStyle,
                            PrivateChannel,
                            Interaction,
-                           Button,
+                           ui,
                            MISSING,
                            EasyModifiedViews,
                            CustomIDNotFound,
                            SelectMenu,
                            ComponentType,
-                           Select,
                            random)
 
-from ..DshellParser.ast_nodes import UiSelectNode, UiButtonNode, CodeNode, OptionUiSelectNode, ListNode
+from ..DshellParser.ast_nodes import UiSelectNode, UiButtonNode, OptionUiSelectNode, ListNode, StrNode, IntNode, BoolNode
 
 from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
@@ -187,7 +186,8 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
 
     if isinstance(ui_node, UiButtonNode):
         async for _, args_button, code in build_ui_button_parameters(ui_node, interpreter):
-            b = Button(**args_button)
+            print(args_button)
+            b = ui.Button(**args_button)
             view.add_items(b)
             view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, 'interpreter': interpreter})
 
@@ -242,7 +242,7 @@ async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModif
 
         async for args, args_button, code in build_ui_button_parameters(ui_node, interpreter):
             try:
-                ui: Button = view.get_ui(args_button['custom_id'])
+                ui: ui.Button = view.get_ui(args_button['custom_id'])
             except CustomIDNotFound:
                 raise ValueError(f"Button with custom_id '{args_button['custom_id']}' not found in the view !")
 
@@ -259,7 +259,7 @@ async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModif
 
         async for args, args_select, code in build_ui_select_parameters(ui_select_node=ui_node, interpreter=interpreter):
             try:
-                ui: Select = view.get_ui(args_select['custom_id'])
+                ui: ui.Select = view.get_ui(args_select['custom_id'])
             except CustomIDNotFound:
                 raise ValueError(f"Select menu with custom_id '{args_select['custom_id']}' not found in the view !")
 
@@ -279,7 +279,7 @@ async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModif
     return view
 
 
-async def ui_button_callback(button: Button, interaction: Interaction, data: dict[str, Any]):
+async def ui_button_callback(button: ui.Button, interaction: Interaction, data: dict[str, Any]):
     """
     Callback for UI buttons.
     Executes the code associated with the button.
@@ -291,25 +291,92 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
     code = data.pop('code', None)
     interpreter: "DshellInterpreteur" = data.pop('interpreter', None)
     if code is not None:
+        message = interaction
         local_env = {
-            '__ret__': None,
-            '__guild__': interaction.guild.name if interaction.guild else None,
-            '__channel__': interaction.channel.name if interaction.channel else None,
-            '__author__': interaction.user.id,
-            '__author_name__': interaction.user.name,
-            '__author_display_name__': interaction.user.display_name,
-            '__author_avatar__': interaction.user.display_avatar.url if interaction.user.display_avatar else None,
-            '__author_discriminator__': interaction.user.discriminator,
-            '__author_bot__': interaction.user.bot,
-            '__author_nick__': interaction.user.nick if hasattr(interaction.user, 'nick') else None,
-            '__author_id__': interaction.user.id,
-            '__message__': interaction.message.content if hasattr(interaction.message, 'content') else None,
-            '__message_id__': interaction.message.id if hasattr(interaction.message, 'id') else None,
-            '__channel_name__': interaction.channel.name if interaction.channel else None,
-            '__channel_type__': interaction.channel.type.name if hasattr(interaction.channel, 'type') else None,
-            '__channel_id__': interaction.channel.id if interaction.channel else None,
-            '__private_channel__': isinstance(interaction.channel, PrivateChannel),
+            '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
+            '__loop__': None,  # used to store the current loop variable in loop nodes if the loop identifier is not specified
+            '__break__': BoolNode(0), # used to break a loop
+
+            '__author__': IntNode(message.user.id),
+            '__author_name__': StrNode(message.user.name),
+            '__author_display_name__': StrNode(message.user.display_name),
+            '__author_avatar__': StrNode(message.user.display_avatar.url) if message.user.display_avatar else None,
+            '__author_discriminator__': StrNode(message.user.discriminator),
+            '__author_bot__': BoolNode(message.user.bot),
+            '__author_nick__': StrNode(message.user.nick) if hasattr(message.user, 'nick') else None,
+            '__author_id__': IntNode(message.user.id),
+            '__author_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the author on message add event reaction
+            '__author_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the author on message remove event reaction
+
+            '__message__': StrNode(message.message.content),
+            '__message_content__': StrNode(message.message.content),
+            '__message_id__': IntNode(message.message.id),
+            '__message_author__': IntNode(message.message.author.id),
+            '__message_before__': StrNode(message.message.content),  # same as __message__, but before edit. Can be overwritten by add vars_env parameter
+            '__message_created_at__': StrNode(message.message.created_at),
+            '__message_edited_at__': StrNode(message.message.edited_at),
+            '__message_reactions__': ListNode([StrNode(reaction.emoji) for reaction in message.message.reactions], bypass_limit_elt=True, editable=False),
+            '__message_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction added on message add event reaction
+            '__message_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction removed on message remove event reaction
+            '__message_url__': StrNode(message.message.jump_url) if hasattr(message.message, 'jump_url') else None,
+            '__last_message__': IntNode(message.message.channel.last_message_id),
+
+            '__channel__': IntNode(message.message.channel.id),
+            '__channel_name__': StrNode(message.message.channel.name),
+            '__channel_type__': StrNode(message.message.channel.type.name) if hasattr(message.message.channel, 'type') else None,
+            '__channel_id__': IntNode(message.message.channel.id),
+            '__private_channel__': BoolNode(isinstance(message.message.channel, PrivateChannel)),
         }
+
+        if message.guild is not None:
+            local_env.update(
+                {
+            '__guild__': IntNode(message.channel.guild.id),
+            '__guild_name__': StrNode(message.channel.guild.name),
+            '__guild_id__': IntNode(message.channel.guild.id),
+            '__guild_members__': ListNode([IntNode(member.id) for member in message.channel.guild.members], bypass_limit_elt=True, editable=False),
+            '__guild_member_count__': IntNode(message.channel.guild.member_count),
+            '__guild_icon__': StrNode(message.channel.guild.icon.url) if message.channel.guild.icon else None,
+            '__guild_owner_id__': IntNode(message.channel.guild.owner_id),
+            '__guild_description__': StrNode(message.channel.guild.description),
+            '__guild_roles__': ListNode([IntNode(role.id) for role in message.channel.guild.roles], bypass_limit_elt=True, editable=False),
+            '__guild_roles_count__': IntNode(len(message.channel.guild.roles)),
+            '__guild_emojis__': ListNode([IntNode(emoji.id) for emoji in message.channel.guild.emojis], bypass_limit_elt=True, editable=False),
+            '__guild_emojis_count__': IntNode(len(message.channel.guild.emojis)),
+            '__guild_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.channels], bypass_limit_elt=True, editable=False),
+            '__guild_text_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.text_channels], bypass_limit_elt=True, editable=False),
+            '__guild_voice_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.voice_channels], bypass_limit_elt=True, editable=False),
+            '__guild_categories__': ListNode([IntNode(channel.id) for channel in message.channel.guild.categories], bypass_limit_elt=True, editable=False),
+            '__guild_stage_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.stage_channels], bypass_limit_elt=True, editable=False),
+            '__guild_forum_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.forum_channels], bypass_limit_elt=True, editable=False),
+            '__guild_channels_count__': IntNode(len(message.channel.guild.channels)),
+                }
+            )
+        else:
+            local_env.update(
+                {
+            '__guild__': None,
+            '__guild_name__': None,
+            '__guild_id__': None,
+            '__guild_members__': None,
+            '__guild_member_count__': None,
+            '__guild_icon__': None,
+            '__guild_owner_id__': None,
+            '__guild_description__': None,
+            '__guild_roles__': None,
+            '__guild_roles_count__': None,
+            '__guild_emojis__': None,
+            '__guild_emojis_count__': None,
+            '__guild_channels__': None,
+            '__guild_text_channels__': None,
+            '__guild_voice_channels__': None,
+            '__guild_categories__': None,
+            '__guild_stage_channels__': None,
+            '__guild_forum_channels__': None,
+            '__guild_channels_count__': None,
+                }
+            )
+
         local_env.update(data)
         from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
         with new_scope(interpreter, local_env):
@@ -319,7 +386,7 @@ async def ui_button_callback(button: Button, interaction: Interaction, data: dic
 
     data.update({'code': code, 'interpreter': interpreter})
 
-async def ui_select_callback(select: Select, interaction: Interaction, data: dict[str, Any]):
+async def ui_select_callback(select: ui.Select, interaction: Interaction, data: dict[str, Any]):
     """
     Callback for UI select menus.
     Executes the code associated with the select menu.
@@ -330,27 +397,118 @@ async def ui_select_callback(select: Select, interaction: Interaction, data: dic
     """
     code = data.pop('code', None)
     interpreter: "DshellInterpreteur" = data.pop('interpreter', None)
+
+    message = interaction
     if code is not None:
         local_env = {
-            '__ret__': None,
-            '__guild__': interaction.guild.name if interaction.guild else None,
-            '__channel__': interaction.channel.name if interaction.channel else None,
-            '__author__': interaction.user.id,
-            '__author_name__': interaction.user.name,
-            '__author_display_name__': interaction.user.display_name,
-            '__author_avatar__': interaction.user.display_avatar.url if interaction.user.display_avatar else None,
-            '__author_discriminator__': interaction.user.discriminator,
-            '__author_bot__': interaction.user.bot,
-            '__author_nick__': interaction.user.nick if hasattr(interaction.user, 'nick') else None,
-            '__author_id__': interaction.user.id,
-            '__message__': interaction.message.content if hasattr(interaction.message, 'content') else None,
-            '__message_id__': interaction.message.id if hasattr(interaction.message, 'id') else None,
-            '__channel_name__': interaction.channel.name if interaction.channel else None,
-            '__channel_type__': interaction.channel.type.name if hasattr(interaction.channel, 'type') else None,
-            '__channel_id__': interaction.channel.id if interaction.channel else None,
-            '__private_channel__': isinstance(interaction.channel, PrivateChannel),
-            '__values__': ListNode([i.id for i in select.values]) if select.values and hasattr(select.values[0], 'id') else ListNode(select.values)
+            '__values__': ListNode([IntNode(i.id) for i in select.values]) if select.values and hasattr(
+                select.values[0], 'id') else ListNode(StrNode(i) for i in select.values),
+            '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
+            '__loop__': None,
+            # used to store the current loop variable in loop nodes if the loop identifier is not specified
+            '__break__': BoolNode(0),  # used to break a loop
+
+            '__author__': IntNode(message.user.id),
+            '__author_name__': StrNode(message.user.name),
+            '__author_display_name__': StrNode(message.user.display_name),
+            '__author_avatar__': StrNode(message.user.display_avatar.url) if message.user.display_avatar else None,
+            '__author_discriminator__': StrNode(message.user.discriminator),
+            '__author_bot__': BoolNode(message.user.bot),
+            '__author_nick__': StrNode(message.user.nick) if hasattr(message.user, 'nick') else None,
+            '__author_id__': IntNode(message.user.id),
+            '__author_add_reaction__': None,
+            # Can be overwritten by add vars_env parameter to get the author on message add event reaction
+            '__author_remove_reaction__': None,
+            # Can be overwritten by add vars_env parameter to get the author on message remove event reaction
+
+            '__message__': StrNode(message.message.content),
+            '__message_content__': StrNode(message.message.content),
+            '__message_id__': IntNode(message.message.id),
+            '__message_author__': IntNode(message.message.author.id),
+            '__message_before__': StrNode(message.message.content),
+            # same as __message__, but before edit. Can be overwritten by add vars_env parameter
+            '__message_created_at__': StrNode(message.message.created_at),
+            '__message_edited_at__': StrNode(message.message.edited_at),
+            '__message_reactions__': ListNode([StrNode(reaction.emoji) for reaction in message.message.reactions],
+                                              bypass_limit_elt=True, editable=False),
+            '__message_add_reaction__': None,
+            # Can be overwritten by add vars_env parameter to get the reaction added on message add event reaction
+            '__message_remove_reaction__': None,
+            # Can be overwritten by add vars_env parameter to get the reaction removed on message remove event reaction
+            '__message_url__': StrNode(message.message.jump_url) if hasattr(message.message, 'jump_url') else None,
+            '__last_message__': IntNode(message.message.channel.last_message_id),
+
+            '__channel__': IntNode(message.message.channel.id),
+            '__channel_name__': StrNode(message.message.channel.name),
+            '__channel_type__': StrNode(message.message.channel.type.name) if hasattr(message.message.channel,
+                                                                                      'type') else None,
+            '__channel_id__': IntNode(message.message.channel.id),
+            '__private_channel__': BoolNode(isinstance(message.message.channel, PrivateChannel)),
         }
+
+        if message.guild is not None:
+            local_env.update(
+                {
+                    '__guild__': IntNode(message.channel.guild.id),
+                    '__guild_name__': StrNode(message.channel.guild.name),
+                    '__guild_id__': IntNode(message.channel.guild.id),
+                    '__guild_members__': ListNode([IntNode(member.id) for member in message.channel.guild.members],
+                                                  bypass_limit_elt=True, editable=False),
+                    '__guild_member_count__': IntNode(message.channel.guild.member_count),
+                    '__guild_icon__': StrNode(message.channel.guild.icon.url) if message.channel.guild.icon else None,
+                    '__guild_owner_id__': IntNode(message.channel.guild.owner_id),
+                    '__guild_description__': StrNode(message.channel.guild.description),
+                    '__guild_roles__': ListNode([IntNode(role.id) for role in message.channel.guild.roles],
+                                                bypass_limit_elt=True, editable=False),
+                    '__guild_roles_count__': IntNode(len(message.channel.guild.roles)),
+                    '__guild_emojis__': ListNode([IntNode(emoji.id) for emoji in message.channel.guild.emojis],
+                                                 bypass_limit_elt=True, editable=False),
+                    '__guild_emojis_count__': IntNode(len(message.channel.guild.emojis)),
+                    '__guild_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.channels],
+                                                   bypass_limit_elt=True, editable=False),
+                    '__guild_text_channels__': ListNode(
+                        [IntNode(channel.id) for channel in message.channel.guild.text_channels], bypass_limit_elt=True,
+                        editable=False),
+                    '__guild_voice_channels__': ListNode(
+                        [IntNode(channel.id) for channel in message.channel.guild.voice_channels],
+                        bypass_limit_elt=True, editable=False),
+                    '__guild_categories__': ListNode(
+                        [IntNode(channel.id) for channel in message.channel.guild.categories], bypass_limit_elt=True,
+                        editable=False),
+                    '__guild_stage_channels__': ListNode(
+                        [IntNode(channel.id) for channel in message.channel.guild.stage_channels],
+                        bypass_limit_elt=True, editable=False),
+                    '__guild_forum_channels__': ListNode(
+                        [IntNode(channel.id) for channel in message.channel.guild.forum_channels],
+                        bypass_limit_elt=True, editable=False),
+                    '__guild_channels_count__': IntNode(len(message.channel.guild.channels)),
+                }
+            )
+        else:
+            local_env.update(
+                {
+                    '__guild__': None,
+                    '__guild_name__': None,
+                    '__guild_id__': None,
+                    '__guild_members__': None,
+                    '__guild_member_count__': None,
+                    '__guild_icon__': None,
+                    '__guild_owner_id__': None,
+                    '__guild_description__': None,
+                    '__guild_roles__': None,
+                    '__guild_roles_count__': None,
+                    '__guild_emojis__': None,
+                    '__guild_emojis_count__': None,
+                    '__guild_channels__': None,
+                    '__guild_text_channels__': None,
+                    '__guild_voice_channels__': None,
+                    '__guild_categories__': None,
+                    '__guild_stage_channels__': None,
+                    '__guild_forum_channels__': None,
+                    '__guild_channels_count__': None,
+                }
+            )
+
         local_env.update(data)
         from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
         with new_scope(interpreter, local_env):
