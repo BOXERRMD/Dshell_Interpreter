@@ -187,7 +187,7 @@ class DshellInterpreteur:
                 self.env.set(node.name.value, ListNode([await build_ui(first_node, self)]))  # store UIs in a list
 
         elif isinstance(first_node, CodeNode):
-            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), first_node):
+            if self.env.contains(node.name.value) and isinstance(self.env.get(node.name.value), CodeNode):
                 self.env.get(node.name.value).update(first_node)
             else:
                 self.env.set(node.name.value, first_node)

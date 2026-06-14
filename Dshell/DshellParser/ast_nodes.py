@@ -1,4 +1,4 @@
-from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite, getsizeof)
+from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite, getsizeof, Permissions)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE, MAX_FILE_SIZE
 from .errors import *

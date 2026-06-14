@@ -9,7 +9,7 @@ from pycordViews import EasyModifiedViews
 from Dshell.full_import import (Interaction,
                            Embed, Optional, File, Union)
 
-from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode
+from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode, FloatNode
 from .utils.utils_message import utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
 from .utils.utils_embed import utils_check_embeds_arguments
@@ -22,7 +22,7 @@ from .utils.utils_type_validation import (_validate_optional_number,
 
 async def dshell_respond_interaction(ctx: Interaction,
                                      content: Optional[StrNode] = None,
-                                     delete=None,
+                                     delete:Optional[Union[IntNode, FloatNode]]=None,
                                      global_mentions: Optional[BoolNode] = None,
                                      everyone_mention: BoolNode = BoolNode(1),
                                      roles_mentions: BoolNode = BoolNode(1),
@@ -31,7 +31,7 @@ async def dshell_respond_interaction(ctx: Interaction,
                                      hide: BoolNode = BoolNode(0),
                                      embeds: Optional[ListNode]=None,
                                      files: Optional[Union[ListNode, FileNode]] = None,
-                                     view: Optional[EasyModifiedViews]=None) -> int:
+                                     view: Optional[EasyModifiedViews]=None) -> IntNode:
     """
     Répond à une interaction Discord avec un message.
     
@@ -109,7 +109,7 @@ async def dshell_respond_interaction(ctx: Interaction,
 
     return IntNode(sended_message.id)
 
-async def dshell_defer_interaction(ctx: Interaction) -> bool:
+async def dshell_defer_interaction(ctx: Interaction) -> BoolNode:
     """
     Diffère la réponse d'une interaction Discord.
     
@@ -135,7 +135,7 @@ async def dshell_defer_interaction(ctx: Interaction) -> bool:
 
     return BoolNode(1)
 
-async def dshell_delete_original_message(ctx: Interaction) -> int:
+async def dshell_delete_original_message(ctx: Interaction) -> IntNode:
     """
     Supprime le message original d'une interaction Discord.
     

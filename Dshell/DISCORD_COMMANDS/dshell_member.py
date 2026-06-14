@@ -256,8 +256,7 @@ async def dshell_timeout_member(ctx: Message, duration: IntNode, member: Optiona
     if not target_member:
         raise Exception(f'Member {member} not found in the server !')
 
-    if not isinstance(duration, int):
-        raise TypeError("Duration must be an integer representing seconds.")
+    _validate_required_int(duration, "duration", _CMD)
 
     if duration < 0:
         raise ValueError("Duration must be a non-negative integer.")
@@ -304,7 +303,7 @@ async def dshell_rename_member(ctx: Message, new_name: StrNode, member: Optional
     return IntNode(renamed_member.id)
 
 
-async def dshell_check_permissions(ctx: Message, permissions: PermissionNode, member: Optional[IntNode]=None):
+async def dshell_check_permissions(ctx: Message, permissions: IntNode, member: Optional[IntNode]=None):
     """
     Vérifie si un membre possède des permissions spécifiques sur le serveur.
     
@@ -332,19 +331,18 @@ async def dshell_check_permissions(ctx: Message, permissions: PermissionNode, me
     _validate_required_int(permissions, "Permissions", _CMD)
     _validate_optional_int(member, "Member", _CMD)
     
-    target_member: Member = ctx.author if member is None else ctx.channel.guild.get_member(member)
+    target_member: Optional[Member] = ctx.author if member is None else ctx.channel.guild.get_member(member)
 
     if not target_member:
         raise Exception(f'Member {member} not found in the server !')
 
-    if not isinstance(permissions, int):
-        raise TypeError("Permissions must be an integer representing permissions flags.")
+    _validate_required_int(permissions, "permissions", _CMD)
 
     permissions_to_check = Permissions(permissions)
     member_permissions = target_member.guild_permissions
 
-    if (permissions_to_check.value & member_permissions.value) != 0:
-        return True
+    if (permissions_to_check & member_permissions) != 0:
+        return BoolNode(1)
     return BoolNode(0)
 
 
@@ -452,7 +450,7 @@ async def dshell_give_member_roles(ctx: Message,
     if target_member is None:
         raise Exception(f'Member {member} not found in the server !')
 
-    if isinstance(roles, int):
+    if isinstance(roles, IntNode):
         roles = (roles, )
 
     list_roles: list[Role] = []
@@ -466,7 +464,7 @@ async def dshell_give_member_roles(ctx: Message,
 
     list_roles.extend(target_member.roles)
 
-    await target_member.edit(roles=list_roles, reason=str(reason))
+    await target_member.edit(roles=list_roles, reason=reason)
 
     return IntNode(target_member.id)
 
@@ -513,7 +511,7 @@ async def dshell_remove_member_roles(ctx: Message,
     if target_member is None:
         raise Exception(f'Member {member} not found in the server !')
 
-    if isinstance(roles, int):
+    if isinstance(roles, IntNode):
         roles = (roles,)
 
     list_roles: set[Role] = set()
@@ -527,6 +525,6 @@ async def dshell_remove_member_roles(ctx: Message,
 
     new_set_role = list(set(target_member.roles) - list_roles)
 
-    await target_member.edit(roles=new_set_role, reason=str(reason))
+    await target_member.edit(roles=new_set_role, reason=reason)
 
     return IntNode(target_member.id)
