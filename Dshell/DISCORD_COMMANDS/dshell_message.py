@@ -1,7 +1,7 @@
 from pycordViews import EasyModifiedViews
 
 from Dshell.full_import import (Message,
-                           PartialMessage,
+                           TextChannel,
                                 File)
 
 from ..DshellParser.ast_nodes import ListNode, StrNode, BoolNode, IntNode, EmbedNode, FileNode
@@ -21,6 +21,7 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_eval_group_node,
                                           _validate_required_string)
 from ..DshellInterpreteur.cached_messages import dshell_cached_messages
+from ..DshellInterpreteur.dshell_global_variables import MAX_WAIT_MESSAGE_TIMEOUT
 
 from Dshell.full_import import Optional, Union, compile, DOTALL
 from asyncio import wait_for, sleep
@@ -469,6 +470,9 @@ async def dshell_scan_message(ctx: Message,
 
     _validate_required_int(timeout, "timeout", _CMD)
 
+    if timeout > MAX_WAIT_MESSAGE_TIMEOUT:
+        raise Exception(f"Timeout can't wait more than {MAX_WAIT_MESSAGE_TIMEOUT} seconds !")
+
     target_channel = ctx.channel if channel is None else ctx.guild.get_channel(channel)
 
     _validate_not_none(target_channel, f"Channel {channel} not found in guild {ctx.guild.name} !")
@@ -507,11 +511,21 @@ async def dshell_scan_message(ctx: Message,
     except TimeoutError:
         return None
 
-async def dshell_scan_check(target_channel) -> Message:
-    last_message_id = target_channel.last_message_id
-    while target_channel.last_message_id == last_message_id or target_channel.last_message.is_system():
-        await sleep(1)
+async def dshell_scan_check(target_channel: TextChannel) -> Message:
+    last_message = target_channel.last_message
 
-    return target_channel.last_message
+    if last_message is None:
+        raise Exception(f"No reference message (message in {target_channel.name} channel not found) to compare with the latest message found !")
+
+    last_message_datetime = last_message.created_at
+    last_message_to_wait = last_message
+    while last_message_to_wait.id == last_message.id or last_message_to_wait.is_system():
+        await sleep(0.5)
+        async for m in target_channel.history(limit=5, after=last_message_datetime, oldest_first=True):
+            if not m.is_system() and m.id != last_message.id:
+                last_message_to_wait = m
+                break
+
+    return last_message_to_wait
 
 
