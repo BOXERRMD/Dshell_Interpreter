@@ -75,10 +75,13 @@ async def dshell_get_channels(ctx: Message, name: Optional[StrNode]=None, regex:
     channels = ListNode([])
 
     for channel in ctx.channel.guild.channels:
-        if name is not None and channel.name == StrNode(name):
+        if name is not None and channel.name == name:
             channels.add(IntNode(channel.id))
 
         elif regex is not None and search(regex, channel.name):
+            channels.add(IntNode(channel.id))
+
+        else:
             channels.add(IntNode(channel.id))
 
     return channels
@@ -155,13 +158,15 @@ async def dshell_create_text_channel(ctx: Message,
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
+    final_permissions = permissions.value if not MISSING else permissions
+
     created_channel = await ctx.guild.create_text_channel(str(name),
                                                           category=channel_category,
                                                           position=position,
                                                           slowmode_delay=slowmode,
                                                           topic=topic,
                                                           nsfw=nsfw,
-                                                          overwrites=permissions.value,
+                                                          overwrites=final_permissions,
                                                           reason=reason)
 
     return IntNode(created_channel.id)
@@ -193,19 +198,21 @@ async def dshell_create_voice_channel(ctx: Message,
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
+    final_permissions = permissions.value if not MISSING else permissions
+
     created_channel = await ctx.guild.create_voice_channel(StrNode(name),
                                                            category=channel_category,
                                                            position=position,
                                                            bitrate=bitrate,
-                                                           overwrites=permissions.value,
+                                                           overwrites=final_permissions,
                                                            reason=reason)
 
     return IntNode(created_channel.id)
 
 
 async def dshell_delete_channel(ctx: Message,
-                                channel=None,
-                                reason=None,
+                                channel: Optional[IntNode]=None,
+                                reason: Optional[StrNode]=None,
                                 timeout: FloatNode = FloatNode(0)):
     """
     Deletes a channel.
@@ -285,7 +292,7 @@ async def dshell_edit_text_channel(ctx: Message,
     _validate_optional_string(reason, "Reason", _CMD)
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
-    new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
+    new_categoy = ctx.channel.category if category is MISSING else ctx.channel.guild.get_channel(category)
 
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
@@ -303,13 +310,13 @@ async def dshell_edit_text_channel(ctx: Message,
 
 
 async def dshell_edit_voice_channel(ctx: Message,
-                                    channel=None,
+                                    channel: Optional[IntNode]=None,
                                     name: Optional[StrNode]=None,
                                     category: IntNode = MISSING,
                                     position: IntNode = MISSING,
                                     bitrate: IntNode = MISSING,
                                     permissions: PermissionNode = MISSING,
-                                    reason=None):
+                                    reason: Optional[StrNode]=None):
     """
     Edits a voice channel on the server
     """
@@ -330,7 +337,7 @@ async def dshell_edit_voice_channel(ctx: Message,
     _validate_optional_string(reason, "Reason", _CMD)
 
     channel_to_edit = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
-    new_categoy = ctx.channel.category if isinstance(category, _MissingSentinel) else ctx.channel.guild.get_channel(category)
+    new_categoy = ctx.channel.category if category is MISSING else ctx.channel.guild.get_channel(category)
 
     if channel_to_edit is None:
         raise Exception(f"Channel {channel} not found !")
@@ -356,7 +363,7 @@ async def dshell_create_thread_message(ctx: Message,
 
     _CMD = "ct"
 
-    message = ctx if message is None else await utils_get_message(ctx, message)
+    final_message = ctx if message is None else await utils_get_message(ctx, message)
 
     _validate_required_string(name, "Name", _CMD)
 
@@ -372,7 +379,7 @@ async def dshell_create_thread_message(ctx: Message,
     if isinstance(slowmode, IntNode) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
-    thread = await message.create_thread(name=name,
+    thread = await final_message.create_thread(name=name,
                     auto_archive_duration=archive,
                     slowmode_delay=slowmode)
 
@@ -394,7 +401,7 @@ async def dshell_edit_thread(ctx: Message,
     if thread is None:
         raise Exception("Thread must be specified !")
 
-    thread = await utils_get_thread(ctx, thread)
+    final_thread = await utils_get_thread(ctx, thread)
 
     _validate_missing_or_type(name, "Name", StrNode, _CMD)
 
@@ -410,12 +417,12 @@ async def dshell_edit_thread(ctx: Message,
     if isinstance(slowmode, IntNode) and slowmode < 0:
         raise Exception("Slowmode delay must be a positive integer !")
 
-    await thread.edit(name=name if name is not None else thread.name,
+    await final_thread.edit(name=name if name is not None else thread.name,
                       auto_archive_duration=archive if archive is not MISSING else thread.auto_archive_duration,
                       slowmode_delay=slowmode if slowmode is not MISSING else thread.slowmode_delay,
                       reason=reason)
 
-    return IntNode(thread.id)
+    return IntNode(final_thread.id)
 
 
 async def dshell_get_thread(ctx: Message, message: Optional[Union[IntNode, StrNode]] = None):
@@ -425,13 +432,13 @@ async def dshell_get_thread(ctx: Message, message: Optional[Union[IntNode, StrNo
 
     _CMD = "gt"
 
-    message = ctx if message is None else await utils_get_message(ctx, message)
+    final_message = ctx if message is None else await utils_get_message(ctx, message)
 
     # Return None if message doesn't have thread attribute (not raising error for this case)
     if not hasattr(message, 'thread'):
         return None
 
-    thread = message.thread
+    thread = final_message.thread
 
     if thread is None:
         return None
@@ -486,7 +493,7 @@ async def dshell_create_category(ctx: Message,
     return IntNode(created_category.id)
 
 async def dshell_edit_category(ctx: Message,
-                                category,
+                                category: IntNode,
                                 name: Optional[StrNode]=None,
                                 position=MISSING,
                                 permissions: PermissionNode = MISSING,
