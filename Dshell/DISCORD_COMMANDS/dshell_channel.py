@@ -158,7 +158,7 @@ async def dshell_create_text_channel(ctx: Message,
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
-    final_permissions = permissions.value if not MISSING else permissions
+    final_permissions = permissions.value if not isinstance(permissions, _MissingSentinel) else permissions
 
     created_channel = await ctx.guild.create_text_channel(str(name),
                                                           category=channel_category,
@@ -198,7 +198,7 @@ async def dshell_create_voice_channel(ctx: Message,
 
     channel_category = ctx.channel.category if category is None else ctx.channel.guild.get_channel(category)
 
-    final_permissions = permissions.value if not MISSING else permissions
+    final_permissions = permissions.value if not isinstance(permissions, _MissingSentinel) else permissions
 
     created_channel = await ctx.guild.create_voice_channel(StrNode(name),
                                                            category=channel_category,

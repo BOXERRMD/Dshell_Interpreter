@@ -1,6 +1,6 @@
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
-from ..DshellInterpreteur.errors import DshellInterpreterStopExecution
+from ..DshellInterpreteur.errors import DshellInterpreterStopExecution, DshellInterpreterError
 from Dshell.full_import import TypeVar, Union, Optional, Any, Callable, sleep, findall
 from ..DshellParser.ast_nodes import *
 from Dshell.full_import import AutoShardedBot, Interaction, Message, PrivateChannel
@@ -226,6 +226,7 @@ class DshellInterpreteur:
             try:
                 if isinstance(node, StartNode):
                     await self.execute(node.body)
+                    return
 
                 if isinstance(node, CommandNode):
                     await self._execute_command_node(node)
@@ -260,7 +261,7 @@ class DshellInterpreteur:
                     if await self.eval_data_token(node.error_message):
                         raise RuntimeError("Execution stopped - EndNode encountered")
                     else:
-                        raise DshellInterpreterStopExecution("Execution stopped without error")
+                        raise DshellInterpreterStopExecution()
 
             except Exception as e:
                 if not self.raise_error:

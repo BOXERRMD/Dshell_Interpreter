@@ -221,18 +221,14 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 return_node = ReturnNode(body=tokens_by_line[1:], line=line)
                 last_block.body.append(return_node)
 
-            elif first_token_line.value == 'scan':
-                scan_node = ScanNode(ArgsCommandNode(body=tokens_by_line[1:], line=line), line=line)
-                last_block.body.append(scan_node)
-
             elif first_token_line.value == '#end':  # node pour arrêter le programme si elle est rencontré
-                error_message = True
+                error_message = BoolNode(1)
                 if len_tokens_by_line_since_command_name > 0:
                     if tokens_by_line[1].type != DTT.BOOL:
                         raise TypeError(f'[#END] the variable given must be a boolean, not {tokens_by_line[1].type}')
                     else:
                         error_message = tokens_by_line[1]
-                end_node = EndNode(error_message)
+                end_node = EndNode(line=line, error_message=error_message)
                 last_block.body.append(end_node)
 
         ############################## DISCORD KEYWORDS ##############################
