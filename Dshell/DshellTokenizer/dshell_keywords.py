@@ -11,7 +11,6 @@ __all__ = [
 from ..DISCORD_COMMANDS import *
 
 from Dshell.full_import import Callable
-from ..DISCORD_COMMANDS.dshell_file import dshell_read_file, dshell_write_file, dshell_get_message_files
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code', 'eval', 'return', 'break'
@@ -184,6 +183,8 @@ dshell_mathematical_operators: dict[str, tuple[Callable, int, int, int]] = {
     r"%": (lambda a, b: a % b, 7, 2, 2),
     r"-": (lambda a, b=None: a-b if b is not None else -a, 6, 1, 2),
     r"+": (lambda a, b: a + b, 6, 2, 2),
+    r"..": (lambda a, b: ListNode([IntNode(i) for i in range(IntNode(a), IntNode(b))])
+                if a <= b else ListNode([IntNode(i) for i in range(IntNode(a), IntNode(b), -1)]), 5, 2, 2)
     # warning: ambiguity between unary and binary to be handled in your parser
 
 }

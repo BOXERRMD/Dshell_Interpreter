@@ -120,6 +120,7 @@ class DshellInterpreteur:
             print_ast(self.ast)
 
         self.raise_error = False
+        self.end_program: bool = False
 
     async def _execute_command_node(self, node: CommandNode):
         """Execute a command node."""
@@ -153,6 +154,9 @@ class DshellInterpreteur:
 
             if self.env.get('__break__'):
                 self.env.set('__break__', BoolNode(0))
+                break
+
+            if self.end_program:
                 break
 
     async def _execute_break_node(self, node: BreakNode):
@@ -223,6 +227,10 @@ class DshellInterpreteur:
 
         for node in ast:
 
+            # cut the current program if an EndNode is encountred with the parameter "error_message" to False
+            if self.end_program:
+                return
+
             try:
                 if isinstance(node, StartNode):
                     await self.execute(node.body)
@@ -261,7 +269,7 @@ class DshellInterpreteur:
                     if await self.eval_data_token(node.error_message):
                         raise RuntimeError("Execution stopped - EndNode encountered")
                     else:
-                        raise DshellInterpreterStopExecution()
+                        self.end_program = True
 
             except Exception as e:
                 if not self.raise_error:
