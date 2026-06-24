@@ -13,19 +13,24 @@ from ..DshellParser.ast_nodes import UiSelectNode, UiButtonNode, OptionUiSelectN
 
 from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
-from ..DshellInterpreteur.dshell_scope import new_scope
+from ..DshellInterpreteur.dshell_scope import new_scope, get_scope, update_nbr_usage_scope, get_usage_scope
 
-from Dshell.full_import import Any, TYPE_CHECKING, Union
+from Dshell.full_import import Any, TYPE_CHECKING, Union, Optional
 
 from .utils.utils_type_validation import (_validate_optional_code_node,
+                                          _validate_required_int,
                                           _validate_optional_int,
-                                          _validate_optional_string)
+                                          _validate_optional_string,
+                                          _validate_required_string,
+                                          _validate_required_bool,
+                                          _validate_missing_or_type)
 
 from .utils.utils_global import utils_refactor_emoji
 
 if TYPE_CHECKING:
     from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
 
+scope_id = "scope_id"
 
 ButtonStyleValues: set = {i.name for i in ButtonStyle}
 SelectSyleValues: dict = {'string': ComponentType.string_select,
@@ -42,19 +47,22 @@ async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: 
     :param interpreter:
     :return:
     """
+    _CMD = "button"
+
     regrouped_parameters = await regroupe_commandes(ui_button_node.body, interpreter, normalise=True)
     args_button: dict[str, list[Any]] = regrouped_parameters.get_dict_parameters()
 
     code = args_button.pop('code', None)
-    style = args_button.pop('style', 'primary').lower()
-    custom_id = args_button.pop('custom_id', 'ui_button_'+str(random()))
-    row = args_button.pop('row', 0)
+    style = StrNode(args_button.pop('style', 'primary').lower())
+    custom_id = args_button.pop('custom_id', StrNode('ui_button_'+str(random())))
+    row = args_button.pop('row', IntNode(0))
     emoji = utils_refactor_emoji(args_button.pop('emoji', None))
 
-    _validate_optional_code_node(code, "Button code", "build_ui_button")
-
-    if not isinstance(custom_id, str):
-        raise TypeError(f"Button custom_id must be a string, not {type(custom_id)} !")
+    _validate_optional_code_node(code, "code", _CMD)
+    _validate_required_string(style, "style", _CMD)
+    _validate_required_string(custom_id, "custom_id", _CMD)
+    _validate_required_int(row, "row", _CMD)
+    _validate_optional_string(emoji, "emoji", _CMD)
 
     if style not in ButtonStyleValues:
         raise ValueError(f"Button style must be one of {', '.join(ButtonStyleValues)}, not '{style}' !")
@@ -74,40 +82,32 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     :param interpreter:
     :return:
     """
+    _CMD = "select"
+
     regrouped_parameters = await regroupe_commandes(ui_select_node.body, interpreter, normalise=True)
     args_select: dict[str, list[Any]] = regrouped_parameters.get_dict_parameters()
 
     code = args_select.pop('code', None)
-    custom_id = args_select.pop('custom_id', 'ui_select_'+str(random()))
-    select_type = args_select.pop('type', 'string').lower()
+    custom_id = args_select.pop('custom_id', StrNode('ui_select_'+str(random())))
+    select_type = StrNode(args_select.pop('type', 'string').lower())
 
-    disabled = args_select.get('disabled', False)
-    max_values = args_select.get('max', 1)
-    min_values = args_select.get('min', 1)
-    placeholder = args_select.get('placeholder', "")
-    row = args_select.pop('row', 0)
+    disabled = args_select.get('disabled', BoolNode(0))
+    max_values = args_select.get('max', IntNode(1))
+    min_values = args_select.get('min', IntNode(1))
+    placeholder = args_select.get('placeholder', StrNode(""))
+    row = args_select.pop('row', IntNode(0))
 
-    _validate_optional_code_node(code, "Select code", "build_ui_select")
+    _validate_optional_code_node(code, "Select code", _CMD)
+    _validate_required_string(custom_id, "custom_id", _CMD)
+    _validate_required_string(select_type, "type", _CMD)
+    _validate_required_bool(disabled, "disabled", _CMD)
+    _validate_required_int(max_values, "max", _CMD)
+    _validate_required_int(max_values, "min", _CMD)
+    _validate_required_string(placeholder, "placeholder", _CMD)
+    _validate_optional_int(row, "row", _CMD)
 
-    if not isinstance(custom_id, str):
-        raise TypeError(f"Select custom_id must be a string, not {type(custom_id)} !")
-
-    if select_type is None or not isinstance(select_type, str) or select_type not in SelectSyleValues:
-        raise TypeError(f"Select type must be a string, not {type(select_type)} !")
-
-    if not isinstance(disabled, bool):
-        raise TypeError(f"Select disabled must be a bool, not {type(disabled)} !")
-
-    if not isinstance(max_values, int):
-        raise TypeError(f"Select max_values must be an int, not {type(max_values)} !")
-
-    if not isinstance(min_values, int):
-        raise TypeError(f"Select min_values must be an int, not {type(min_values)} !")
-
-    if not isinstance(placeholder, str):
-        raise TypeError(f"Select placeholder must be a string, not {type(placeholder)} !")
-
-    _validate_optional_int(row, "Select row", "build_ui_select")
+    if select_type not in SelectSyleValues:
+        raise TypeError(f"Select style must be one of {', '.join(SelectSyleValues.keys())}, not '{select_type}' !")
 
     args_select["disabled"] = disabled
     args_select["max_values"] = max_values
@@ -128,6 +128,8 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
     :param interpreter:
     :return:
     """
+    _CMD = "option"
+
     option_results: list[dict[str, Any]] = []
 
     for option_node in option_nodes:
@@ -140,27 +142,20 @@ async def build_ui_select_options(option_nodes: list[OptionUiSelectNode], interp
         emoji = utils_refactor_emoji(args_option.pop('emoji', None))
         default = args_option.pop('default', False)
 
-        if label is None or not isinstance(label, str):
-            raise TypeError(f"Option label must be a string, not {type(label)} !")
+        _validate_required_string(label, "label", _CMD)
+        _validate_missing_or_type(value, "value", StrNode, _CMD)
+        _validate_optional_string(description, "description", _CMD)
+        _validate_optional_string(emoji, "emoji", _CMD)
+        _validate_required_bool(default, "default", _CMD)
 
         if len(label) > 100:
             raise ValueError("Option label must be less than 100 characters !")
 
-        if value and not isinstance(value, str):
-            raise TypeError(f"Option value must be a string, not {type(value)} !")
-
         if value and len(value) > 100:
             raise ValueError("Option value must be less than 100 characters !")
 
-        _validate_optional_string(description, "Option description", "build_ui_option")
-
         if description is not None and len(description) > 100:
             raise ValueError("Option description must be less than 100 characters !")
-
-        _validate_optional_string(emoji, "Option emoji", "build_ui_option")
-
-        if not isinstance(default, bool):
-            raise TypeError(f"Option default must be a bool, not {type(default)} !")
 
         option_dict = {
             'label': label,
@@ -182,14 +177,18 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
     :param interpreter:
     :return:
     """
-    view = EasyModifiedViews()
+
+    async def ui_timeout(ctx):
+        update_nbr_usage_scope(interpreter.scope_id, -1)
+
+    view = EasyModifiedViews(timeout=600, call_on_timeout=ui_timeout, disabled_on_timeout=True)
 
     if isinstance(ui_node, UiButtonNode):
         async for _, args_button, code in build_ui_button_parameters(ui_node, interpreter):
-            print(args_button)
             b = ui.Button(**args_button)
             view.add_items(b)
-            view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, 'interpreter': interpreter})
+            view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, scope_id: interpreter.scope_id})
+        update_nbr_usage_scope(interpreter.scope_id, 1)
 
     elif isinstance(ui_node, UiSelectNode):
         s = SelectMenu()
@@ -204,31 +203,31 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
                 for option in options:
                     menu.add_option(**option)
 
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, 'interpreter': interpreter})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
 
             elif select_type == ComponentType.role_select:
                 s.add_role_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, 'interpreter': interpreter})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
 
             elif select_type == ComponentType.user_select:
                 s.add_user_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, 'interpreter': interpreter})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
 
             elif select_type == ComponentType.mentionable_select:
                 s.add_mentionable_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, 'interpreter': interpreter})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
 
             elif select_type == ComponentType.channel_select:
                 s.add_channel_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, 'interpreter': interpreter})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
 
         view.add_items(s)
+        update_nbr_usage_scope(interpreter.scope_id, 1)
 
     else:
         raise TypeError(f"UI node must be UiButtonNode or UiSelectNode, not {type(ui_node)} !")
 
     return view
-
 
 
 async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModifiedViews, interpreter: "DshellInterpreteur") -> EasyModifiedViews:
@@ -253,7 +252,7 @@ async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModif
             ui.url = args_button.get('url', ui.url)
             ui.row = args_button.get('row', ui.row)
             new_code = code if code is not None else view.get_callable_data(args_button['custom_id'])['code']
-            view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': new_code, 'interpreter': interpreter})
+            view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': new_code, scope_id: interpreter.scope_id})
 
     elif isinstance(ui_node, UiSelectNode):
 
@@ -274,7 +273,7 @@ async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModif
                 ui.add_option(**option)
 
             new_code = code if code is not None else view.get_callable_data(args_select['custom_id'])['code']
-            view.set_callable(args_select['custom_id'], _callable=ui_select_callback, data={'code': new_code, 'interpreter': interpreter})
+            view.set_callable(args_select['custom_id'], _callable=ui_select_callback, data={'code': new_code, scope_id: interpreter.scope_id})
 
     return view
 
@@ -288,8 +287,9 @@ async def ui_button_callback(button: ui.Button, interaction: Interaction, data: 
     :param data:
     :return:
     """
-    code = data.pop('code', None)
-    interpreter: "DshellInterpreteur" = data.pop('interpreter', None)
+    code = data.get('code', None)
+    scope: Optional[str] = data.get(scope_id, None)
+
     if code is not None:
         message = interaction
         local_env = {
@@ -377,14 +377,20 @@ async def ui_button_callback(button: ui.Button, interaction: Interaction, data: 
                 }
             )
 
-        local_env.update(data)
         from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
-        with new_scope(interpreter, local_env):
-            await DshellInterpreteur(code, ctx=interaction, debug=False, vars_env=interpreter.env).execute()
+
+        new_interpreter = DshellInterpreteur(
+            code,
+            ctx=interaction,
+            debug=False,
+            vars_env=scope)
+
+        with new_scope(new_interpreter, local_env):
+            await new_interpreter.execute()
+
     else:
         await interaction.response.defer(invisible=True)
 
-    data.update({'code': code, 'interpreter': interpreter})
 
 async def ui_select_callback(select: ui.Select, interaction: Interaction, data: dict[str, Any]):
     """
@@ -395,8 +401,8 @@ async def ui_select_callback(select: ui.Select, interaction: Interaction, data: 
     :param data:
     :return:
     """
-    code = data.pop('code', None)
-    interpreter: "DshellInterpreteur" = data.pop('interpreter', None)
+    code = data.get('code', None)
+    scope: Optional[str] = data.get(scope_id, None)
 
     message = interaction
     if code is not None:
@@ -511,9 +517,14 @@ async def ui_select_callback(select: ui.Select, interaction: Interaction, data: 
 
         local_env.update(data)
         from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
-        with new_scope(interpreter, local_env):
-            await DshellInterpreteur(code, ctx=interaction, debug=False, vars_env=interpreter.env).execute()
+        new_interpreter = DshellInterpreteur(
+            code,
+            ctx=interaction,
+            debug=False,
+            vars_env=scope)
+
+        with new_scope(new_interpreter, local_env):
+            await new_interpreter.execute()
+
     else:
         await interaction.response.defer(invisible=True)
-
-    data.update({'code': code, 'interpreter': interpreter})

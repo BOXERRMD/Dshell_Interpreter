@@ -1,9 +1,8 @@
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
-from ..DshellInterpreteur.errors import DshellInterpreterStopExecution, DshellInterpreterError
-from Dshell.full_import import TypeVar, Union, Optional, Any, Callable, sleep, findall
+from ..full_import import TypeVar, Union, Optional, Any, Callable, sleep, findall
 from ..DshellParser.ast_nodes import *
-from Dshell.full_import import AutoShardedBot, Interaction, Message, PrivateChannel
+from ..full_import import AutoShardedBot, Interaction, Message, PrivateChannel, random
 from ..DshellParser.dshell_parser import parse, print_ast
 from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
 from .cached_messages import dshell_cached_messages
@@ -12,7 +11,7 @@ from .utils_interpreter import get_params, eval_expression, eval_expression_inli
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
 from ..DISCORD_COMMANDS.dshell_ui import build_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
-from .dshell_scope import Scope, new_scope
+from .dshell_scope import Scope, new_scope, get_scope, create_scope, update_nbr_usage_scope, get_usage_scope
 from .dshell_global_variables import MAX_SLEEP_TIME_SECONDS, MIN_SLEEP_TIME_SECONDS
 
 
@@ -28,7 +27,7 @@ class DshellInterpreteur:
     def __init__(self, code: Union[str, CodeNode], ctx: context,
                  debug: bool = False,
                  vars: Optional[str] = None,
-                 vars_env: Optional[dict[str, Any] | Scope] = None):
+                 vars_env: Optional[dict[str, Any] | str] = None):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
@@ -48,7 +47,19 @@ class DshellInterpreteur:
             self.ast: list[ASTNode] = code.body
 
         message = ctx.message if isinstance(ctx, Interaction) else ctx
-        self.env: Scope = Scope()
+
+        # scope creation
+        scope = get_scope(vars_env)
+        if scope:
+            self.env = scope
+            self.scope_id = vars_env
+        else:
+            self.scope_id: str = create_scope()
+            self.env: Optional[Scope] = get_scope(self.scope_id)
+
+        if self.env is None:
+            raise Exception(f"Scope {self.scope_id} not found in interpreter creation !")
+
         self.env.update({
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
             '__loop__': None,  # used to store the current loop variable in loop nodes if the loop identifier is not specified
@@ -106,9 +117,8 @@ class DshellInterpreteur:
 
         } if message is not None and not debug else {'__ret__': None, '__break__': BoolNode(0)}) # {} is used in debug mode, when ctx is None
 
-        if isinstance(vars_env, Scope):
-            self.env = vars_env
-        elif isinstance(vars_env, dict): # add the variables to the environment
+
+        if isinstance(vars_env, dict): # add the variables to the environment
             self.env.update(vars_env)
 
         self.vars = StrNode(vars) if vars is not None else StrNode('')
@@ -327,8 +337,7 @@ class DshellInterpreteur:
         """
         Clear the interpreter environment.
         """
-        self.env.clear()
-        self.ast.clear()
+        update_nbr_usage_scope(self.scope_id, -1)
 
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):
