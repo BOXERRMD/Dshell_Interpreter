@@ -125,7 +125,7 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
 
             if tmp_tokens and len(tmp_tokens[0]) > 0:
                 for i in range(old_index_order, index_order):
-                    param_node_arguments_dict[param_node_arguments_order[i][0]] = tmp_tokens[0][i]
+                    param_node_arguments_dict[param_node_arguments_order[i][0]] = await interpreter.eval_data_token(tmp_tokens[0][i])
 
         # traitement des paramètres à tokeniser à la chaine
         elif param_node_arguments_order[index_order][1] == DTT.PARAMETERS:
@@ -140,7 +140,9 @@ async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict
             tmp_tokens = DshellTokenizer(tmp_parameter).start()
 
             if tmp_tokens and len(tmp_tokens[0]) > 0:
-                param_node_arguments_dict[param_node_arguments_order[old_index_order][0]] = ListNode(tmp_tokens[0])
+                param_node_arguments_dict[param_node_arguments_order[old_index_order][0]] = ListNode(
+                    [await interpreter.eval_data_token(i) for i in tmp_tokens[0]]
+                )
 
         # traitement des paramètres à considéré comme une chaine de caractère à la chaine
         elif param_node_arguments_order[index_order][1] == DTT.STR_PARAMETER:
