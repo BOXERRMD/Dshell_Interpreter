@@ -188,7 +188,7 @@ async def utils_len(ctx: Message, value):
         3
     """
     if not isinstance(value, (StrNode, ListNode)):
-        raise TypeError(f"value must be a list or a string in len command, not {type(value)}")
+        raise TypeError(f"value must be a list or a string in len command, not {type(value).__name__}")
 
     return IntNode(len(value))
 
@@ -347,7 +347,7 @@ def utils_build_colour(color: Union[IntNode, ListNode]) -> Union[Colour, IntNode
         else:
             return Colour.from_rgb(*color)
     else:
-        raise TypeError(f"Color must be an integer or a ListNode, not {type(color)} !")
+        raise TypeError(f"Color must be an integer or a ListNode, not {type(color).__name__} !")
 
 def utils_refactor_emoji(emoji: Union[StrNode, None]) -> Union[StrNode, None]:
     """

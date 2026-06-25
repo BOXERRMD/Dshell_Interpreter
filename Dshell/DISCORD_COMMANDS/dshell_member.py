@@ -95,7 +95,7 @@ async def dshell_send_private_message(ctx: Message,
         embeds = ListNode([embeds])
 
     else:
-        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds)} !')
+        raise Exception(f'Embeds must be a list of Embed objects or a single Embed object, not {type(embeds).__name__} !')
 
     sended_message = await member_to_send.send(message, delete_after=delete, embeds=embeds, files=final_files)
 

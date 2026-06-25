@@ -6,8 +6,7 @@ from ..DshellTokenizer.dshell_token_type import DTT_DATA
 from ..DshellParser.ast_nodes import IfNode, ParamNode, ListNode, StrNode
 from ..DshellParser.dshell_parser import to_postfix
 
-from Dshell.full_import import sub, escape
-from Dshell.full_import import Any, TYPE_CHECKING
+from Dshell.full_import import Any, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
@@ -23,7 +22,7 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
 
     :param body: The list of tokens to group.
     :param interpreter: The Dshell interpreter instance.
-    :param normalise: If True, normalises the arguments (make value lowercase).
+    :param normalise: If True, normalizes the arguments (make value lowercase).
     """
     # tokens to return
 
@@ -67,10 +66,10 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
 
             while (index + 1) < n and body[index + 1].type not in (DTT.PARAMETER, DTT.STR_PARAMETER, DTT.PARAMETERS):
 
-                final_argument += body[index + 1].value + ''
+                final_argument += body[index + 1].value + ' '
                 index += 1
-                instance_dhsell_arguments.set_parameter(body[current_index].value, StrNode(final_argument), type_=DTT.STR_PARAMETER)
 
+            instance_dhsell_arguments.set_parameter(body[current_index].value, StrNode(final_argument), type_=DTT.STR_PARAMETER)
             index += 1
 
         elif body[index].type == DTT.PARAMETERS:
@@ -81,8 +80,8 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
 
                 list_parameters.append(await interpreter.eval_data_token(body[index + 1]))
                 index += 1
-                instance_dhsell_arguments.set_parameter(body[current_index].value, ListNode(list_parameters), type_=DTT.PARAMETERS)
 
+            instance_dhsell_arguments.set_parameter(body[current_index].value, ListNode(list_parameters), type_=DTT.PARAMETERS)
             index += 1
 
         else:
@@ -93,60 +92,75 @@ async def regroupe_commandes(body: list[Token], interpreter: "DshellInterpreteur
 
 async def get_params(node: ParamNode, interpreter: "DshellInterpreteur") -> dict[StrNode, Any]:
     """
-    Get the parameters from a ParamNode.
+    Get the parameters from a ParamNode and replace their value if an input user is valide
     :param node: The ParamNode to get the parameters from.
     :param interpreter: The Dshell interpreter instance.
     :return: A dictionary of parameters.
     """
-    def replace_match(match) -> StrNode:
-        special_char = match.group(1)
-        if special_char:
-            return ''
-        return StrNode(match.group(4))
 
-    variables = interpreter.vars
-    regrouped_parameters: DshellArguments = await regroupe_commandes(node.body, interpreter)
+    user_input: list[str] = interpreter.vars.strip().split()
+    param_node_arguments: DshellArguments = await regroupe_commandes(node.body, interpreter)
+    param_node_arguments_dict: dict[str, Union[Any, None]] = param_node_arguments.get_dict_parameters()
+    param_node_arguments_order: list[tuple[str, DTT]] = param_node_arguments.order
 
-    from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
-    _ = DshellTokenizer(variables, math_any_character=True).start()
-    regrouped_variables = await regroupe_commandes(_[0] if _ else tuple(), interpreter)
+    index_user_input: int = 0
+    index_order: int = 0
 
-    already_modified = set()
-    variables_non_specified_parameters = regrouped_variables.parameters.pop('*', None).value  # remove non-specified parameters
+    while index_order < len(param_node_arguments_order) and index_user_input < len(user_input):
 
-    for param_name, param_data in regrouped_variables.parameters.items():
-        regrouped_parameters.update_parameter(param_name, param_data)
-        variables = sub(rf"--([*']?)({escape(param_name)})\s+(.*)\s*?(.*)$", replace_match, variables, count=1)
-        already_modified.add(param_name)
+        # traitement des paramètres simple à tokeniser
+        if param_node_arguments_order[index_order][1] == DTT.PARAMETER:
+            old_index_order = index_order
+            tmp_parameter = ''
+            while (index_order < len(param_node_arguments_order) and
+                   param_node_arguments_order[index_order][1] == DTT.PARAMETER and
+                   index_user_input < len(user_input)):
 
-    index_variable = 0
-    for var in regrouped_parameters.parameters.keys():
-        if var not in already_modified:
+                tmp_parameter += user_input[index_user_input] + ' '
+                index_user_input += 1
+                index_order += 1
 
-            parameter_type = regrouped_parameters.get_parameter(var).type
+            from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
+            tmp_tokens = DshellTokenizer(tmp_parameter).start()
 
-            if parameter_type == DTT.PARAMETER and index_variable < len(variables_non_specified_parameters):
-                regrouped_parameters.set_parameter(StrNode(var), variables_non_specified_parameters[index_variable], parameter_type)  # variables_post_regrouped[index_variable] is not a token so cannot be evaluated! causes problems in commands that require something other than str
-                index_variable += 1
+            if tmp_tokens and len(tmp_tokens[0]) > 0:
+                for i in range(old_index_order, index_order):
+                    param_node_arguments_dict[param_node_arguments_order[i][0]] = tmp_tokens[0][i]
 
-            elif parameter_type == DTT.STR_PARAMETER:
-                variables_post_regrouped: list[StrNode] = StrNode(variables.strip().split(' ')) if variables else []  # set only for full str parameters
-                str_parameters_set_for_variables = variables_post_regrouped[index_variable:]
-                # the line below allows setting a full str parameter with multiple words. If the remaining variables are empty, we use the default value (must use str function because otherwise it puts a DshellArgumentsData)
-                regrouped_parameters.set_parameter(StrNode(var), StrNode(' '.join(str_parameters_set_for_variables) if str_parameters_set_for_variables else [StrNode(regrouped_parameters.parameters.get(var, ''))]), parameter_type)
-                break
+        # traitement des paramètres à tokeniser à la chaine
+        elif param_node_arguments_order[index_order][1] == DTT.PARAMETERS:
+            old_index_order = index_order
+            tmp_parameter = ''
+            while index_user_input < len(user_input):
 
-            elif parameter_type == DTT.PARAMETERS:
-                regrouped_parameters.set_parameter(StrNode(var), ListNode(variables_non_specified_parameters[index_variable:]), parameter_type)
-                break
+                tmp_parameter += user_input[index_user_input] + ' '
+                index_user_input += 1
 
-    for param_name, param_data in regrouped_parameters.parameters.items():
-        if param_data.obligatory and param_data.value == '*':
-            raise Exception(f"Parameter '{param_name}' is obligatory but not specified!")
+            from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
+            tmp_tokens = DshellTokenizer(tmp_parameter).start()
 
-    x = regrouped_parameters.get_dict_parameters()
-    x.pop('*', None)
-    return x
+            if tmp_tokens and len(tmp_tokens[0]) > 0:
+                param_node_arguments_dict[param_node_arguments_order[old_index_order][0]] = ListNode(tmp_tokens[0])
+
+        # traitement des paramètres à considéré comme une chaine de caractère à la chaine
+        elif param_node_arguments_order[index_order][1] == DTT.STR_PARAMETER:
+            old_index_order = index_order
+            tmp_parameter = ''
+            while index_user_input < len(user_input):
+
+                tmp_parameter += user_input[index_user_input] + ' '
+                index_user_input += 1
+
+            param_node_arguments_dict[param_node_arguments_order[old_index_order][0]] = StrNode(tmp_parameter)
+
+        else:
+            raise Exception(f"Parameter type {param_node_arguments_order[index_order][1]} not found !\n"
+                            f"Please, use : -- or --' or --*")
+
+    param_node_arguments_dict.pop('*')
+    return {StrNode(key): value for key, value in param_node_arguments_dict.items()}
+
+
 
 
 async def eval_expression_inline(if_node: IfNode, interpreter: "DshellInterpreteur") -> Token:

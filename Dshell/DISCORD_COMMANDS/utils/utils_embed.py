@@ -26,6 +26,6 @@ def utils_check_embeds_arguments(_CMD: StrNode,
 
             final_embeds = embeds
         else:
-            raise Exception(f"Embeds must be a embed object or a ListNode, not {type(embeds)} in '{_CMD}' command")
+            raise Exception(f"Embeds must be a embed object or a ListNode, not {type(embeds).__name__} in '{_CMD}' command")
 
     return final_embeds

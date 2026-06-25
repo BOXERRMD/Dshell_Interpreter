@@ -280,7 +280,7 @@ async def dshell_clear_one_reactions(ctx: Message, message: Union[IntNode, StrNo
     """
 
     if not isinstance(emoji, StrNode):
-        raise Exception(f'Emoji must be StrNode, not {type(emoji)}')
+        raise Exception(f'Emoji must be StrNode, not {type(emoji).__name__}')
 
     target_message = ctx if message is None else await utils_get_message(ctx, message)
 

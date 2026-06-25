@@ -67,7 +67,7 @@ async def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> M
         dshell_cached_messages.set(cached_messages)
         return cached_messages[message_id]
 
-    raise Exception(f"Message must be an integer or a string, not {type(message)} !")
+    raise Exception(f"Message must be an integer or a string, not {type(message).__name__} !")
 
 
 async def utils_fetch_partial_message(partial_message: Union[Message, PartialMessage]) -> Message:
@@ -81,7 +81,7 @@ async def utils_fetch_partial_message(partial_message: Union[Message, PartialMes
     if not isinstance(partial_message, PartialMessage):
         if isinstance(partial_message, Message):
             return partial_message
-        raise Exception(f"Expected a PartialMessage or Message, got '{type(partial_message)}' !")
+        raise Exception(f"Expected a PartialMessage or Message, got '{type(partial_message).__name__}' !")
 
     try:
         message = await partial_message.fetch()

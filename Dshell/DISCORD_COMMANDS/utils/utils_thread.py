@@ -35,4 +35,4 @@ async def utils_get_thread(ctx: Message, thread: Union[IntNode, StrNode]) -> Uni
         except NotFound:
             raise Exception(f"Thread with ID {message_id} not found in channel {channel_id} !")
 
-    raise Exception(f"Thread must be an integer or a string, not {type(thread)} !")
+    raise Exception(f"Thread must be an integer or a string, not {type(thread).__name__} !")

@@ -71,14 +71,14 @@ table_regex: dict[DTT, Pattern] = {
 
 class DshellTokenizer:
 
-    def __init__(self, code: str, math_any_character: bool = False):
+    def __init__(self, code: str, match_any_character: bool = False):
         """
         Initialize the tokenizer.
         :param code: The code to tokenize
-        :param math_any_character: Whether to match any character
+        :param match_any_character: Whether to match any character
         """
         self.code: str = code
-        self.match_any_character: bool = math_any_character
+        self.match_any_character: bool = match_any_character
         self.data_pre_processor: list[PreProcessorData] = []
 
     def start(self):

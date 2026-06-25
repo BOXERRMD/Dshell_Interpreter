@@ -225,7 +225,7 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
         update_nbr_usage_scope(interpreter.scope_id, 1)
 
     else:
-        raise TypeError(f"UI node must be UiButtonNode or UiSelectNode, not {type(ui_node)} !")
+        raise TypeError(f"UI node must be UiButtonNode or UiSelectNode, not {type(ui_node).__name__} !")
 
     return view
 

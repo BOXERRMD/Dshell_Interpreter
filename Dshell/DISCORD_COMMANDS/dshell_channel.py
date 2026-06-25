@@ -59,7 +59,7 @@ async def dshell_get_channel(ctx: Message, name: StrNode):
     if isinstance(name, StrNode):
         return next((IntNode(c.id) for c in ctx.channel.guild.channels if c.name == name), None)
 
-    raise Exception(f"Channel must be an integer or a string, not {type(name)} !")
+    raise Exception(f"Channel must be an integer or a string, not {type(name).__name__} !")
 
 
 async def dshell_get_channels(ctx: Message, name: Optional[StrNode]=None, regex: Optional[StrNode]=None) -> ListNode:

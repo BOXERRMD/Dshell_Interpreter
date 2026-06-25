@@ -11,8 +11,9 @@ from .utils_interpreter import get_params, eval_expression, eval_expression_inli
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
 from ..DISCORD_COMMANDS.dshell_ui import build_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
-from .dshell_scope import Scope, new_scope, get_scope, create_scope, update_nbr_usage_scope, get_usage_scope
+from .dshell_scope import Scope, new_scope, get_scope, create_scope, update_nbr_usage_scope
 from .dshell_global_variables import MAX_SLEEP_TIME_SECONDS, MIN_SLEEP_TIME_SECONDS
+from .dshell_iterators import DshellIterator
 
 
 All_nodes = TypeVar('All_nodes', IfNode, LoopNode, ElseNode, ElifNode, ArgsCommandNode, VarNode)
@@ -365,6 +366,10 @@ async def eval_CodeNode(eval_node: EvalNode, interpreter: DshellInterpreteur):
     :param interpreter: The Dshell interpreter instance.
     """
     codeNode = await interpreter.eval_data_token(eval_node.codeNode)
+
+    if not isinstance(codeNode, CodeNode):
+        raise TypeError(f"[EVAL] ident must be a CodeNode, not {type(codeNode).__name__} !")
+
     argscommand = await regroupe_commandes(eval_node.argsNode.body, interpreter)
     kwargs = argscommand.get_dict_parameters()
     kwargs.pop('*', None)
@@ -375,51 +380,3 @@ async def eval_CodeNode(eval_node: EvalNode, interpreter: DshellInterpreteur):
         result = interpreter.env.get('__ret__')
 
     return result
-
-
-class DshellIterator:
-    """
-    Used to transform anything into an iterable
-    """
-
-    def __init__(self, data):
-        self.data = self._check_data(data)
-        self.current = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        return next(self.data)
-
-    def _check_data(self, data: Any):
-
-        if not isinstance(data, (StrNode, ListNode, FloatNode, IntNode, FileNode, FileStreamNode)):
-            raise Exception(f"{data} can't be in a loop !")
-
-        if isinstance(data, FileNode):
-            return data.stream()
-
-        elif isinstance(data, (FloatNode, IntNode)):
-            return IntIterator(IntNode(data))
-
-        else:
-            return data
-
-class IntIterator:
-
-    def __init__(self, max_iterator: IntNode):
-        self.max_iterator = max_iterator
-        self.pointer = IntNode(0)
-
-    def __iter__(self) -> "IntIterator":
-        return self
-
-    def __next__(self) -> IntNode:
-        if self.pointer >= self.max_iterator:
-            self.pointer = IntNode(0)
-            raise StopIteration
-
-        current = self.pointer
-        self.pointer += 1
-        return current

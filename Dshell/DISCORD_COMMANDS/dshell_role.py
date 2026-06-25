@@ -117,13 +117,13 @@ async def dshell_delete_roles(ctx: Message, roles: Union[ListNode, IntNode], rea
     _CMD = "dr"
 
     if roles is not None and not isinstance(roles, (IntNode, ListNode)):
-        raise Exception(f"Roles must be a int, role mention or NodeList of both, not {type(roles)} !")
+        raise Exception(f"Roles must be a int, role mention or NodeList of both, not {type(roles).__name__} !")
 
     _validate_optional_string(reason, "Reason", _CMD)
 
     roles: Union[IntNode, ListNode]
     if not isinstance(roles, (IntNode, ListNode)):
-        raise Exception(f"Role must be a int, role mention or NodeList of both, not {type(roles)} !")
+        raise Exception(f"Role must be a int, role mention or NodeList of both, not {type(roles).__name__} !")
 
     if isinstance(roles, IntNode):
         roles: tuple = (roles, )

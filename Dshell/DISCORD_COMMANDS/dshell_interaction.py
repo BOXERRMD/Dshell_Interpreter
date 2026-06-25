@@ -73,7 +73,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     _CMD = "sri"
 
     if not isinstance(ctx, Interaction):
-        raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
+        raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx).__name__} !')
 
     _validate_optional_string(content, "Content", _CMD)
     _validate_optional_number(delete, "Delete", _CMD)
@@ -129,7 +129,7 @@ async def dshell_defer_interaction(ctx: Interaction) -> BoolNode:
     """
 
     if not isinstance(ctx, Interaction):
-        raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
+        raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx).__name__} !')
 
     await ctx.response.defer()
 
@@ -154,7 +154,7 @@ async def dshell_delete_original_message(ctx: Interaction) -> IntNode:
     """
 
     if not isinstance(ctx, Interaction):
-        raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx)} !')
+        raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx).__name__} !')
 
     await ctx.delete_original_message()
 

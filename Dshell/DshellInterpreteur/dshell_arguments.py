@@ -28,6 +28,7 @@ class DshellArguments:
     """
     Manage Dshell parameters and arguments passed to a command call.
     Example: !ban @user reason for ban
+    "order" list store parameters order append to the class
     """
 
     def __init__(self):
@@ -35,6 +36,8 @@ class DshellArguments:
         self.parameters: dict[str, DshellArgumentsData] = {
             '*': DshellArgumentsData([], False, DTT.LIST)  # Non-specified parameters
         }
+
+        self.order: list[tuple[str, DTT]] = []
 
     def set_parameter(self, name: StrNode, value: Any, type_: DTT, obligatory: bool = False) -> None:
         """
@@ -45,6 +48,7 @@ class DshellArguments:
         :param obligatory: Whether this parameter is required
         """
         self.parameters[name] = DshellArgumentsData(value, obligatory, type_)
+        self.order.append((name, type_))
 
     def get_parameter(self, name: str) -> DshellArgumentsData:
         """
@@ -83,6 +87,7 @@ class DshellArguments:
         :param value: The parameter value to add to the list
         """
         self.parameters['*'].value.append(value)
+        self.order.append(('*', DTT.PARAMETER))
 
     def __repr__(self) -> str:
         return str(self.parameters)

@@ -37,6 +37,6 @@ def utils_check_files_arguments(_CMD: StrNode, files: Optional[Union[FileNode, L
                                         spoiler=file.spoiler))
 
         else:
-            raise Exception(f"Files must be a FileNode or a ListNode, not {type(files)} in '{_CMD}' command")
+            raise Exception(f"Files must be a FileNode or a ListNode, not {type(files).__name__} in '{_CMD}' command")
 
     return final_files if len(final_files) > 0 else None
