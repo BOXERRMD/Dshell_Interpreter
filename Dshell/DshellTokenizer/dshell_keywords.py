@@ -167,61 +167,62 @@ dshell_commands: dict[str, Callable] = {
 }
 
 """
-Tuple format: (function, precedence, number of operands min, number of operands max)
+Tuple format: (function, precedence, number of operands min, number of operands max, 
+                Optional[index to translate into value])
 """
 
-dshell_mathematical_operators: dict[str, tuple[Callable, int, int, int]] = {
+dshell_mathematical_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = {
 
-    r"++": (lambda a: a + 1, 6, 1, 1),
-    r"--": (lambda a: a - 1, 6, 1, 1),
-    r"**": (lambda a, b: a ** b, 8, 2, 2),
-    r"//": (lambda a, b: a // b, 7, 2, 2),
-    r">>": (lambda a, b: a >> b, 5, 2, 2),
-    r"<<": (lambda a, b: a << b, 5, 2, 2),
-    r"^": (lambda a, b: a ^ b, 5, 2, 2),
-    r"/": (lambda a, b: a / b, 7, 2, 2),
-    r"*": (lambda a, b: a * b, 7, 2, 2),
-    r"%": (lambda a, b: a % b, 7, 2, 2),
-    r"-": (lambda a, b=None: a-b if b is not None else -a, 6, 1, 2),
-    r"+": (lambda a, b: a + b, 6, 2, 2),
+    r"++": (lambda a: a + 1, 6, 1, 1, None),
+    r"--": (lambda a: a - 1, 6, 1, 1, None),
+    r"**": (lambda a, b: a ** b, 8, 2, 2, None),
+    r"//": (lambda a, b: a // b, 7, 2, 2, None),
+    r">>": (lambda a, b: a >> b, 5, 2, 2, None),
+    r"<<": (lambda a, b: a << b, 5, 2, 2, None),
+    r"^": (lambda a, b: a ^ b, 5, 2, 2, None),
+    r"/": (lambda a, b: a / b, 7, 2, 2, None),
+    r"*": (lambda a, b: a * b, 7, 2, 2, None),
+    r"%": (lambda a, b: a % b, 7, 2, 2, None),
+    r"-": (lambda a, b=None: a-b if b is not None else -a, 6, 1, 2, None),
+    r"+": (lambda a, b: a + b, 6, 2, 2, None),
     r"..": (lambda a, b: (IntIterator(
                                 min_iterator=IntNode(a),
                                 max_iterator=IntNode(b),
                                 step= IntNode(1 if a <= b else -1))
-                          ), 5, 2, 2)
+                          ), 5, 2, 2, None)
     # warning: ambiguity between unary and binary to be handled in your parser
 
 }
 
-dshell_logical_word_operators: dict[str, tuple[Callable, int, int, int]] = {
-    r"and": (lambda a, b: bool(a and b), 2, 2, 2),
-    r"or": (lambda a, b: bool(a or b), 1, 2, 2),
-    r"not": (lambda a: not a, 3, 1, 1),
-    r"in": (lambda a, b: a in b, 4, 2, 2),
+dshell_logical_word_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = {
+    r"and": (lambda a, b: bool(a and b), 2, 2, 2, None),
+    r"or": (lambda a, b: bool(a or b), 1, 2, 2, None),
+    r"not": (lambda a: not a, 3, 1, 1, None),
+    r"in": (lambda a, b: a in b, 4, 2, 2, None),
 }
 
-dshell_logical_operators: dict[str, tuple[Callable, int, int, int]] = {
+dshell_logical_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = {
 
-    r"==": (lambda a, b: a == b, 4, 2, 2),
-    r"<=": (lambda a, b: a <= b, 4, 2, 2),
-    r"=<": (lambda a, b: a <= b, 4, 2, 2),
-    r"!=": (lambda a, b: a != b, 4, 2, 2),
-    r"=!": (lambda a, b: a != b, 4, 2, 2),
-    r">=": (lambda a, b: a >= b, 4, 2, 2),
-    r"=>": (lambda a, b: a >= b, 4, 2, 2),
-    r"&&": (lambda a, b: a and b, 2, 2, 2),
-    r"||": (lambda a, b: a or b, 1, 2, 2),
-    r"&": (lambda a, b: a & b, 2, 2, 2),
-    r"|": (lambda a, b: a | b, 1, 2, 2),
-    r"=": (lambda a, b: a == b, 4, 2, 2),
-    r"<": (lambda a, b: a < b, 4, 2, 2),
-    r">": (lambda a, b: a > b, 4, 2, 2),
-    r"!": (lambda a: not a, 3, 1, 1),
-    r"?": (lambda condition, first_choice, second_choice: first_choice if condition else second_choice, 1, 3, 3),
+    r"==": (lambda a, b: a == b, 4, 2, 2, None),
+    r"<=": (lambda a, b: a <= b, 4, 2, 2, None),
+    r"=<": (lambda a, b: a <= b, 4, 2, 2, None),
+    r"!=": (lambda a, b: a != b, 4, 2, 2, None),
+    r"=!": (lambda a, b: a != b, 4, 2, 2, None),
+    r">=": (lambda a, b: a >= b, 4, 2, 2, None),
+    r"=>": (lambda a, b: a >= b, 4, 2, 2, None),
+    r"&&": (lambda a, b: a and b, 2, 2, 2, None),
+    r"||": (lambda a, b: a or b, 1, 2, 2, None),
+    r"&": (lambda a, b: a & b, 2, 2, 2, None),
+    r"|": (lambda a, b: a | b, 1, 2, 2, None),
+    r"=": (lambda a, b: a == b, 4, 2, 2, None),
+    r"<": (lambda a, b: a < b, 4, 2, 2, None),
+    r">": (lambda a, b: a > b, 4, 2, 2, None),
+    r"!": (lambda a: not a, 3, 1, 1, None),
+    r"?": (lambda condition, first, second: first if condition else second, 1, 3, 3, 1),
     #r".": (lambda target, attribute: target.call(attribute) if hasattr(target, attribute) and hasattr(target, 'call') else None, 9, 2, 2), # attribute access operator
 
 }
 
-dshell_operators: dict[str, tuple[Callable, int, int]] = dshell_logical_operators.copy()
+dshell_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = dshell_logical_operators.copy()
 dshell_operators.update(dshell_logical_word_operators)
 dshell_operators.update(dshell_mathematical_operators)

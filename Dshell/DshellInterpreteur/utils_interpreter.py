@@ -190,7 +190,7 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
     for token in postfix:
 
         if token.type in DTT_DATA:
-            stack.append(await interpreter.eval_data_token(token))
+            stack.append(token)
 
         elif token.type in (DTT.MATHS_OPERATOR, DTT.LOGIC_OPERATOR, DTT.LOGIC_WORD_OPERATOR):
             op = token.value
@@ -212,14 +212,46 @@ async def eval_expression(tokens: list[Token], interpreter: "DshellInterpreteur"
                     raise SyntaxError(f"Too many operands for operator '{op}'")
 
                 operands.reverse()
-                result = dshell_operators[op][0](*operands)  # call the operator function with the operands
 
-                stack.append(result)
+                stack.append(await do_operation(op, operands, interpreter, dshell_operators))
 
         else:
             raise SyntaxError(f"Unexpected token type: {token.type} - {token.value}")
 
     if len(stack) != 1:
-        raise SyntaxError(f"Invalid expression: missing operators or operands in expression <{' '.join((i.value for i in tokens))}>")
+        raise SyntaxError(f"Invalid expression: missing operators or operands in expression '{' '.join((str(i.value) for i in tokens))}'")
 
-    return stack[0]
+    result = stack[0]
+    if isinstance(result, Token):
+        result = await interpreter.eval_data_token(result)
+
+    return result
+
+async def do_operation(operator: str,
+                       operands: list[Token],
+                       interpreter: "DshellInterpreteur",
+                       all_operators: dict)  -> Any:
+    """
+    Do all convertions and operations
+    :param operator:
+    :param operands:
+    :param interpreter:
+    :param all_operators: is dshell_operators dictionnary
+    :return:
+    """
+
+    i = 0
+    if (nbr_operand_to_translate := all_operators[operator][4]) is not None:
+        while i != nbr_operand_to_translate and i < len(operands):
+            operands[i] = await interpreter.eval_data_token(operands[i])
+            i += 1
+    else:
+        while i < len(operands):
+            operands[i] = await interpreter.eval_data_token(operands[i])
+            i += 1
+
+    result = all_operators[operator][0](*operands)
+    if isinstance(result, Token):
+        result = await interpreter.eval_data_token(result)
+
+    return result
