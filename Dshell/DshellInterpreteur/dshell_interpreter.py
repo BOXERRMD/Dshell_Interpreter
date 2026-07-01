@@ -225,7 +225,10 @@ class DshellInterpreteur:
         try:
             await self.execute(node.body)
         except Exception as e:
+            if self.end_program:
+                raise Exception(e)
             self.env.set(node.variable.value, e)
+        self.raise_error = False
 
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """
@@ -280,17 +283,18 @@ class DshellInterpreteur:
                     await self._execute_sleep_node(node)
 
                 elif isinstance(node, EvalNode):
-
                     self.env.set('__ret__', await eval_CodeNode(node, self))
 
                 elif isinstance(node, ReturnNode):
                     self.env.set('__ret__', await eval_expression(node.body, self))
 
+                elif isinstance(node, RaiseNode):
+                    raise Exception(StrNode(await eval_expression(node.error, self)))
+
                 elif isinstance(node, EndNode):
+                    self.end_program = True
                     if await self.eval_data_token(node.error_message):
                         raise RuntimeError("Execution stopped - EndNode encountered")
-                    else:
-                        self.end_program = True
 
             except Exception as e:
                 if not self.raise_error:

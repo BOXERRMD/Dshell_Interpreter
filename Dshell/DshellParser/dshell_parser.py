@@ -238,6 +238,11 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 blocks.pop()
                 return blocks, pointer
 
+            elif first_token_line_value == 'raise':
+
+                raise_node = RaiseNode(tokens_by_line[1:], line=line)
+                last_block.body.append(raise_node)
+
             elif first_token_line_value == '#end':  # node pour arrêter le programme si elle est rencontré
                 error_message = BoolNode(1)
                 if len_tokens_by_line_since_command_name > 0:

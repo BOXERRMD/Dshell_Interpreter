@@ -37,7 +37,8 @@ __all__ = [
     'OptionUiSelectNode',
     'FileNode',
     'FileStreamNode',
-    'CatchNode'
+    'CatchNode',
+    'RaiseNode'
 ]
 
 
@@ -604,6 +605,28 @@ class CatchNode(ASTNode):
             "type": "CatchNode",
             "variable": self.variable,
             "body": [token.to_dict() for token in self.body]
+        }
+
+
+class RaiseNode(ASTNode):
+    """
+    Node representing an Ecxeption raised by the user.
+    """
+    def __init__(self, error: list[Token], line: int):
+        super().__init__(line)
+        self.error = error
+
+    def __repr__(self):
+        return f"<RAISE> - {self.error}"
+
+    def to_dict(self):
+        """
+        Convert the RaiseNode to a dictionary representation.
+        :return: Dictionary representation of the EvalGroupNode.
+        """
+        return {
+            "type": "RaiseNode",
+            "error": self.error,
         }
 
 
