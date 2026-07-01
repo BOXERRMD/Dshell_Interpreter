@@ -222,6 +222,7 @@ class DshellInterpreteur:
 
     async def _execute_catch_node(self, node: CatchNode):
         """Execute a catch node."""
+        self.env.set(node.variable.value, StrNode(""))
         try:
             await self.execute(node.body)
         except Exception as e:
