@@ -67,7 +67,7 @@ async def utils_help(ctx: Message, command: StrNode) -> StrNode:
         raise ValueError(f"[HELP] command not found : '{command}'")
 
     sig = signature(dshell_commands[command])
-    result = StrNode("## HELP `{command}`")
+    result = StrNode(f"## HELP `{command}`")
 
     for nom, param in sig.parameters.items():
         if nom == "ctx":

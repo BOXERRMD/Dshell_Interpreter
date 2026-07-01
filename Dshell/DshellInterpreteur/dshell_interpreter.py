@@ -220,6 +220,13 @@ class DshellInterpreteur:
 
         await sleep(sleep_time)
 
+    async def _execute_catch_node(self, node: CatchNode):
+        """Execute a catch node."""
+        try:
+            await self.execute(node.body)
+        except Exception as e:
+            self.env.set(node.variable.value, e)
+
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """
         Executes the abstract syntax tree (AST) generated from the Dshell code.
@@ -262,6 +269,9 @@ class DshellInterpreteur:
 
                 elif isinstance(node, BreakNode):
                     await self._execute_break_node(node)
+
+                elif isinstance(node, CatchNode):
+                    await self._execute_catch_node(node)
 
                 elif isinstance(node, VarNode):
                     await self._execute_var_node(node)

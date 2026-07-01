@@ -14,11 +14,14 @@ from ..full_import import Callable
 from ..DshellInterpreteur.dshell_iterators import IntIterator
 
 dshell_keyword: set[str] = {
-    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep', 'param', '#param', 'code', '#code', 'eval', 'return', 'break'
+    'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep',
+    'param', '#param', 'code', '#code', 'eval', 'return', 'break',
+    'catch', '#catch', 'raise'
 }
 
 dshell_discord_keyword: set[str] = {
-    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui', 'button', '#button', 'select', '#select', 'option'
+    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui',
+    'button', '#button', 'select', '#select', 'option'
 }
 
 async def dshell_debug(ctx, x):

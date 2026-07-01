@@ -36,7 +36,8 @@ __all__ = [
     'UiSelectNode',
     'OptionUiSelectNode',
     'FileNode',
-    'FileStreamNode'
+    'FileStreamNode',
+    'CatchNode'
 ]
 
 
@@ -580,6 +581,31 @@ class SleepNode(ASTNode):
             "type": "SleepNode",
             "body": [token.to_dict() for token in self.body]
         }
+
+
+class CatchNode(ASTNode):
+    """
+    Node representing a "try-except" python-like in Dshell.
+    """
+    def __init__(self, body: list[Token], variable: Token, line: int):
+        super().__init__(line)
+        self.body = body
+        self.variable = variable
+
+    def __repr__(self):
+        return StrNode(f"<CATCH> - line {self.start_line} to {self.end_line}")
+
+    def to_dict(self):
+        """
+        Convert the EvalGroupNode to a dictionary representation.
+        :return: Dictionary representation of the EvalGroupNode.
+        """
+        return {
+            "type": "CatchNode",
+            "variable": self.variable,
+            "body": [token.to_dict() for token in self.body]
+        }
+
 
 class EvalGroupNode(ASTNode):
     """
