@@ -227,7 +227,7 @@ class DshellInterpreteur:
         except Exception as e:
             if self.end_program:
                 raise Exception(e)
-            self.env.set(node.variable.value, e)
+            self.env.set(node.variable.value, StrNode(e))
         self.raise_error = False
 
     async def execute(self, ast: Optional[list[All_nodes]] = None):
