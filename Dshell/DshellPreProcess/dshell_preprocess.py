@@ -18,7 +18,7 @@ def define(code: str, pre_processor_data: PreProcessorData) -> str:
     """
     return sub(f"(?<![a-zA-Z]){pre_processor_data.symbol}(?![a-zA-Z])", pre_processor_data.value, code)
 
-pre_processor_pattern = compile(r"^\s*##([a-z]+) +([a-zA-Z]+)(?: +(.*))?$", flags=MULTILINE|DOTALL)
+pre_processor_pattern = compile(r"^\s*## *([a-zA-Z]+) +([a-zA-Z]+)(?: +(.*))?$", flags=MULTILINE|DOTALL)
 def preProcessor(code: list[str]) -> list[str]:
     """
     Execute preprocessor line
@@ -34,8 +34,11 @@ def preProcessor(code: list[str]) -> list[str]:
 
         if pre_processor_match := search(pre_processor_pattern, line):
 
-            if pre_processor_match.group(1) in PreProcessorInstructions:
-                pre_processor_data.append(PreProcessorData(*pre_processor_match.groups()))
+            instruction: str = pre_processor_match.group(1).lower()
+            symbol: str = pre_processor_match.group(2)
+            value: str = pre_processor_match.group(3)
+            if instruction in PreProcessorInstructions:
+                pre_processor_data.append(PreProcessorData(instruction, symbol, value))
 
         else:
             # apply pre-processor instructions
