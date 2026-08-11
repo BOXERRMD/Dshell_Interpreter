@@ -117,7 +117,7 @@ def _validate_optional_permission(value, param_name: StrNode, command_name: StrN
     :param command_name: The command name for error messages (optional)
     :raises TypeError: If the value is not None and not a PermissionNode
     """
-    if value is not None and not isinstance(value, PermissionNode):
+    if value is not None and not isinstance(value, _MissingSentinel) and not isinstance(value, PermissionNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be a PermissionNode or None, not {type(value).__name__}")
 
 

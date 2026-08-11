@@ -10,8 +10,9 @@ __all__ = [
 
 from ..DISCORD_COMMANDS import *
 
-from ..full_import import Callable
+from ..full_import import Callable, ChainMap
 from ..DshellInterpreteur.dshell_iterators import IntIterator
+
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep',
@@ -174,7 +175,16 @@ Tuple format: (function, precedence, number of operands min, number of operands 
                 Optional[index to translate into value])
 """
 
-dshell_mathematical_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = {
+Operator = tuple[
+    Callable,
+    int,
+    int,
+    int,
+    Optional[int],
+]
+
+
+dshell_mathematical_operators: dict[str, Operator] = {
 
     r"++": (lambda a: a + 1, 6, 1, 1, None),
     r"--": (lambda a: a - 1, 6, 1, 1, None),
@@ -197,14 +207,14 @@ dshell_mathematical_operators: dict[str, tuple[Callable, int, int, int, Optional
 
 }
 
-dshell_logical_word_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = {
+dshell_logical_word_operators: dict[str, Operator] = {
     r"and": (lambda a, b: bool(a and b), 2, 2, 2, None),
     r"or": (lambda a, b: bool(a or b), 1, 2, 2, None),
     r"not": (lambda a: not a, 3, 1, 1, None),
     r"in": (lambda a, b: a in b, 4, 2, 2, None),
 }
 
-dshell_logical_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = {
+dshell_logical_operators: dict[str, Operator] = {
 
     r"==": (lambda a, b: a == b, 4, 2, 2, None),
     r"<=": (lambda a, b: a <= b, 4, 2, 2, None),
@@ -222,10 +232,13 @@ dshell_logical_operators: dict[str, tuple[Callable, int, int, int, Optional[int]
     r">": (lambda a, b: a > b, 4, 2, 2, None),
     r"!": (lambda a: not a, 3, 1, 1, None),
     r"?": (lambda condition, first, second: first if condition else second, 1, 3, 3, 1),
-    #r".": (lambda target, attribute: target.call(attribute) if hasattr(target, attribute) and hasattr(target, 'call') else None, 9, 2, 2), # attribute access operator
-
 }
 
-dshell_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = dshell_logical_operators.copy()
+dshell_operators: ChainMap[str, Operator] = ChainMap(
+    dshell_logical_operators,
+    dshell_logical_word_operators,
+    dshell_mathematical_operators)
+
+"""dshell_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = dshell_logical_operators.copy()
 dshell_operators.update(dshell_logical_word_operators)
-dshell_operators.update(dshell_mathematical_operators)
+dshell_operators.update(dshell_mathematical_operators)"""

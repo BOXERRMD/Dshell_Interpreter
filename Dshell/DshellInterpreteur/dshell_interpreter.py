@@ -88,7 +88,7 @@ class DshellInterpreteur:
             '__message_add_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction added on message add event reaction
             '__message_remove_reaction__': None, # Can be overwritten by add vars_env parameter to get the reaction removed on message remove event reaction
             '__message_url__': StrNode(message.jump_url) if hasattr(message, 'jump_url') else None,
-            '__last_message__': IntNode(message.channel.last_message_id),
+            '__last_message__': IntNode(message.channel.last_message_id or 1),
 
             '__channel__': IntNode(message.channel.id),
             '__channel_name__': StrNode(message.channel.name),
@@ -102,7 +102,7 @@ class DshellInterpreteur:
             '__guild_members__': ListNode([IntNode(member.id) for member in message.channel.guild.members], bypass_limit_elt=True, editable=False),
             '__guild_member_count__': IntNode(message.channel.guild.member_count),
             '__guild_icon__': StrNode(message.channel.guild.icon.url) if message.channel.guild.icon else None,
-            '__guild_owner_id__': IntNode(message.channel.guild.owner_id),
+            '__guild_owner_id__': IntNode(message.channel.guild.owner_id or 1),
             '__guild_description__': StrNode(message.channel.guild.description),
             '__guild_roles__': ListNode([IntNode(role.id) for role in message.channel.guild.roles], bypass_limit_elt=True, editable=False),
             '__guild_roles_count__': IntNode(len(message.channel.guild.roles)),

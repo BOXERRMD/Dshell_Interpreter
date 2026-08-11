@@ -1,4 +1,7 @@
-from ..full_import import search, sub, Optional
+from ..full_import import findall, sub, MULTILINE, StrEnum
+
+class PreProcessorInstructions(StrEnum):
+    DEFINE = "define"
 
 class PreProcessorData:
     def __init__(self, instruction: str, symbol: str, value: str):
@@ -6,33 +9,60 @@ class PreProcessorData:
         self.symbol = symbol
         self.value = value
 
-def define(code, pre_processor_data: PreProcessorData) -> str:
+def define(code: str, pre_processor_data: PreProcessorData) -> str:
     """
     Replace all symbol with the current value
-    :param symbol:
-    :param value:
+    :param code: the code before tokenization
+    :param pre_processor_data: all data for the ##define pre-processor
     :return:
     """
     return sub(f"(?<![a-zA-Z]){pre_processor_data.symbol}(?![a-zA-Z])", pre_processor_data.value, code)
 
-def preProcessor(code: str) -> Optional[PreProcessorData]:
+
+def preProcessor(code: str) -> str:
     """
-    Execute preprocessor code
-    :param code:
+    Execute preprocessor line
+    :param code: the code before tokenization
     :return:
     """
-    pre_process_match = search(r"^\s*##([a-zA-Z]+)\s+([a-zA-Z]+)\s+(.*)$", code)
-    if pre_process_match:
-        return PreProcessorData(pre_process_match.group(1).lower(), pre_process_match.group(2), pre_process_match.group(3))
-    return None
+    pre_processor_matchs = findall(r"^\s*##([a-z]+) +([a-zA-Z]+)(?: +)?(.*?)?$", code, flags=MULTILINE)
 
-def applyPreProcessor(code: str, pre_processor_data: PreProcessorData):
+    if pre_processor_matchs:
+        pre_processor_data: list[PreProcessorData] = list()
+
+        for match in pre_processor_matchs:
+            if match[0] in PreProcessorInstructions:
+                pre_processor_data.append(PreProcessorData(*match))
+
+        # remove all pre-processor instructions in the code
+        code = sub(r"^\s*##.*$", "", code, flags=MULTILINE)
+
+        # apply pre-processor instructions
+        code = applyPreProcessor(code, pre_processor_data)
+
+        code = removeCommentPreProcessor(code)
+
+    return code
+
+def applyPreProcessor(code: str, pre_processor_data: list[PreProcessorData]) -> str:
     """
     Apply preprocessor data to code
-    :param code:
+    :param line: the current line before tokenization
     :param pre_processor_data:
     :return:
     """
-    match pre_processor_data.instruction:
-        case "define":
-            return define(code, pre_processor_data)
+    for pre_processor in pre_processor_data:
+        match pre_processor.instruction:
+            case "define":
+                code = define(code, pre_processor)
+
+    return code
+
+def removeCommentPreProcessor(code: str) -> str:
+    """
+    Remove all comment in the code
+    :param code:
+    :return:
+    """
+    # add \ before or in :: like \:: or :\: disable comment. Usable in string to add :: characters sequence.
+    return sub(r"(?<!\\):(?<!\\)?:.*", "", code, flags=MULTILINE)
