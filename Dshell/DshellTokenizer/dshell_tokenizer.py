@@ -12,10 +12,8 @@ from Dshell.full_import import (
                            ASCII,
                            DOTALL,
                            IGNORECASE,
-                           MULTILINE,
                            compile,
                            escape,
-                           findall,
                            finditer,
                            Match,
                            sub)
@@ -27,7 +25,7 @@ from .dshell_keywords import (dshell_keyword,
                               dshell_logical_operators,
                               dshell_logical_word_operators)
 
-from ..DshellPreProcess.dshell_preprocess import preProcessor, applyPreProcessor, PreProcessorData
+from ..DshellPreProcess.dshell_preprocess import preProcessor
 
 MASK_CHARACTER = '§'
 
@@ -67,6 +65,7 @@ table_regex: dict[DTT, Pattern] = {
     DTT.IDENT: compile(rf"([A-Za-z0-9_]+)"),
 }
 
+backslash_pattern = compile(r"\\(.)", flags=DOTALL)
 
 class DshellTokenizer:
 
@@ -83,8 +82,8 @@ class DshellTokenizer:
         Start the tokenizer to process the current code.
         Returns an array of tokens per line (normally separated by \\n)
         """
-        self.code = preProcessor(self.code)
         split_commands = self.split(self.code)
+        split_commands = preProcessor(split_commands)
         return self.tokenizer(split_commands)
 
     def tokenizer(self, command_lines: list[str]) -> list[list[Token]]:
@@ -94,14 +93,12 @@ class DshellTokenizer:
         """
         tokens: list[list[Token]] = []
         ident_tokens = 0
-        line_number = 1
 
-        while line_number-1 < len(command_lines):
+        for line_number, line in enumerate(command_lines, start=1):
             line: str = command_lines[line_number-1] # get the current line
 
             # if the line is empty or already tokenized, pass the line.
             if is_line_empty(line):
-                line_number+=1
                 continue
 
             tokens.append([])
@@ -112,28 +109,30 @@ class DshellTokenizer:
                     match: Match
 
                     start_match = match.start()
-                    #end_match = match.end()
+                    end_match = match.end()
 
                     token = Token(token_type, match.group(1), (line_number, start_match))
                     tokens_per_line.append(token)
 
                     if token_type == DTT.STR:
-                        token.value = token.value.replace(r'\"', '"')
+                        token.value = sub(backslash_pattern, lambda m: escape(m.group(1)), token.value)
 
                     len_match = len(match.group(0))
-                    line = line.replace(match.group(0), MASK_CHARACTER*len_match, 1)
+                    line = line[:start_match] + MASK_CHARACTER * len_match + line[end_match:]
 
             tokens_per_line.sort(key=lambda t: t.position[1])
 
             if tokens_per_line:
                 tokens[ident_tokens] = self.parse_group(tokens_per_line, line_number)
 
-            line_number += 1
             ident_tokens += 1
         return tokens
 
     @staticmethod
-    def split(command: str, global_split='\n', keep_grouping_character=True, grouping_character='"') -> list[
+    def split(command: str,
+              global_split='\n',
+              keep_grouping_character=True,
+              grouping_character='"') -> list[
         str]:
         """
         Separate commands into a list while respecting strings between quotes.
@@ -145,27 +144,35 @@ class DshellTokenizer:
         :return: A list of split commands with restored strings.
         """
 
-        commands: str = command.strip()
-        temporary_replacement = '[REPLACE]'
-        pattern_find_regrouped_part = compile(rf'({grouping_character}(?:[^\\{grouping_character}]|\\.)*{grouping_character})', flags=DOTALL)
-        between_grouping_character = findall(pattern_find_regrouped_part, commands)  # find parts between quotes and save them
+        result: list[str] = []
+        in_string: bool = False # True if we are in a string
+        backslash: bool = False
+        line: list[str] = [] # buffer for each line
 
-        res = sub(pattern_find_regrouped_part,
-                  temporary_replacement,
-                  commands,
-                  )  # replace parts between quotes
+        for char in command:
 
-        res = res.split(global_split)  # split commands without quotes
+            if backslash:
+                line.append('\\')
+                line.append(char)
+                backslash = False
 
-        # restore quotes to their place
-        result = []
-        for i in res:
-            while temporary_replacement in i:
-                i = i.replace(temporary_replacement,
-                              between_grouping_character[0][1: -1] if not keep_grouping_character else
-                              between_grouping_character[0], 1)
-                between_grouping_character.pop(0)
-            result.append(i)
+            elif char == global_split and not in_string:
+                result.append(''.join(line))
+                line.clear()
+
+            elif char == grouping_character:
+                in_string = not in_string
+                if keep_grouping_character:
+                    line.append(char)
+
+            elif char == '\\':
+                backslash = True
+
+            else:
+                line.append(char)
+
+        result.append(''.join(line))
+
         return result
 
     @staticmethod

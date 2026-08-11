@@ -1,4 +1,4 @@
-from ..full_import import findall, sub, MULTILINE, StrEnum
+from ..full_import import sub, MULTILINE, StrEnum, search, compile, DOTALL
 
 class PreProcessorInstructions(StrEnum):
     DEFINE = "define"
@@ -18,31 +18,33 @@ def define(code: str, pre_processor_data: PreProcessorData) -> str:
     """
     return sub(f"(?<![a-zA-Z]){pre_processor_data.symbol}(?![a-zA-Z])", pre_processor_data.value, code)
 
-
-def preProcessor(code: str) -> str:
+pre_processor_pattern = compile(r"^\s*##([a-z]+) +([a-zA-Z]+)(?: +(.*))?$", flags=MULTILINE|DOTALL)
+def preProcessor(code: list[str]) -> list[str]:
     """
     Execute preprocessor line
-    :param code: the code before tokenization
-    :return:
+    :param code: a list of code line before tokenization
+    :return: a new list of string after pre-processor and since pre-processor instructions
     """
-    pre_processor_matchs = findall(r"^\s*##([a-z]+) +([a-zA-Z]+)(?: +)?(.*?)?$", code, flags=MULTILINE)
+    pre_processor_data: list[PreProcessorData] = list()
+    new_code: list[str] = []
 
-    if pre_processor_matchs:
-        pre_processor_data: list[PreProcessorData] = list()
+    for line in code:
 
-        for match in pre_processor_matchs:
-            if match[0] in PreProcessorInstructions:
-                pre_processor_data.append(PreProcessorData(*match))
+        line = removeCommentPreProcessor(line)
 
-        # remove all pre-processor instructions in the code
-        code = sub(r"^\s*##.*$", "", code, flags=MULTILINE)
+        if pre_processor_match := search(pre_processor_pattern, line):
 
-        # apply pre-processor instructions
-        code = applyPreProcessor(code, pre_processor_data)
+            if pre_processor_match.group(1) in PreProcessorInstructions:
+                pre_processor_data.append(PreProcessorData(*pre_processor_match.groups()))
 
-        code = removeCommentPreProcessor(code)
+        else:
+            # apply pre-processor instructions
+            line = applyPreProcessor(line, pre_processor_data)
+            new_code.append(line)
 
-    return code
+    return new_code
+
+
 
 def applyPreProcessor(code: str, pre_processor_data: list[PreProcessorData]) -> str:
     """
