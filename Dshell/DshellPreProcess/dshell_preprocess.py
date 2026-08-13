@@ -3,6 +3,10 @@ from ..full_import import sub, MULTILINE, StrEnum, search, compile, DOTALL
 class PreProcessorInstructions(StrEnum):
     DEFINE = "define"
 
+    @classmethod
+    def contain(cls, key: str, /) -> bool:
+        return any(member.value == key for member in cls)
+
 class PreProcessorData:
     def __init__(self, instruction: str, symbol: str, value: str):
         self.instruction = instruction
@@ -37,7 +41,7 @@ def preProcessor(code: list[str]) -> list[str]:
             instruction: str = pre_processor_match.group(1).lower()
             symbol: str = pre_processor_match.group(2)
             value: str = pre_processor_match.group(3)
-            if instruction in PreProcessorInstructions:
+            if PreProcessorInstructions.contain(instruction):
                 pre_processor_data.append(PreProcessorData(instruction, symbol, value))
 
         else:

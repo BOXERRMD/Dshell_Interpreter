@@ -5,7 +5,6 @@ from copy import deepcopy
 from pycordViews import EasyModifiedViews, SelectMenu
 from pycordViews.views.errors import CustomIDNotFound
 from datetime import timedelta, datetime, UTC
-from requests import get
 
 from discord.ui import Button, Select
 from discord import *
