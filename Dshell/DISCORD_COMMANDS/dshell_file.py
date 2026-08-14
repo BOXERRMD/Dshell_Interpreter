@@ -27,9 +27,6 @@ async def dshell_get_message_files(ctx: Message, message: Union[StrNode, IntNode
 
     attachments_list: ListNode = ListNode([], bypass_limit_elt=True)
 
-    if isinstance(target_message, PartialMessage):
-        target_message = await target_message.fetch()
-
     for attachment in target_message.attachments:
         if attachment.content_type is not None and attachment.content_type.startswith("text/"):
             file = FileNode(name=attachment.filename,
@@ -91,7 +88,7 @@ async def dshell_write_file(ctx: Message,
     _validate_required_bool(append, 'append', 'wf')
     _validate_optional_string(filename, 'filename', 'wf')
 
-    target_file = file if isinstance(file, FileNode) else FileNode(filename if filename is not None else "unnamed_file.txt")
+    target_file = file if isinstance(file, FileNode) else FileNode(filename if filename is not None else StrNode("unnamed_file.txt"))
 
     target_file.description = description if description is not None else target_file.description
     target_file.spoiler = spoiler if spoiler is not None else target_file.spoiler

@@ -1,4 +1,14 @@
-from Dshell.full_import import (Any, randint, Optional, Union, Embed, Member, Role, PermissionOverwrite, getsizeof, Permissions)
+from Dshell.full_import import (
+    Any,
+    randint,
+    Optional,
+    Union,
+    Embed,
+    Member,
+    Role,
+    PermissionOverwrite,
+    getsizeof,
+    Invite)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE, MAX_FILE_SIZE
 from .errors import *
@@ -9,7 +19,6 @@ __all__ = [
     'IntNode',
     'FloatNode',
     'BoolNode',
-    'LengthNode',
     'StartNode',
     'ElseNode',
     'ElifNode',
@@ -52,8 +61,13 @@ class ASTNode:
     def __getattr__(self, item):
         raise AttributeError(f"'{type(self).__name__}' node has no attribute '{item}'")
 
+class DATANode:
+    """
+    Base class for all Data nodes created during execution
+    """
 
-class StrNode(str, ASTNode):
+
+class StrNode(str, ASTNode, DATANode):
 
     def __new__(cls, value: Any):
         cls.pointer = 0
@@ -115,7 +129,7 @@ class StrNode(str, ASTNode):
     def __repr__(self):
         return StrNode(f"{super().__repr__()}")
 
-class IntNode(int, ASTNode):
+class IntNode(int, ASTNode, DATANode):
     def __new__(cls, value: Union[str, StrNode, int, "IntNode", float, "FloatNode"], base: int = 10):
         if isinstance(value, (int, IntNode, float, FloatNode)):
             return super().__new__(cls, value)
@@ -127,7 +141,7 @@ class IntNode(int, ASTNode):
     def __sizeof__(self):
         return getsizeof(IntNode)
 
-class FloatNode(float, ASTNode):
+class FloatNode(float, ASTNode, DATANode):
     def __new__(cls, value: Union[str, StrNode, float, "FloatNode", int, IntNode]):
         return super().__new__(cls, value)
 
@@ -137,7 +151,7 @@ class FloatNode(float, ASTNode):
     def __sizeof__(self):
         return getsizeof(FloatNode)
 
-class BoolNode(int, ASTNode):
+class BoolNode(int, ASTNode, DATANode):
     def __new__(cls, value: Union[str, StrNode, int, IntNode, bool, "BoolNode"]):
         return super().__new__(cls, int(bool(value)))
 
@@ -396,30 +410,6 @@ class VarNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
-class LengthNode(ASTNode):
-    """
-    Node representing the length operation in the AST.
-    """
-
-    def __init__(self, body: Token, line: int):
-        """
-        :param body: list of tokens representing the body of the length operation
-        """
-        super().__init__(line)
-        self.body = body
-
-    def __repr__(self):
-        return StrNode(f"<LENGTH> - {self.body}")
-
-    def to_dict(self):
-        """
-        Convert the LengthNode to a dictionary representation.
-        :return: Dictionary representation of the LengthNode.
-        """
-        return {
-            "type": "LengthNode",
-            "body": self.body.to_dict()
-        }
 
 class EndNode(ASTNode):
     """
@@ -557,6 +547,7 @@ class PermissionNode(ASTNode):
 
     def __repr__(self):
         return StrNode(f"<PERMISSION> - {self.value}")
+
 
 class SleepNode(ASTNode):
     """
@@ -841,7 +832,7 @@ class OptionUiSelectNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
-class FileNode(ASTNode):
+class FileNode(DATANode):
     def __init__(self, name: Optional[StrNode] = None, description: Optional[StrNode] = None, spoiler: bool = False):
         super().__init__(0)
         self.name = name
@@ -877,7 +868,7 @@ class FileNode(ASTNode):
     def __repr__(self):
         return StrNode(f"<FILE> - {self.name}")
 
-class FileStreamNode(ASTNode):
+class FileStreamNode(DATANode):
 
     def __init__(self, file: FileNode, separator: Optional[StrNode] = None):
         super().__init__(-1)
@@ -927,7 +918,7 @@ class FileStreamNode(ASTNode):
         return self.file.size()
 
 
-class ListNode(ASTNode):
+class ListNode(ASTNode, DATANode):
     """
     Node representing a list structure in the AST.
     Iterable class for browsing lists created from Dshell code.
