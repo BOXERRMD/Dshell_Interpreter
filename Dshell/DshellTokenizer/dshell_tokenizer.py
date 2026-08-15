@@ -115,7 +115,7 @@ class DshellTokenizer:
                     tokens_per_line.append(token)
 
                     if token_type == DTT.STR:
-                        token.value = sub(backslash_pattern, lambda m: escape(m.group(1)), token.value)
+                        token.value = sub(backslash_pattern, r"\1", token.value)
 
                     len_match = len(match.group(0))
                     line = line[:start_match] + MASK_CHARACTER * len_match + line[end_match:]
