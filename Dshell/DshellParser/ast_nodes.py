@@ -834,7 +834,7 @@ class OptionUiSelectNode(ASTNode):
 
 class FileNode(DATANode):
     def __init__(self, name: Optional[StrNode] = None, description: Optional[StrNode] = None, spoiler: bool = False):
-        super().__init__(0)
+        super().__init__()
         self.name = name
         self.description = description
         self.spoiler = spoiler
@@ -871,7 +871,7 @@ class FileNode(DATANode):
 class FileStreamNode(DATANode):
 
     def __init__(self, file: FileNode, separator: Optional[StrNode] = None):
-        super().__init__(-1)
+        super().__init__()
         self.file: FileNode = file
         self.content: str = file.read()
         self.separator: Optional[StrNode] = separator
