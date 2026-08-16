@@ -239,6 +239,3 @@ dshell_operators: ChainMap[str, Operator] = ChainMap(
     dshell_logical_word_operators,
     dshell_mathematical_operators)
 
-"""dshell_operators: dict[str, tuple[Callable, int, int, int, Optional[int]]] = dshell_logical_operators.copy()
-dshell_operators.update(dshell_logical_word_operators)
-dshell_operators.update(dshell_mathematical_operators)"""
