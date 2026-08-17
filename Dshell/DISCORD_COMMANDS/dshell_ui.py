@@ -1,4 +1,4 @@
-from Dshell.full_import import (ButtonStyle,
+from ..full_import import (ButtonStyle,
                            PrivateChannel,
                            Interaction,
                            ui,
@@ -7,15 +7,16 @@ from Dshell.full_import import (ButtonStyle,
                            CustomIDNotFound,
                            SelectMenu,
                            ComponentType,
-                           random)
+                           random,
+                           IntEnum)
 
 from ..DshellParser.ast_nodes import UiSelectNode, UiButtonNode, OptionUiSelectNode, ListNode, StrNode, IntNode, BoolNode
 
 from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
-from ..DshellInterpreteur.dshell_scope import new_scope, get_scope, update_nbr_usage_scope, get_usage_scope
+from ..DshellInterpreteur.dshell_scope import new_scope, update_nbr_usage_scope
 
-from Dshell.full_import import Any, TYPE_CHECKING, Union, Optional
+from ..full_import import Any, TYPE_CHECKING, Union, Optional
 
 from .utils.utils_type_validation import (_validate_optional_code_node,
                                           _validate_required_int,
@@ -39,6 +40,22 @@ SelectSyleValues: dict = {'string': ComponentType.string_select,
                           'mention': ComponentType.mentionable_select,
                           'channel': ComponentType.channel_select}
 
+class UITimeout(IntEnum):
+    default_timeout = 600
+    max_timeout = 60*60*24
+    min_timeout = 5
+
+def check_timeout(timeout: Union[int, IntNode]):
+    """
+    Check if the timeout is : min_timeout <= timeout <= max_timeout
+    :param timeout:
+    :return: the current timeout
+    """
+    if not UITimeout.min_timeout <= timeout <= UITimeout.max_timeout:
+        raise Exception(f"UI timeout must be greater or equal than [{UITimeout.min_timeout} min] "
+                        f"and less or equal than[{UITimeout.max_timeout}]")
+    return timeout
+
 async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: "DshellInterpreteur"):
     """
     Builds the parameters for a UI component from the UiNode.
@@ -53,16 +70,18 @@ async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: 
     args_button: dict[str, list[Any]] = regrouped_parameters.get_dict_parameters()
 
     code = args_button.pop('code', None)
-    style = StrNode(args_button.pop('style', 'primary').lower())
+    style = StrNode(args_button.pop('style', StrNode('primary')).lower())
     custom_id = args_button.pop('custom_id', StrNode('ui_button_'+str(random())))
     row = args_button.pop('row', IntNode(0))
     emoji = utils_refactor_emoji(args_button.pop('emoji', None))
+    timeout = args_button.pop('timeout', IntNode(UITimeout.default_timeout))
 
     _validate_optional_code_node(code, "code", _CMD)
     _validate_required_string(style, "style", _CMD)
     _validate_required_string(custom_id, "custom_id", _CMD)
     _validate_required_int(row, "row", _CMD)
     _validate_optional_string(emoji, "emoji", _CMD)
+    _validate_required_int(timeout, 'timeout', _CMD)
 
     if style not in ButtonStyleValues:
         raise ValueError(f"Button style must be one of {', '.join(ButtonStyleValues)}, not '{style}' !")
@@ -71,6 +90,7 @@ async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: 
     args_button['row'] = row
     args_button['style'] = ButtonStyle[style]
     args_button['emoji'] = emoji
+    args_button['timeout'] = check_timeout(timeout)
     args = args_button.pop('*', ())
     yield args, args_button, code
 
@@ -89,13 +109,14 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
 
     code = args_select.pop('code', None)
     custom_id = args_select.pop('custom_id', StrNode('ui_select_'+str(random())))
-    select_type = StrNode(args_select.pop('type', 'string').lower())
+    select_type = StrNode(args_select.pop('type', StrNode('string')).lower())
 
     disabled = args_select.get('disabled', BoolNode(0))
     max_values = args_select.get('max', IntNode(1))
     min_values = args_select.get('min', IntNode(1))
     placeholder = args_select.get('placeholder', StrNode(""))
     row = args_select.pop('row', IntNode(0))
+    timeout = args_select.pop('timeout', IntNode(UITimeout.default_timeout))
 
     _validate_optional_code_node(code, "Select code", _CMD)
     _validate_required_string(custom_id, "custom_id", _CMD)
@@ -105,6 +126,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     _validate_required_int(max_values, "min", _CMD)
     _validate_required_string(placeholder, "placeholder", _CMD)
     _validate_optional_int(row, "row", _CMD)
+    _validate_required_int(timeout, 'timeout', _CMD)
 
     if select_type not in SelectSyleValues:
         raise TypeError(f"Select style must be one of {', '.join(SelectSyleValues.keys())}, not '{select_type}' !")
@@ -117,6 +139,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     args_select["row"] = row
     args_select["type"] = SelectSyleValues[select_type]
     args_select['custom_id'] = custom_id
+    args_select['timeout'] = check_timeout(timeout)
     args = args_select.pop('*', ())
 
     yield args, args_select, code
@@ -185,6 +208,7 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
 
     if isinstance(ui_node, UiButtonNode):
         async for _, args_button, code in build_ui_button_parameters(ui_node, interpreter):
+            view.timeout = args_button.pop('timeout', UITimeout.default_timeout)
             b = ui.Button(**args_button)
             view.add_items(b)
             view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, scope_id: interpreter.scope_id})
@@ -196,6 +220,7 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
 
             options = args_select.pop("options", [])
             select_type = args_select.pop("type")
+            view.timeout = args_select.pop('timeout', IntNode(UITimeout.default_timeout))
 
             if select_type == ComponentType.string_select:
                 menu = s.add_string_select_menu(**args_select)
