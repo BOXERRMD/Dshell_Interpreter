@@ -144,52 +144,52 @@ class IntNode(int, ASTNode, DATANode):
         return getsizeof(IntNode)
 
     def __add__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot add {type(value).__name__} type to IntNode")
         return IntNode(super().__add__(value))
 
     def __sub__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot sub {type(value).__name__} type to IntNode")
         return IntNode(super().__sub__(value))
 
     def __pow__(self, x: "IntNode", /) -> "IntNode":
-        if not isinstance(x, IntNode):
+        if not isinstance(x, (IntNode, int)):
             raise Exception(f"Cannot pow {type(x).__name__} type to IntNode")
         return IntNode(super().__pow__(x))
 
     def __floordiv__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot divide {type(value).__name__} type to IntNode")
         return IntNode(super().__floordiv__(value))
 
     def __rshift__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot shift to the right {type(value).__name__} type to IntNode")
         return IntNode(super().__rshift__(value))
 
     def __lshift__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot shift to the left {type(value).__name__} type to IntNode")
         return IntNode(super().__lshift__(value))
 
     def __xor__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot xor {type(value).__name__} type to IntNode")
         return IntNode(super().__xor__(value))
 
     def __truediv__(self, value: "IntNode", /) -> "FloatNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot divide {type(value).__name__} type to IntNode")
         return FloatNode(super().__truediv__(value))
 
     def __mul__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot multiply {type(value).__name__} type to IntNode")
         return IntNode(super().__mul__(value))
 
     def __mod__(self, value: "IntNode", /) -> "IntNode":
-        if not isinstance(value, IntNode):
+        if not isinstance(value, (IntNode, int)):
             raise Exception(f"Cannot modulo {type(value).__name__} type to IntNode")
         return IntNode(super().__mod__(value))
 
@@ -205,52 +205,52 @@ class FloatNode(float, ASTNode, DATANode):
         return getsizeof(FloatNode)
 
     def __add__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot add {type(value).__name__} type to FloatNode")
         return FloatNode(super().__add__(value))
 
     def __sub__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot sub {type(value).__name__} type to FloatNode")
         return FloatNode(super().__sub__(value))
 
     def __pow__(self, x: "FloatNode", /) -> "FloatNode":
-        if not isinstance(x, FloatNode):
+        if not isinstance(x, (FloatNode, float)):
             raise Exception(f"Cannot pow {type(x).__name__} type to FloatNode")
         return FloatNode(super().__pow__(x))
 
     def __floordiv__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot divide {type(value).__name__} type to FloatNode")
         return FloatNode(super().__floordiv__(value))
 
     def __rshift__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot shift to the right {type(value).__name__} type to FloatNode")
         return FloatNode(super().__rshift__(value))
 
     def __lshift__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot shift to the left {type(value).__name__} type to FloatNode")
         return FloatNode(super().__lshift__(value))
 
     def __xor__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot xor {type(value).__name__} type to FloatNode")
         return FloatNode(super().__xor__(value))
 
     def __truediv__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot divide {type(value).__name__} type to FloatNode")
         return FloatNode(super().__truediv__(value))
 
     def __mul__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot multiply {type(value).__name__} type to FloatNode")
         return FloatNode(super().__mul__(value))
 
     def __mod__(self, value: "FloatNode", /) -> "FloatNode":
-        if not isinstance(value, FloatNode):
+        if not isinstance(value, (FloatNode, float)):
             raise Exception(f"Cannot modulo {type(value).__name__} type to FloatNode")
         return FloatNode(super().__mod__(value))
 
@@ -265,52 +265,52 @@ class BoolNode(int, ASTNode, DATANode):
         return getsizeof(BoolNode)
 
     def __add__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot add {type(value).__name__} type to IntNode")
         return BoolNode(super().__add__(value))
 
     def __sub__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot sub {type(value).__name__} type to IntNode")
         return BoolNode(super().__sub__(value))
 
     def __pow__(self, x: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(x, (BoolNode, IntNode)):
+        if not isinstance(x, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot pow {type(x).__name__} type to IntNode")
         return BoolNode(super().__pow__(x))
 
     def __floordiv__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot divide {type(value).__name__} type to IntNode")
         return BoolNode(super().__floordiv__(value))
 
     def __rshift__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot shift to the right {type(value).__name__} type to IntNode")
         return BoolNode(super().__rshift__(value))
 
     def __lshift__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot shift to the left {type(value).__name__} type to IntNode")
         return BoolNode(super().__lshift__(value))
 
     def __xor__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot xor {type(value).__name__} type to IntNode")
         return BoolNode(super().__xor__(value))
 
     def __truediv__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot divide {type(value).__name__} type to IntNode")
         return BoolNode(super().__truediv__(value))
 
     def __mul__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot multiply {type(value).__name__} type to IntNode")
         return BoolNode(super().__mul__(value))
 
     def __mod__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
-        if not isinstance(value, (BoolNode, IntNode)):
+        if not isinstance(value, (BoolNode, IntNode, bool)):
             raise Exception(f"Cannot modulo {type(value).__name__} type to IntNode")
         return BoolNode(super().__mod__(value))
 
