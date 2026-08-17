@@ -208,7 +208,7 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
 
     if isinstance(ui_node, UiButtonNode):
         async for _, args_button, code in build_ui_button_parameters(ui_node, interpreter):
-            view.timeout = args_button.pop('timeout', UITimeout.default_timeout)
+            view.timeout = args_button.pop('timeout', IntNode(UITimeout.default_timeout))
             b = ui.Button(**args_button)
             view.add_items(b)
             view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, scope_id: interpreter.scope_id})
