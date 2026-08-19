@@ -40,6 +40,7 @@ __all__ = [
     'PermissionNode',
     'EvalGroupNode',
     'ParamNode',
+    'GlobalNode',
     'CodeNode',
     'EvalNode',
     'ReturnNode',
@@ -827,16 +828,35 @@ class ParamNode(ASTNode):
             "body": [token.to_dict() for token in self.body]
         }
 
+
+class GlobalNode(ASTNode):
+    """
+    Node representing env variables used in code node.
+    """
+    def __init__(self, line: int, *args: Token):
+        super().__init__(line)
+        self.env_variables: tuple[Token, ...] = args
+
+    def __repr__(self) -> str:
+        return StrNode(f"<GLOBAL - {', '.join((str(i) for i in self.env_variables))}")
+
+    def to_dict(self):
+        return {
+            "type": "GlobalNode",
+            "env_variables": self.env_variables
+        }
+
 class CodeNode(ASTNode):
     """
     Node representing a block of code to pass in arguments.
     """
-    def __init__(self, body: list[ASTNode], line: int):
+    def __init__(self, body: list[ASTNode], line: int, global_env_vars: Optional[GlobalNode] = None):
         """
         :param body: list of Node representing the code already parsed
         """
         super().__init__(line)
         self.body = body
+        self.global_env_vars: Optional[GlobalNode] = global_env_vars
 
     def __repr__(self):
         return StrNode(f"<CODE> - {self.body}")
@@ -848,8 +868,10 @@ class CodeNode(ASTNode):
         """
         return {
             "type": "CodeNode",
+            "global_env_vars": self.global_env_vars.to_dict(),
             "body": [token.to_dict() for token in self.body]
         }
+
 
 class EvalNode(ASTNode):
     """

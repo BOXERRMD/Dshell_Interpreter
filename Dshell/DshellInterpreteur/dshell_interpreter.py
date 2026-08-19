@@ -11,7 +11,7 @@ from .utils_interpreter import get_params, eval_expression, eval_expression_inli
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
 from ..DISCORD_COMMANDS.dshell_ui import build_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
-from .dshell_scope import Scope, new_scope, get_scope, create_scope, update_nbr_usage_scope
+from .dshell_scope import Scope, new_scope
 from .dshell_global_variables import MAX_SLEEP_TIME_SECONDS, MIN_SLEEP_TIME_SECONDS
 from .dshell_iterators import DshellIterator
 
@@ -28,7 +28,8 @@ class DshellInterpreteur:
     def __init__(self, code: Union[str, CodeNode], ctx: context,
                  debug: bool = False,
                  vars: Optional[str] = None,
-                 vars_env: Optional[dict[str, Any] | str] = None):
+                 vars_env: Optional[dict[str, Any] | Scope] = None,
+                 is_ui: bool = False):
         """
         Interpreter Dshell code
         :param code: The code to interpret. Each line must end with a newline character, except SEPARATOR and SUB_SEPARATOR tokens.
@@ -36,6 +37,7 @@ class DshellInterpreteur:
         :param debug: If True, prints the AST of the code and put the ctx to None.
         :param vars: Optional dictionary of variables to initialize in the interpreter's environment.
         :param vars_env: Optional dictionary of additional environment variables to add to the interpreter's environment.
+        :param is_ui: If is true, env scope parent was nos delete because it will be reused after
 
         Note: __message_before__ (message content before edit) can be overwritten by vars_env parameter.
         """
@@ -50,16 +52,14 @@ class DshellInterpreteur:
         message = ctx.message if isinstance(ctx, Interaction) else ctx
 
         # scope creation
-        scope = get_scope(vars_env)
-        if scope:
-            self.env = scope
-            self.scope_id = vars_env
-        else:
-            self.scope_id: str = create_scope()
-            self.env: Optional[Scope] = get_scope(self.scope_id)
+        self.env: Scope = Scope()
+        if isinstance(vars_env, Scope):
+            self.env = Scope(vars_env)
+        elif isinstance(vars_env, dict):
+            self.env = Scope()
+            self.env.update(vars_env)
 
-        if self.env is None:
-            raise Exception(f"Scope {self.scope_id} not found in interpreter creation !")
+        self.is_ui = is_ui
 
         self.env.update({
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
@@ -350,7 +350,8 @@ class DshellInterpreteur:
         """
         Clear the interpreter environment.
         """
-        update_nbr_usage_scope(self.scope_id, -1)
+        self.env.clear()
+        del self.env
 
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):

@@ -17,7 +17,7 @@ from ..DshellInterpreteur.dshell_iterators import IntIterator
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep',
     'param', '#param', 'code', '#code', 'eval', 'return', 'break',
-    'catch', '#catch', 'raise'
+    'catch', '#catch', 'raise', 'global'
 }
 
 dshell_discord_keyword: set[str] = {

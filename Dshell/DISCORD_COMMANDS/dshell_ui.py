@@ -8,13 +8,21 @@ from ..full_import import (ButtonStyle,
                            SelectMenu,
                            ComponentType,
                            random,
-                           IntEnum)
+                           IntEnum,
+                           deepcopy)
 
-from ..DshellParser.ast_nodes import UiSelectNode, UiButtonNode, OptionUiSelectNode, ListNode, StrNode, IntNode, BoolNode
+from ..DshellParser.ast_nodes import (UiSelectNode,
+                                      UiButtonNode,
+                                      OptionUiSelectNode,
+                                      CodeNode,
+                                      ListNode,
+                                      StrNode,
+                                      IntNode,
+                                      BoolNode)
 
 from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
-from ..DshellInterpreteur.dshell_scope import new_scope, update_nbr_usage_scope
+from ..DshellInterpreteur.dshell_scope import new_scope, Scope
 
 from ..full_import import Any, TYPE_CHECKING, Union, Optional
 
@@ -30,8 +38,6 @@ from .utils.utils_global import utils_refactor_emoji
 
 if TYPE_CHECKING:
     from ..DshellInterpreteur.dshell_interpreter import DshellInterpreteur
-
-scope_id = "scope_id"
 
 ButtonStyleValues: set = {i.name for i in ButtonStyle}
 SelectSyleValues: dict = {'string': ComponentType.string_select,
@@ -55,6 +61,26 @@ def check_timeout(timeout: Union[int, IntNode]):
         raise Exception(f"UI timeout must be greater or equal than [{UITimeout.min_timeout} min] "
                         f"and less or equal than[{UITimeout.max_timeout}]")
     return timeout
+
+
+def build_ui_scope(env: Scope, code_node: CodeNode):
+    """
+    Create a new scope to store only variables used in UI.
+    :param code_node:
+    :return:
+    """
+
+    new_ui_scope = Scope()
+
+    if not isinstance(code_node, CodeNode) or code_node.global_env_vars is None:
+        return new_ui_scope
+
+    for token in code_node.global_env_vars.env_variables:
+
+        new_ui_scope.set(token.value, deepcopy(env.get(token.value, None)))
+    print(new_ui_scope.vars)
+
+    return new_ui_scope
 
 async def build_ui_button_parameters(ui_button_node: UiButtonNode, interpreter: "DshellInterpreteur"):
     """
@@ -201,18 +227,15 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
     :return:
     """
 
-    async def ui_timeout(ctx):
-        update_nbr_usage_scope(interpreter.scope_id, -1)
-
-    view = EasyModifiedViews(timeout=600, call_on_timeout=ui_timeout, disabled_on_timeout=True)
+    view = EasyModifiedViews(timeout=600, disabled_on_timeout=True)
 
     if isinstance(ui_node, UiButtonNode):
         async for _, args_button, code in build_ui_button_parameters(ui_node, interpreter):
+            code: CodeNode
             view.timeout = args_button.pop('timeout', IntNode(UITimeout.default_timeout))
             b = ui.Button(**args_button)
             view.add_items(b)
-            view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, scope_id: interpreter.scope_id})
-        update_nbr_usage_scope(interpreter.scope_id, 1)
+            view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, 'scope': build_ui_scope(interpreter.env, code)})
 
     elif isinstance(ui_node, UiSelectNode):
         s = SelectMenu()
@@ -228,26 +251,25 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
                 for option in options:
                     menu.add_option(**option)
 
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, "scope": build_ui_scope(interpreter.env, code)})
 
             elif select_type == ComponentType.role_select:
                 s.add_role_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, "scope": build_ui_scope(interpreter.env, code)})
 
             elif select_type == ComponentType.user_select:
                 s.add_user_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, "scope": build_ui_scope(interpreter.env, code)})
 
             elif select_type == ComponentType.mentionable_select:
                 s.add_mentionable_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, "scope": build_ui_scope(interpreter.env, code)})
 
             elif select_type == ComponentType.channel_select:
                 s.add_channel_select_menu(**args_select)
-                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, scope_id: interpreter.scope_id})
+                s.set_callable(args_select["custom_id"], _callable=ui_select_callback, data={'code': code, "scope": build_ui_scope(interpreter.env, code)})
 
         view.add_items(s)
-        update_nbr_usage_scope(interpreter.scope_id, 1)
 
     else:
         raise TypeError(f"UI node must be UiButtonNode or UiSelectNode, not {type(ui_node).__name__} !")
@@ -276,8 +298,8 @@ async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModif
             ui.disabled = args_button.get('disabled', ui.disabled)
             ui.url = args_button.get('url', ui.url)
             ui.row = args_button.get('row', ui.row)
-            new_code = code if code is not None else view.get_callable_data(args_button['custom_id'])['code']
-            view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': new_code, scope_id: interpreter.scope_id})
+            new_code: CodeNode = code if code is not None else view.get_callable_data(args_button['custom_id'])['code']
+            view.set_callable(args_button['custom_id'], _callable=ui_button_callback, data={'code': new_code, "scope": build_ui_scope(interpreter.env, new_code)})
 
     elif isinstance(ui_node, UiSelectNode):
 
@@ -297,8 +319,8 @@ async def rebuild_ui(ui_node: Union[UiButtonNode, UiSelectNode], view: EasyModif
             for option in options:
                 ui.add_option(**option)
 
-            new_code = code if code is not None else view.get_callable_data(args_select['custom_id'])['code']
-            view.set_callable(args_select['custom_id'], _callable=ui_select_callback, data={'code': new_code, scope_id: interpreter.scope_id})
+            new_code: CodeNode = code if code is not None else view.get_callable_data(args_select['custom_id'])['code']
+            view.set_callable(args_select['custom_id'], _callable=ui_select_callback, data={'code': new_code, "scope": build_ui_scope(interpreter.env, new_code)})
 
     return view
 
@@ -313,7 +335,7 @@ async def ui_button_callback(button: ui.Button, interaction: Interaction, data: 
     :return:
     """
     code = data.get('code', None)
-    scope: Optional[str] = data.get(scope_id, None)
+    scope: Scope = data.get("scope", Scope())
 
     if code is not None:
         message = interaction
@@ -413,6 +435,8 @@ async def ui_button_callback(button: ui.Button, interaction: Interaction, data: 
         with new_scope(new_interpreter, local_env):
             await new_interpreter.execute()
 
+        new_interpreter.clear()
+
     else:
         await interaction.response.defer(invisible=True)
 
@@ -427,7 +451,7 @@ async def ui_select_callback(select: ui.Select, interaction: Interaction, data: 
     :return:
     """
     code = data.get('code', None)
-    scope: Optional[str] = data.get(scope_id, None)
+    scope: Optional[str] = data.get("scope", None)
 
     message = interaction
     if code is not None:

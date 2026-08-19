@@ -6,6 +6,7 @@ __all__ = [
     "ast_to_dict",
 ]
 
+from .ast_nodes import GlobalNode
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellTokenizer.dshell_token_type import DshellTokenType as DTT
 from ..DshellTokenizer.dshell_token_type import DTT_DATA
@@ -201,6 +202,18 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
                 blocks.pop()
                 return blocks, pointer
+
+            elif first_token_line_value == 'global':
+                if not isinstance(last_block, CodeNode):
+                    raise SyntaxError(f"[GLOBAL] No code open on line {first_token_line.position}")
+
+                for i in range(1, len_tokens_by_line):
+                    ident = tokens_by_line[i]
+                    if ident.type != DTT.IDENT:
+                        raise ValueError(f"[GLOBAL] '{ident}' value must be a ident on line {first_token_line.position}")
+
+                global_node = GlobalNode(line, *tokens_by_line[1:])
+                last_block.global_env_vars = global_node
 
             elif first_token_line_value == 'eval':
                 if len_tokens_by_line_since_command_name < 1:
