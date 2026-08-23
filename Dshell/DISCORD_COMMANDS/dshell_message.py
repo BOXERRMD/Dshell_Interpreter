@@ -520,7 +520,7 @@ async def dshell_scan_check(target_channel: TextChannel) -> Message:
     last_message_datetime = last_message.created_at
     last_message_to_wait = last_message
     while last_message_to_wait.id == last_message.id or last_message_to_wait.is_system():
-        await sleep(0.5)
+        await sleep(1)
         async for m in target_channel.history(limit=5, after=last_message_datetime, oldest_first=True):
             if not m.is_system() and m.id != last_message.id:
                 last_message_to_wait = m

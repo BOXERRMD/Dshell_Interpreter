@@ -2,4 +2,3 @@ contextvars
 py-cord==2.8.1
 requests
 pycordviews
-regex

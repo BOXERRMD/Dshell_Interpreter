@@ -19,7 +19,7 @@ setup(
               "Dshell.DISCORD_COMMANDS",
               "Dshell.DISCORD_COMMANDS.utils",
               "Dshell.DshellPreProcess"],
-    install_requires=["py-cord==2.6.1", "requests", "pycordviews"],
+    install_requires=["py-cord==2.8.1", "requests", "pycordviews", "contextvars"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",

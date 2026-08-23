@@ -2,7 +2,8 @@ from asyncio import sleep
 from typing import *
 from sys import getsizeof
 from copy import deepcopy
-from pycordViews import EasyModifiedViews, SelectMenu
+from pycordViews import EasyModifiedViews
+from pycordViews import SelectMenu as SelectMenuPycordViews
 from pycordViews.views.errors import CustomIDNotFound
 from datetime import timedelta, datetime, UTC
 

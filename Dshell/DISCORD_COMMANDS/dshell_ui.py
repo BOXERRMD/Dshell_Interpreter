@@ -5,7 +5,7 @@ from ..full_import import (ButtonStyle,
                            MISSING,
                            EasyModifiedViews,
                            CustomIDNotFound,
-                           SelectMenu,
+                           SelectMenuPycordViews,
                            ComponentType,
                            random,
                            IntEnum,
@@ -144,7 +144,7 @@ async def build_ui_select_parameters(ui_select_node: UiSelectNode, interpreter: 
     row = args_select.pop('row', IntNode(0))
     timeout = args_select.pop('timeout', IntNode(UITimeout.default_timeout))
 
-    _validate_optional_code_node(code, "Select code", _CMD)
+    _validate_optional_code_node(code, "code", _CMD)
     _validate_required_string(custom_id, "custom_id", _CMD)
     _validate_required_string(select_type, "type", _CMD)
     _validate_required_bool(disabled, "disabled", _CMD)
@@ -238,7 +238,7 @@ async def build_ui(ui_node: Union[UiButtonNode, UiSelectNode], interpreter: "Dsh
             view.set_callable(b.custom_id, _callable=ui_button_callback, data={'code': code, 'scope': build_ui_scope(interpreter.env, code)})
 
     elif isinstance(ui_node, UiSelectNode):
-        s = SelectMenu()
+        s = SelectMenuPycordViews()
         async for _, args_select, code in build_ui_select_parameters(ui_node, interpreter):
 
             options = args_select.pop("options", [])
@@ -451,7 +451,7 @@ async def ui_select_callback(select: ui.Select, interaction: Interaction, data: 
     :return:
     """
     code = data.get('code', None)
-    scope: Optional[str] = data.get("scope", None)
+    scope: Scope = data.get("scope", Scope())
 
     message = interaction
     if code is not None:
@@ -574,6 +574,8 @@ async def ui_select_callback(select: ui.Select, interaction: Interaction, data: 
 
         with new_scope(new_interpreter, local_env):
             await new_interpreter.execute()
+
+        new_interpreter.clear()
 
     else:
         await interaction.response.defer(invisible=True)
