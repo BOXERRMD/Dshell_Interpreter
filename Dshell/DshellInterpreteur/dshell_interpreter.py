@@ -114,9 +114,10 @@ class DshellInterpreteur:
             '__guild_categories__': ListNode([IntNode(channel.id) for channel in message.channel.guild.categories], bypass_limit_elt=True, editable=False),
             '__guild_stage_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.stage_channels], bypass_limit_elt=True, editable=False),
             '__guild_forum_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.forum_channels], bypass_limit_elt=True, editable=False),
-            '__guild_channels_count__': IntNode(len(message.channel.guild.channels)),
+            '__guild_channels_count__': IntNode(len(message.channel.guild.channels))
 
-        } if message is not None and not debug else {'__ret__': None, '__break__': BoolNode(0)}) # {} is used in debug mode, when ctx is None
+        } if message is not None and not debug else {'__ret__': None, '__break__': BoolNode(0)},  # {} is used in debug mode, when ctx is None
+                        size_memory=False)
 
 
         if isinstance(vars_env, dict): # add the variables to the environment

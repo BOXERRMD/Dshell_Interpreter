@@ -1,4 +1,3 @@
-from typing_extensions import Literal
 
 from Dshell.full_import import (
     Any,
@@ -9,8 +8,7 @@ from Dshell.full_import import (
     Member,
     Role,
     PermissionOverwrite,
-    getsizeof,
-    Invite)
+    getsizeof)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE, MAX_FILE_SIZE
 from .errors import *
@@ -142,7 +140,7 @@ class IntNode(int, ASTNode, DATANode):
         return StrNode(f"{super().__repr__()}")
 
     def __sizeof__(self):
-        return getsizeof(IntNode)
+        return len(self.to_bytes(length=50)) # 50 is the maximum number of bytes to convert an integer to bytes, it can be changed if needed
 
     def __add__(self, value: "IntNode", /) -> "IntNode":
         if not isinstance(value, (IntNode, int)):
@@ -203,7 +201,7 @@ class FloatNode(float, ASTNode, DATANode):
         return StrNode(f"{super().__repr__()}")
 
     def __sizeof__(self):
-        return getsizeof(FloatNode)
+        return getsizeof(float)
 
     def __add__(self, value: "FloatNode", /) -> "FloatNode":
         if not isinstance(value, (FloatNode, float)):
@@ -263,7 +261,7 @@ class BoolNode(int, ASTNode, DATANode):
         return StrNode(f"{super().__repr__()}")
 
     def __sizeof__(self):
-        return getsizeof(BoolNode)
+        return getsizeof(IntNode(0))
 
     def __add__(self, value: Union["BoolNode", "IntNode"], /) -> "BoolNode":
         if not isinstance(value, (BoolNode, IntNode, bool)):
@@ -697,7 +695,7 @@ class PermissionNode(ASTNode):
         self.value.update(other.value)
 
     def __sizeof__(self):
-        return len(self.value)*getsizeof(PermissionNode)
+        return len(self.value)*getsizeof(PermissionOverwrite)
 
     def __repr__(self):
         return StrNode(f"<PERMISSION> - {self.value}")
@@ -739,7 +737,7 @@ class CatchNode(ASTNode):
         self.variable = variable
 
     def __repr__(self):
-        return StrNode(f"<CATCH> - line {self.start_line} to {self.end_line}")
+        return StrNode(f"<CATCH> - {self.body}")
 
     def to_dict(self):
         """
@@ -1032,7 +1030,7 @@ class FileNode(DATANode):
         return FileStreamNode(self, separator)
 
     def size(self):
-        return IntNode(len(self.read()))
+        return IntNode(getsizeof(self.read()))
 
     def __len__(self):
         return self.size()
