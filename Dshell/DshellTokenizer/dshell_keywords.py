@@ -24,7 +24,7 @@ dshell_keyword: set[str] = {
 }
 
 dshell_discord_keyword: set[str] = {
-    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'ui', '#ui',
+    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission',
     'button', '#button', 'select', '#select', 'option'
 }
 
@@ -186,7 +186,10 @@ Operator = tuple[
 
 def dshell_operator_on_list(op: Callable, _list1: ListNode, _list2: ListNode) -> ListNode:
     """
-
+    Apply an operator to two lists element-wise.
+    :param op: The operator function to apply.
+    :param _list1: The first list.
+    :param _list2: The second list.
     """
 
     _validate_required_list_node(_list1, str(_list1), "OPERATOR ON LIST")
