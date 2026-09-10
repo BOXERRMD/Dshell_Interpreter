@@ -13,6 +13,9 @@ from ..DISCORD_COMMANDS import *
 from ..full_import import Callable, ChainMap
 from ..DshellInterpreteur.dshell_iterators import IntIterator
 
+from ..DISCORD_COMMANDS.utils.utils_type_validation import _validate_required_list_node
+
+from operator import *
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep',
@@ -32,8 +35,6 @@ async def dshell_debug(ctx, x):
     :param x:
     :return:
     """
-    from ..DISCORD_COMMANDS.utils.utils_file import utils_check_files_arguments
-    #utils_check_files_arguments("debug", x)
     print(x)
     return x
 
@@ -183,27 +184,56 @@ Operator = tuple[
     Optional[int],
 ]
 
+def dshell_operator_on_list(op: Callable, _list1: ListNode, _list2: ListNode) -> ListNode:
+    """
+
+    """
+
+    _validate_required_list_node(_list1, str(_list1), "OPERATOR ON LIST")
+    _validate_required_list_node(_list2, str(_list2), "OPERATOR ON LIST")
+
+    if (len_list1 := len(_list1)) == 0 or (len_list2 := len(_list2)) == 0:
+        return _list1
+
+    if len_list1 != len_list2:
+        raise ValueError(f"Lists must be of the same length, got {len_list1} and {len_list2}")
+
+    for i in range(0, len_list1):
+        _list1.set(i, op(_list1[i], _list2[i]))
+
+    return _list1
 
 dshell_mathematical_operators: dict[str, Operator] = {
 
+    r"**.": (lambda a, b=None: dshell_operator_on_list(pow, a, b), 8, 1, 2, None),
+    r"//.": (lambda a, b=None: dshell_operator_on_list(floordiv, a, b), 7, 1, 2, None),
+    r">>.": (lambda a, b=None: dshell_operator_on_list(rshift, a, b), 5, 1, 2, None),
+    r"<<.": (lambda a, b=None : dshell_operator_on_list(lshift, a, b), 5, 1, 2, None),
+    r"/.": (lambda a, b=None : dshell_operator_on_list(truediv, a, b), 7, 1, 2, None),
+    r"*.": (lambda a, b=None: dshell_operator_on_list(mul, a, b), 7, 1, 2, None),
+    r"%.": (lambda a, b=None : dshell_operator_on_list(mod, a, b), 7, 1, 2, None),
+    r"-.": (lambda a, b=None : dshell_operator_on_list(sub, a, b), 7, 1, 2, None),
+    r"+.": (lambda a, b=None : dshell_operator_on_list(add, a, b), 7, 1, 2, None),
+    r"#.": (lambda a, b=None : dshell_operator_on_list(len, a, b), 7, 1, 2, None),
+    r"~.": (lambda a, b=None : dshell_operator_on_list(invert, a, b), 7, 1, 2, None),
     r"++": (lambda a: a + 1, 6, 1, 1, None),
     r"--": (lambda a: a - 1, 6, 1, 1, None),
     r"**": (lambda a, b: a ** b, 8, 2, 2, None),
     r"//": (lambda a, b: a // b, 7, 2, 2, None),
     r">>": (lambda a, b: a >> b, 5, 2, 2, None),
     r"<<": (lambda a, b: a << b, 5, 2, 2, None),
-    r"^": (lambda a, b: a ^ b, 5, 2, 2, None),
     r"/": (lambda a, b: a / b, 7, 2, 2, None),
     r"*": (lambda a, b: a * b, 7, 2, 2, None),
     r"%": (lambda a, b: a % b, 7, 2, 2, None),
     r"-": (lambda a, b=None: a-b if b is not None else -a, 6, 1, 2, None),
     r"+": (lambda a, b: a + b, 6, 2, 2, None),
+    r"#": (lambda a : len(a), 100, 1, 1, None),
+    r"~": (lambda a : ~a, 7, 1, 1, None),
     r"..": (lambda a, b: (IntIterator(
                                 min_iterator=IntNode(a),
                                 max_iterator=IntNode(b),
                                 step= IntNode(1 if a <= b else -1))
                           ), 5, 2, 2, None)
-    # warning: ambiguity between unary and binary to be handled in your parser
 
 }
 
@@ -227,6 +257,7 @@ dshell_logical_operators: dict[str, Operator] = {
     r"||": (lambda a, b: a or b, 1, 2, 2, None),
     r"&": (lambda a, b: a & b, 2, 2, 2, None),
     r"|": (lambda a, b: a | b, 1, 2, 2, None),
+    r"^": (lambda a, b: a ^ b, 1, 2, 2, None),
     r"=": (lambda a, b: a == b, 4, 2, 2, None),
     r"<": (lambda a, b: a < b, 4, 2, 2, None),
     r">": (lambda a, b: a > b, 4, 2, 2, None),

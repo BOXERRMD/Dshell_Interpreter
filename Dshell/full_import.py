@@ -12,7 +12,7 @@ from discord import *
 from discord.abc import PrivateChannel
 from discord.utils import get, _MissingSentinel
 from contextvars import ContextVar
-from re import *
 from random import randint, choice, random
 from enum import Enum, auto, StrEnum, IntEnum
 from collections import ChainMap
+from re import *

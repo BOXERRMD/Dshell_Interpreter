@@ -1,22 +1,11 @@
 __all__ = [
     "DshellTokenizer",
-    "table_regex",
-    "MASK_CHARACTER"
+    "table_regex"
 ]
 
 from .dshell_token_type import Token
 from .dshell_token_type import DshellTokenType as DTT
-
-from Dshell.full_import import (
-                           Pattern,
-                           ASCII,
-                           DOTALL,
-                           IGNORECASE,
-                           compile,
-                           escape,
-                           finditer,
-                           Match,
-                           sub)
+from ..full_import import Enum, Optional, StrEnum
 
 from .dshell_keywords import (dshell_keyword,
                               dshell_discord_keyword,
@@ -25,9 +14,48 @@ from .dshell_keywords import (dshell_keyword,
                               dshell_logical_operators,
                               dshell_logical_word_operators)
 
+
+class DshellSpecialChar(StrEnum):
+    """Special characters that are structurally significant in the Dshell syntax."""
+    QUOTE = '"'
+    HASH = '#'
+    L_ANGLE = '<'
+    R_ANGLE = '>'
+    AT = '@'
+    BANG = '!'
+    AMPERSAND = '&'
+    L_BRACE = '{'
+    R_BRACE = '}'
+    L_PAREN = '('
+    R_PAREN = ')'
+    BACKTICK = '`'
+    L_BRACKET = '['
+    R_BRACKET = ']'
+
+
+class DshellLiteralWord(StrEnum):
+    """Keyword-like literals that are recognized as standalone values."""
+    TRUE = 'True'
+    FALSE = 'False'
+    NONE = 'None'
+
+
+class DshellParameterPrefix(Enum):
+    """Supported parameter prefixes used to tag command arguments."""
+    VAR = '--'
+    STR = "--'"
+    LIST = '--*'
+
+    @property
+    def token_type(self):
+        return {
+            DshellParameterPrefix.VAR: DTT.PARAMETER,
+            DshellParameterPrefix.STR: DTT.STR_PARAMETER,
+            DshellParameterPrefix.LIST: DTT.PARAMETERS,
+        }[self]
+
 from ..DshellPreProcess.dshell_preprocess import preProcessor
 
-MASK_CHARACTER = '§'
 
 def is_line_empty(line: str) -> bool:
     """
@@ -35,38 +63,212 @@ def is_line_empty(line: str) -> bool:
     :param line: The line to check.
     :return: True if the line is empty, False otherwise.
     """
-    return all(c in (MASK_CHARACTER, ' ', '\n') for c in line)
+    return all(c in ('', ' ', '\n') for c in line)
 
-table_regex: dict[DTT, Pattern] = {
-    DTT.STR: compile(r'"((?:[^\\"]|\\.)*)"', flags=DOTALL),
-    DTT.EVAL_L_EXPRESSION: compile(r"({)"),
-    DTT.EVAL_R_EXPRESSION: compile(r"(})"),
-    DTT.EVAL_L_GROUP: compile(rf"(\()"),
-    DTT.EVAL_R_GROUP: compile(r"(\))"),
-    DTT.EVAL_OUTDATED_GROUP: compile(r"(`)"),
-    DTT.LIST_L: compile(r"(\[)"),
-    DTT.LIST_R: compile(r"(])"),
-    DTT.PARAMETERS: compile(rf"--\*\s*([A-Za-z_]+)\s*", flags=ASCII),
-    DTT.STR_PARAMETER: compile(rf"--'\s*([A-Za-z_]+)\s*", flags=ASCII),
-    DTT.PARAMETER: compile(rf"--\s*([A-Za-z_]+)\s*", flags=ASCII),
-    DTT.MENTION: compile(r'<(?:@[!&]?|#)([0-9]+)>'),
-    DTT.KEYWORD: compile(rf"(?<!\w)(#?{'|'.join(dshell_keyword)})(?!\w)"),
-    DTT.DISCORD_KEYWORD: compile(rf"(?<![\w\-])(#?{'|'.join(dshell_discord_keyword)})(?![\w\-])" , flags=IGNORECASE),
-    DTT.COMMAND: compile(rf"\b({'|'.join(dshell_commands.keys())})\b", flags=IGNORECASE),
-    DTT.FLOAT: compile(r"(\d+\.\d+)"),
-    DTT.HEXA: compile(r"(0[Xx][0-9a-fA-F]+)"),
-    DTT.INT: compile(r"(\d+)"),
-    DTT.MATHS_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_mathematical_operators.keys()])})"),
-    DTT.LOGIC_OPERATOR: compile(rf"({'|'.join([escape(i) for i in dshell_logical_operators.keys()])})"),
-    DTT.LOGIC_WORD_OPERATOR: compile(
-        rf"(?:^|\s)({'|'.join([escape(i) for i in dshell_logical_word_operators.keys()])})(?:$|\s)"),
-    DTT.BOOL: compile(r"(True|False)", flags=IGNORECASE),
-    DTT.NONE: compile(r"(None)", flags=IGNORECASE),
-    DTT.IDENT: compile(rf"([A-Za-z0-9_]+)"),
-}
 
-backslash_pattern = compile(r"\\(.)", flags=DOTALL)
+def _is_identifier_char(char: str) -> bool:
+    """Return True if the character can be part of an identifier in Dshell."""
+    return char.isalnum() or char == '_'
 
+
+def _is_word_boundary_left(line: str, index: int) -> bool:
+    """Return True if the left side of a word is not attached to another identifier."""
+    if index == 0:
+        return True
+    return not (line[index - 1].isalnum() or line[index - 1] == '_')
+
+
+def _is_word_boundary_right(line: str, index: int) -> bool:
+    """Return True if the right side of a word is not attached to another identifier."""
+    if index >= len(line):
+        return True
+    return not (line[index].isalnum() or line[index] == '_')
+
+
+def _read_word(line: str, index: int) -> str:
+    """Read a contiguous identifier-like word starting at index."""
+    start = index
+    while index < len(line) and _is_identifier_char(line[index]):
+        index += 1
+    return line[start:index]
+
+
+def _read_escaped_string(line: str, index: int) -> tuple[str, int]:
+    """Read a quoted string while unescaping backslash-escaped characters."""
+    value: list[str] = []
+    i = index + 1
+    while i < len(line):
+        char = line[i]
+        if char == '\\':
+            if i + 1 < len(line):
+                value.append(line[i + 1])
+                i += 2
+            else:
+                value.append(char)
+                i += 1
+            continue
+        if char == '"':
+            return ''.join(value), i + 1
+        value.append(char)
+        i += 1
+    raise SyntaxError('Unterminated string literal')
+
+
+def _match_parameter(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a parameter token such as --name, --*name or --'name."""
+    for prefix in DshellParameterPrefix:
+        prefix_value = prefix.value
+        if not line.startswith(prefix_value, index):
+            continue
+        j = index + len(prefix_value)
+        while j < len(line) and line[j].isspace():
+            j += 1
+        start = j
+        while j < len(line) and _is_identifier_char(line[j]):
+            j += 1
+        if j == start:
+            return None
+        name = line[start:j]
+        return prefix.token_type, name, j
+    return None
+
+
+def _match_mention(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a Discord mention like <@1234>, <#1234>, <@!1234> or <@&1234>."""
+    if line[index] != DshellSpecialChar.L_ANGLE:
+        return None
+    j = index + 1
+    if j < len(line) and line[j] == DshellSpecialChar.AT:
+        j += 1
+        if j < len(line) and line[j] in (DshellSpecialChar.BANG, DshellSpecialChar.AMPERSAND):
+            j += 1
+    elif j < len(line) and line[j] == DshellSpecialChar.HASH:
+        j += 1
+    if j >= len(line) or not line[j].isdigit():
+        return None
+    start = j
+    while j < len(line) and line[j].isdigit():
+        j += 1
+    if j < len(line) and line[j] == DshellSpecialChar.R_ANGLE:
+        return DTT.MENTION, line[start:j], j + 1
+    return None
+
+
+def _match_keyword(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a Dshell keyword such as if, var, loop, #if, #end, etc."""
+    if index < len(line) and line[index] == DshellSpecialChar.HASH:
+        start = index + 1
+    else:
+        start = index
+    word = _read_word(line, start)
+    if not word:
+        return None
+    if start == index and not _is_word_boundary_left(line, index):
+        return None
+    candidate = f"{DshellSpecialChar.HASH if index < len(line) and line[index] == DshellSpecialChar.HASH else ''}{word}"
+    if candidate in dshell_keyword:
+        return DTT.KEYWORD, candidate, start + len(word)
+    return None
+
+
+def _match_discord_keyword(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a Discord-related keyword like #embed, #field, #button, etc."""
+    if index < len(line) and line[index] == DshellSpecialChar.HASH:
+        start = index + 1
+    else:
+        start = index
+    if start >= len(line) or not (line[start].isalpha() or line[start] == '_'):
+        return None
+    word = _read_word(line, start)
+    candidate = f"{DshellSpecialChar.HASH if index < len(line) and line[index] == DshellSpecialChar.HASH else ''}{word}"
+    if candidate.lower() in {k.lower() for k in dshell_discord_keyword}:
+        return DTT.DISCORD_KEYWORD, candidate, start + len(word)
+    return None
+
+
+def _match_command(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a built-in command name when it appears as a standalone word."""
+    start = index
+    if not (line[start].isalpha() or line[start] == '_'):
+        return None
+    word = _read_word(line, start)
+    if not word:
+        return None
+    if not _is_word_boundary_left(line, start) or not _is_word_boundary_right(line, start + len(word)):
+        return None
+    lowered = word.lower()
+    for command_name in dshell_commands:
+        if lowered == command_name.lower():
+            return DTT.COMMAND, word, start + len(word)
+    return None
+
+
+def _match_literal(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match an integer, float or hexadecimal literal starting at index."""
+    if index + 1 < len(line) and line[index] == '0' and line[index + 1] in 'xX':
+        j = index + 2
+        while j < len(line) and line[j] in '0123456789abcdefABCDEF':
+            j += 1
+        if j > index + 2:
+            return DTT.HEXA, line[index:j], j
+    j = index
+    while j < len(line) and line[j].isdigit():
+        j += 1
+    if j > index:
+        if j + 1 < len(line) and line[j] == '.' and line[j + 1].isdigit():
+            k = j + 1
+            while k < len(line) and line[k].isdigit():
+                k += 1
+            return DTT.FLOAT, line[index:k], k
+        return DTT.INT, line[index:j], j
+    return None
+
+
+def _match_operator(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a mathematical or logical operator at the current position."""
+    for key in dshell_mathematical_operators.keys():
+        if line.startswith(key, index):
+            return DTT.MATHS_OPERATOR, key, index + len(key)
+    for key in dshell_logical_operators.keys():
+        if line.startswith(key, index):
+            return DTT.LOGIC_OPERATOR, key, index + len(key)
+    for key in dshell_logical_word_operators.keys():
+        if line.startswith(key, index):
+            end = index + len(key)
+            if _is_word_boundary_left(line, index) and _is_word_boundary_right(line, end):
+                return DTT.LOGIC_WORD_OPERATOR, key, end
+    return None
+
+
+def _match_boolean(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a boolean literal (True or False) regardless of the exact casing."""
+    booleans: tuple[DshellLiteralWord, ...] = (DshellLiteralWord.TRUE, DshellLiteralWord.FALSE)
+    for literal in booleans:
+        value = literal.value
+        if line[index:index + len(value)].lower() == value.lower() and _is_word_boundary_left(line, index) and _is_word_boundary_right(line, index + len(value)):
+            return DTT.BOOL, value, index + len(value)
+    return None
+
+
+def _match_none(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match the None literal as a standalone identifier-like word."""
+    value = DshellLiteralWord.NONE.value
+    if line[index:index + len(value)].lower() == value.lower() and _is_word_boundary_left(line, index) and _is_word_boundary_right(line, index + len(value)):
+        return DTT.NONE, value, index + len(value)
+    return None
+
+
+def _match_identifier(line: str, index: int) -> Optional[tuple[DTT, str, int]]:
+    """Match a plain identifier for variables or names not reserved by other rules."""
+    if not (line[index].isalpha() or line[index] == '_'):
+        return None
+    end = index + 1
+    while end < len(line) and _is_identifier_char(line[end]):
+        end += 1
+    return DTT.IDENT, line[index:end], end
+
+
+table_regex = {}
 class DshellTokenizer:
 
     def __init__(self, code: str):
@@ -88,37 +290,136 @@ class DshellTokenizer:
 
     def tokenizer(self, command_lines: list[str]) -> list[list[Token]]:
         """
-        Tokenize each line of code
+        Tokenize each line of code without regex, but following the same priority order
+        as the original regex-based matcher.
         :param command_lines: The code separated into multiple lines by the split method
         """
         tokens: list[list[Token]] = []
         ident_tokens = 0
 
         for line_number, line in enumerate(command_lines, start=1):
-            line: str = command_lines[line_number-1] # get the current line
+            line = command_lines[line_number - 1]
 
-            # if the line is empty or already tokenized, pass the line.
             if is_line_empty(line):
                 continue
 
             tokens.append([])
             tokens_per_line = tokens[ident_tokens]
+            i = 0
 
-            for token_type, regex in table_regex.items():
-                for match in finditer(regex, line):
-                    match: Match
+            while i < len(line):
+                char = line[i]
 
-                    start_match = match.start()
-                    end_match = match.end()
+                if char.isspace():
+                    i += 1
+                    continue
 
-                    token = Token(token_type, match.group(1), (line_number, start_match))
-                    tokens_per_line.append(token)
+                if char == DshellSpecialChar.QUOTE:
+                    start = i
+                    value, i = _read_escaped_string(line, i)
+                    tokens_per_line.append(Token(DTT.STR, value, (line_number, start)))
+                    continue
 
-                    if token_type == DTT.STR:
-                        token.value = sub(backslash_pattern, r"\1", token.value)
+                if char == DshellSpecialChar.L_BRACE:
+                    tokens_per_line.append(Token(DTT.EVAL_L_EXPRESSION, char, (line_number, i)))
+                    i += 1
+                    continue
+                if char == DshellSpecialChar.R_BRACE:
+                    tokens_per_line.append(Token(DTT.EVAL_R_EXPRESSION, char, (line_number, i)))
+                    i += 1
+                    continue
+                if char == DshellSpecialChar.L_PAREN:
+                    tokens_per_line.append(Token(DTT.EVAL_L_GROUP, char, (line_number, i)))
+                    i += 1
+                    continue
+                if char == DshellSpecialChar.R_PAREN:
+                    tokens_per_line.append(Token(DTT.EVAL_R_GROUP, char, (line_number, i)))
+                    i += 1
+                    continue
+                if char == DshellSpecialChar.BACKTICK:
+                    tokens_per_line.append(Token(DTT.EVAL_OUTDATED_GROUP, char, (line_number, i)))
+                    i += 1
+                    continue
+                if char == DshellSpecialChar.L_BRACKET:
+                    tokens_per_line.append(Token(DTT.LIST_L, char, (line_number, i)))
+                    i += 1
+                    continue
+                if char == DshellSpecialChar.R_BRACKET:
+                    tokens_per_line.append(Token(DTT.LIST_R, char, (line_number, i)))
+                    i += 1
+                    continue
 
-                    len_match = len(match.group(0))
-                    line = line[:start_match] + MASK_CHARACTER * len_match + line[end_match:]
+                match = _match_parameter(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_mention(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_keyword(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_discord_keyword(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_command(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_literal(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_operator(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_boolean(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_none(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                match = _match_identifier(line, i)
+                if match is not None:
+                    token_type, value, next_index = match
+                    tokens_per_line.append(Token(token_type, value, (line_number, i)))
+                    i = next_index
+                    continue
+
+                i += 1
 
             tokens_per_line.sort(key=lambda t: t.position[1])
 
