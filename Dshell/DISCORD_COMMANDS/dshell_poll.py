@@ -96,7 +96,7 @@ async def dshell_get_answers_poll(ctx: Message, target: Optional[Union[IntNode, 
         if target_poll is None:
             return None
 
-        return PollNode(target_poll).get_results()
+        return PollNode(target_poll).get_answers()
 
     else:
         target_message = await utils_get_message(ctx, target) if target is not None else ctx
@@ -105,7 +105,7 @@ async def dshell_get_answers_poll(ctx: Message, target: Optional[Union[IntNode, 
         if target_poll is None:
             return None
 
-        return PollNode(target_poll).get_results()
+        return PollNode(target_poll).get_answers()
 
 
 async def dshell_get_results_poll(ctx: Message, target: Optional[Union[IntNode, StrNode, PollNode]] = None) -> Union[ListNode, None]:
