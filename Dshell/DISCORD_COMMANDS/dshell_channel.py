@@ -213,7 +213,7 @@ async def dshell_create_voice_channel(ctx: Message,
 async def dshell_delete_channel(ctx: Message,
                                 channel: Optional[IntNode]=None,
                                 reason: Optional[StrNode]=None,
-                                timeout: FloatNode = FloatNode(0)):
+                                timeout: IntNode = IntNode(0)):
     """
     Deletes a channel.
     You can add a waiting time before it is deleted (in seconds)
