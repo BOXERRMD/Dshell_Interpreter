@@ -101,7 +101,7 @@ async def utils_create_allowed_denied_permissions(ctx: Message,
             permission_value = permissions[i]
         else:
             if len(permissions) > 0:
-                permission_value = permissions[-1]
+                permission_value = permissions[len(permissions)-1]
             else:
                 permission_value = IntNode(0)  # Valeur par défaut si aucune permission n'est fournie
 
