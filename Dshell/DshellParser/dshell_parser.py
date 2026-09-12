@@ -394,6 +394,35 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
 
                 last_block.options.append(OptionUiSelectNode(tokens_by_line[1:], line=line))
 
+            elif first_token_line_value == 'poll':
+                if len_tokens_by_line_since_command_name <= 0:
+                    raise SyntaxError(f'[POLL] Take one or more arguments on line {first_token_line.position} !')
+
+                if tokens_by_line[1].type != DTT.IDENT:
+                    raise TypeError(f'[POLL] the variable given must be a ident, '
+                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+                pool_node = ConstructPollNode([], answers=[], line=line)
+                var_node = VarNode(tokens_by_line[1], body=[pool_node], line=line)
+                last_block.body.append(var_node)
+                _, p = parse(token_lines[pointer + 1:], pool_node)
+                pointer += p + 1
+
+            elif first_token_line_value == '#poll':
+                if not isinstance(last_block, ConstructPollNode):
+                    raise SyntaxError(f'[#POLL] No POLL open on line {first_token_line.position} !')
+                blocks.pop()
+                return blocks, pointer
+
+            elif first_token_line_value == 'answer':
+                if len_tokens_by_line_since_command_name <= 0:
+                    raise SyntaxError(f'[ANSWER] Take one or more arguments on line {first_token_line.position} !')
+
+                if not isinstance(last_block, ConstructPollNode):
+                    raise SyntaxError(f'[ANSWER] No POLL open on line {first_token_line.position} !')
+
+                last_block.answers.append(AnswerPollNode(tokens_by_line[1:], line=line))
+
+
         ############################## AUTRE ##############################
 
         elif first_token_line.type in DTT_DATA:  # if the line starts with a data token, we consider it as a command with an implicit "sm" name

@@ -7,3 +7,4 @@ from .dshell_interaction import *
 from .dshell_embed import *
 from .utils import *
 from .dshell_file import *
+from .dshell_poll import *

@@ -26,7 +26,7 @@ dshell_keyword: set[str] = {
 
 dshell_discord_keyword: set[str] = {
     'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'allow', 'deny',
-    'button', '#button', 'select', '#select', 'option'
+    'button', '#button', 'select', '#select', 'option', 'poll', '#poll', 'answer'
 }
 
 async def dshell_debug(ctx, x):
@@ -169,6 +169,14 @@ dshell_commands: dict[str, Callable] = {
     "rr": dshell_remove_reactions,  # remove reactions from a message
     "cmr": dshell_clear_message_reactions, # clear reactions from a message
     "cor": dshell_clear_one_reactions , # clear one reaction from a message
+
+    "gpo": dshell_get_poll, # create a poll
+    "gpq": dshell_get_question_poll, # get poll question
+    "gpa": dshell_get_answers_poll, # get poll answers
+    "gpr": dshell_get_results_poll, # get poll results
+    "gptr": dshell_get_total_results_poll, # get total poll results
+    "gpe": dshell_get_expiry_poll, # get poll expiry
+    "ep" : dshell_end_poll, # end poll
 
 }
 

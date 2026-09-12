@@ -11,6 +11,7 @@ from .utils_interpreter import get_params, eval_expression, eval_expression_inli
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
 from ..DISCORD_COMMANDS.dshell_ui import build_ui
 from ..DISCORD_COMMANDS.utils.utils_permissions import build_permission
+from ..DISCORD_COMMANDS.utils.utils_poll import build_poll
 from .dshell_scope import Scope, new_scope
 from .dshell_global_variables import MAX_SLEEP_TIME_SECONDS, MIN_SLEEP_TIME_SECONDS
 from .dshell_iterators import DshellIterator
@@ -194,6 +195,10 @@ class DshellInterpreteur:
         else:
             self.env.get('__permissions__').add(node)
 
+    async def _execute_pool_node(self, node: ConstructPollNode):
+        """Execute a pool node."""
+        return await build_poll(node, self)
+
     async def _execute_var_node(self, node: VarNode):
         """Execute a variable assignment node."""
         first_node = node.body[0]
@@ -223,6 +228,9 @@ class DshellInterpreteur:
 
         elif isinstance(first_node, CodeNode):
             self.env.set(node.name.value, first_node)
+
+        elif isinstance(first_node, ConstructPollNode):
+            self.env.set(node.name.value, await self._execute_pool_node(first_node))
 
         else:
             self.env.set(node.name.value, await eval_expression(node.body, self))

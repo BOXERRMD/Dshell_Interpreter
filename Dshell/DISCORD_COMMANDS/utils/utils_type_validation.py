@@ -6,6 +6,7 @@ from ...DshellParser.ast_nodes import *
 from ...full_import import _MissingSentinel
 from pycordViews import EasyModifiedViews
 __all__ = [
+    "_validate_optional_poll",
     "_validate_optional_string",
     "_validate_optional_permission",
     "_validate_optional_int",
@@ -21,14 +22,26 @@ __all__ = [
     "_validate_required_permission",
     "_validate_required_list_node",
     "_validate_required_int",
+    "_validate_required_float",
     "_validate_required_string",
     "_validate_required_file_node",
     "_validate_required_embed",
+    "_validate_required_poll",
     "_validate_missing_or_type",
     "_validate_not_none",
     "_validate_has_attribute",
 ]
 
+def _validate_optional_poll(value, param_name: StrNode, command_name: StrNode):
+    """
+    Validate that an optional value is a PollNode type.
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param command_name: The command name for error messages (optional)
+    :raises Exception: If the value is not None and not a PollNode
+    """
+    if value is not None and not isinstance(value, PollNode):
+        raise TypeError(f"[{command_name}] -> {param_name} must be a PollNode or None, not {type(value).__name__} !")
 
 def _validate_optional_string(value, param_name: StrNode, command_name: StrNode):
     """
@@ -172,6 +185,17 @@ def _validate_optional_file_node(value, param_name: StrNode, command_name: StrNo
 
 # Required parameter validation functions
 
+def _validate_required_poll(value, param_name: StrNode, command_name: StrNode):
+    """
+    Validate that a required value is a PollNode type.
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param command_name: The command name for error messages (optional)
+    :raises Exception: If the value is not a PollNode
+    """
+    if not isinstance(value, PollNode):
+        raise TypeError(f"[{command_name}] -> {param_name} must be a PollNode, not {type(value).__name__} !")
+
 def _validate_required_permission(value, param_name: StrNode, command_name: StrNode):
     """
     Validate that an optional value is a PermissionNode type.
@@ -218,6 +242,17 @@ def _validate_required_int(value, param_name: StrNode, command_name: StrNode):
     """
     if not isinstance(value, IntNode):
         raise TypeError(f"[{command_name}] -> {param_name} must be an int, not {type(value).__name__}")
+
+def _validate_required_float(value, param_name: StrNode, command_name: StrNode):
+    """
+    Validate that a required value is a float type.
+    :param value: The value to validate
+    :param param_name: The parameter name for error messages
+    :param command_name: The command name for error messages (optional)
+    :raises TypeError: If the value is not a float
+    """
+    if not isinstance(value, FloatNode):
+        raise TypeError(f"[{command_name}] -> {param_name} must be a float, not {type(value).__name__}")
 
 
 def _validate_required_string(value, param_name: StrNode, command_name: StrNode):

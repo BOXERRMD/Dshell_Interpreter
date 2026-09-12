@@ -7,9 +7,11 @@ __all__ = [
 from pycordViews import EasyModifiedViews
 
 from Dshell.full_import import (Interaction,
-                           Embed, Optional, File, Union)
+                           Embed, Optional, File, Union,
+                                HTTPException,
+                                Forbidden)
 
-from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode, FloatNode
+from ..DshellParser.ast_nodes import ListNode, FileNode, StrNode, BoolNode, IntNode, FloatNode, PollNode
 from .utils.utils_message import utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
 from .utils.utils_embed import utils_check_embeds_arguments
@@ -18,7 +20,8 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_view,
                                           _validate_optional_string,
                                           _validate_optional_bool,
-                                          _validate_required_bool)
+                                          _validate_required_bool,
+                                          _validate_optional_poll)
 
 async def dshell_respond_interaction(ctx: Interaction,
                                      content: Optional[StrNode] = None,
@@ -31,6 +34,7 @@ async def dshell_respond_interaction(ctx: Interaction,
                                      hide: BoolNode = BoolNode(0),
                                      embeds: Optional[ListNode]=None,
                                      files: Optional[Union[ListNode, FileNode]] = None,
+                                     poll: Optional[PollNode] = None,
                                      view: Optional[EasyModifiedViews]=None) -> IntNode:
     """
     Répond à une interaction Discord avec un message.
@@ -83,6 +87,7 @@ async def dshell_respond_interaction(ctx: Interaction,
     _validate_required_bool(users_mentions, "Users mentions", _CMD)
     _validate_required_bool(reply_mention, "Reply mention", _CMD)
     _validate_required_bool(hide, "Hide", _CMD)
+    _validate_optional_poll(poll, "Poll", _CMD)
 
     allowed_mentions = utils_autorised_mentions(global_mentions,
                                                 everyone_mention,
@@ -98,6 +103,8 @@ async def dshell_respond_interaction(ctx: Interaction,
 
     final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
+    poll_message = poll.poll if poll is not None else None
+
     sended_message = await ctx.response.send_message(
                                      content=StrNode(content),
                                      ephemeral=hide,
@@ -105,6 +112,7 @@ async def dshell_respond_interaction(ctx: Interaction,
                                      delete_after=delete,
                                      embeds=embeds,
                                      files=final_files,
+                                     poll=poll_message,
                                      view=view)
 
     return IntNode(sended_message.id)
@@ -131,7 +139,12 @@ async def dshell_defer_interaction(ctx: Interaction) -> BoolNode:
     if not isinstance(ctx, Interaction):
         raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx).__name__} !')
 
-    await ctx.response.defer()
+    try:
+        await ctx.response.defer()
+    except Forbidden:
+        raise PermissionError(f"I don't have the permission to defer the interaction.")
+    except HTTPException:
+        raise RuntimeError(f"An error occurred while deferring the interaction.")
 
     return BoolNode(1)
 
@@ -156,6 +169,11 @@ async def dshell_delete_original_message(ctx: Interaction) -> IntNode:
     if not isinstance(ctx, Interaction):
         raise Exception(f'Respond to an interaction must be used in an interaction context, not {type(ctx).__name__} !')
 
-    await ctx.delete_original_message()
+    try:
+        await ctx.delete_original_response()
+    except Forbidden:
+        raise PermissionError(f"I don't have the permission to delete the original message of the interaction.")
+    except HTTPException:
+        raise RuntimeError(f"An error occurred while deleting the original message of the interaction.")
 
     return IntNode(ctx.message.id)

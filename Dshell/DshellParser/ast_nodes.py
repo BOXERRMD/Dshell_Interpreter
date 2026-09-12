@@ -8,7 +8,8 @@ from Dshell.full_import import (
     Member,
     Role,
     PermissionOverwrite,
-    getsizeof)
+    getsizeof,
+    Poll)
 from ..DshellTokenizer.dshell_token_type import Token
 from ..DshellInterpreteur.dshell_global_variables import MAX_STR_SIZE, MAX_LIST_SIZE, MAX_FILE_SIZE
 from .errors import *
@@ -50,9 +51,11 @@ __all__ = [
     'FileNode',
     'FileStreamNode',
     'CatchNode',
-    'RaiseNode'
+    'RaiseNode',
+    'ConstructPollNode',
+    'AnswerPollNode',
+    'PollNode'
 ]
-
 
 class ASTNode:
     """
@@ -1330,3 +1333,128 @@ class ListNode(ASTNode, DATANode):
     def __repr__(self):
         return StrNode(f"<LIST> - {self.iterable}")
 
+class ConstructPollNode(ASTNode):
+    """
+    Node representing a pool structure in the AST.
+    This is used to define a pool of elements for commands in Dshell.
+    """
+
+    def __init__(self, body: list[Token], answers: list["AnswerPollNode"], line: int):
+        """
+        :param body: list of tokens representing the pool content
+        """
+        super().__init__(line)
+        self.body = body
+        self.answers: list["AnswerPollNode"] = answers
+
+    def __repr__(self):
+        return StrNode(f"<POOL> - {self.body}")
+
+    def to_dict(self):
+        """
+        Convert the PoolNode to a dictionary representation.
+        :return: Dictionary representation of the PoolNode.
+        """
+        return {
+            "type": "ConstructPollNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
+class AnswerPollNode(ASTNode):
+    """
+    Node representing an answer pool structure in the AST.
+    This is used to define an answer pool of elements for commands in Dshell.
+    """
+
+    def __init__(self, body: list[Token], line: int):
+        """
+        :param body: list of tokens representing the answer pool content
+        """
+        super().__init__(line)
+        self.body = body
+
+    def __repr__(self):
+        return StrNode(f"<ANSWER_POOL> - {self.body}")
+
+    def to_dict(self):
+        """
+        Convert the AnswerPoolNode to a dictionary representation.
+        :return: Dictionary representation of the AnswerPoolNode.
+        """
+        return {
+            "type": "AnswerPoolNode",
+            "body": [token.to_dict() for token in self.body]
+        }
+
+class PollNode(DATANode):
+    """
+    Node representing a poll structure in the AST.
+    This is used to define a poll of elements for commands in Dshell.
+    """
+
+    def __init__(self, poll: Poll):
+        """
+        :param question: StrNode representing the poll question
+        :param answers: ListNode representing the poll answers
+        """
+        super().__init__()
+        self.poll = poll
+
+    def get_answers_id(self) -> ListNode:
+        """
+        Get the IDs of the poll answers.
+        :return: List of answer IDs.
+        """
+        return ListNode([IntNode(answer.id) for answer in self.poll.answers])
+
+    def get_answers(self) -> ListNode:
+        """
+        Get the answers of the poll.
+        :return: List of answer texts.
+        """
+        return ListNode([StrNode(answer.text) for answer in self.poll.answers])
+
+    def get_results(self) -> ListNode:
+        """
+        Get the results of the poll.
+        :return: List of Lists containing answer ID and vote count.
+        """
+        poll_results = self.poll.results
+
+        if poll_results is None:
+            return ListNode([])
+
+        return ListNode([ListNode([IntNode(poll_answer_count.id), IntNode(poll_answer_count.count)]) for poll_answer_count in poll_results.answer_counts])
+
+    def get_total_results(self) -> IntNode:
+        """
+        Get the total number of votes in the poll.
+        :return: Total vote count.
+        """
+        total_votes = self.poll.total_votes()
+        if total_votes is None:
+            return IntNode(0)
+        return IntNode(total_votes)
+
+    def get_expiry(self) -> FloatNode:
+        """
+        Get the expiry time of the poll.
+        :return: Expiry time in seconds.
+        """
+        expiry_time = self.poll.expiry
+        if expiry_time is None:
+            return FloatNode(0.0)
+        return FloatNode(expiry_time.timestamp())
+
+    def __repr__(self):
+        return StrNode(f"<POLL> - {self.poll.question} : [{' | '.join((str(i) for i in self.poll.answers))}]")
+
+    def to_dict(self):
+        """
+        Convert the PollNode to a dictionary representation.
+        :return: Dictionary representation of the PollNode.
+        """
+        return {
+            "type": "PollNode",
+            "poll": self.poll.to_dict()
+        }

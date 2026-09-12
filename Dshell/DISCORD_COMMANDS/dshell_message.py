@@ -4,7 +4,7 @@ from Dshell.full_import import (Message,
                            TextChannel,
                                 File)
 
-from ..DshellParser.ast_nodes import ListNode, StrNode, BoolNode, IntNode, EmbedNode, FileNode
+from ..DshellParser.ast_nodes import ListNode, StrNode, BoolNode, IntNode, EmbedNode, FileNode, PollNode
 
 from .utils.utils_message import utils_get_message, utils_autorised_mentions
 from .utils.utils_file import utils_check_files_arguments
@@ -19,7 +19,8 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_required_int,
                                           _validate_not_none,
                                           _validate_optional_eval_group_node,
-                                          _validate_required_string)
+                                          _validate_required_string,
+                                          _validate_optional_poll)
 from ..DshellInterpreteur.cached_messages import dshell_cached_messages
 from ..DshellInterpreteur.dshell_global_variables import MAX_WAIT_MESSAGE_TIMEOUT
 
@@ -62,6 +63,7 @@ async def dshell_send_message(ctx: Message,
                               reply_mention: BoolNode = BoolNode(0),
                               embeds: Optional[ListNode]=None,
                               files: Optional[ListNode] = None,
+                              poll: Optional[PollNode] = None,
                               view: Optional[EasyModifiedViews]=None) -> IntNode:
     """
     Sends a message on Discord
@@ -74,6 +76,7 @@ async def dshell_send_message(ctx: Message,
     _validate_required_bool(roles_mentions, "Roles mentions", _CMD)
     _validate_required_bool(users_mentions, "Users mentions", _CMD)
     _validate_required_bool(reply_mention, "Reply mention", _CMD)
+    _validate_optional_poll(poll, "Poll", _CMD)
 
     channel_to_send = ctx.channel if channel is None else ctx.channel.guild.get_channel(channel)
     allowed_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
@@ -89,12 +92,15 @@ async def dshell_send_message(ctx: Message,
 
     _validate_optional_view(view, "View", _CMD)
 
+    poll_message = poll.poll if poll is not None else None
+
     sended_message = await channel_to_send.send(message,
                                                 delete_after=delete,
                                                 embeds=embeds,
                                                 allowed_mentions=allowed_mentions,
                                                 view=view,
-                                                files=final_files)
+                                                files=final_files,
+                                                poll=poll_message)
 
     cached_messages = dshell_cached_messages.get()
     cached_messages[sended_message.id] = sended_message
@@ -113,6 +119,8 @@ async def dshell_respond_message(ctx: Message,
                                  reply_mention: BoolNode = BoolNode(0),
                                  delete=None,
                                  files: Optional[ListNode] = None,
+                                 poll: Optional[PollNode] = None,
+                                 view: Optional[EasyModifiedViews]=None,
                                  embeds=None) -> IntNode:
     """
     Responds to a message on Discord
@@ -126,10 +134,13 @@ async def dshell_respond_message(ctx: Message,
     _validate_required_bool(roles_mentions, "Roles mentions", _CMD)
     _validate_required_bool(users_mentions, "Users mentions", _CMD)
     _validate_required_bool(reply_mention, "Reply mention", _CMD)
+    _validate_optional_poll(poll, "Poll", _CMD)
+    _validate_optional_view(view, "View", _CMD)
 
     respond_message = ctx if message is None else await utils_get_message(ctx, message)  # builds a reference to the message (even if it doesn't exist)
     autorised_mentions = utils_autorised_mentions(global_mentions, everyone_mention, roles_mentions, users_mentions, reply_mention)
     mention_author = True if reply_mention else False
+    poll_message = poll.poll if poll is not None else None
 
     final_files: Optional[list[File]] = utils_check_files_arguments(_CMD, files)
 
@@ -143,7 +154,9 @@ async def dshell_respond_message(ctx: Message,
                                      allowed_mentions=autorised_mentions,
                                      delete_after=delete,
                                      embeds=embeds,
-                                     files=final_files)
+                                     files=final_files,
+                                     poll=poll_message,
+                                     view=view)
 
     cached_messages = dshell_cached_messages.get()
     cached_messages[sended_message.id] = sended_message
