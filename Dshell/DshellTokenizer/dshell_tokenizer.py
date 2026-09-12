@@ -42,9 +42,9 @@ class DshellLiteralWord(StrEnum):
 
 class DshellParameterPrefix(Enum):
     """Supported parameter prefixes used to tag command arguments."""
-    VAR = '--'
     STR = "--'"
     LIST = '--*'
+    VAR = '--'
 
     @property
     def token_type(self):
