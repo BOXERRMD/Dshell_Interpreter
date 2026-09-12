@@ -316,6 +316,38 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
                 blocks.pop()
                 return blocks, pointer
 
+            elif first_token_line_value == 'allow':
+                if len_tokens_by_line_since_command_name < 2:
+                    raise SyntaxError(f'[ALLOW] Take two arguments on line {first_token_line.position} !')
+
+                if tokens_by_line[1].type not in (DTT.INT, DTT.LIST, DTT.MENTION):
+                    raise TypeError(f'[ALLOW] the first variable given must be an integer or a list, '
+                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+
+                if tokens_by_line[2].type not in (DTT.INT, DTT.LIST, DTT.MENTION):
+                    raise TypeError(f'[ALLOW] the second variable given must be an integer, mention or a list of integer, '
+                                    f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
+
+                last_block.body.append(AllowedPermissionNode(tokens_by_line[1], tokens_by_line[2]))
+
+            elif first_token_line_value == 'deny':
+                if len_tokens_by_line_since_command_name < 1:
+                    raise SyntaxError(f'[DENY] Take one or two arguments on line {first_token_line.position} !')
+
+                if tokens_by_line[1].type not in (DTT.INT, DTT.LIST, DTT.MENTION):
+                    raise TypeError(f'[DENY] the first variable given must be an integer or a list, '
+                                    f'not {tokens_by_line[1].type} in line {tokens_by_line[1].position}')
+
+                if len(tokens_by_line) > 2 and tokens_by_line[2].type not in (DTT.INT, DTT.LIST, DTT.MENTION, DTT.NONE):
+                    raise TypeError(f'[DENY] the second variable given must be an integer, mention or a list of integer, '
+                                    f'not {tokens_by_line[2].type} in line {tokens_by_line[2].position}')
+
+                last_block.body.append(
+                    DeniedPermissionNode(
+                        tokens_by_line[1], tokens_by_line[2] if len(tokens_by_line) > 2 else Token(DTT.NONE, DTT.NONE.value, tokens_by_line[1].position)
+                    )
+                )
+
             elif first_token_line_value == 'button':
                 if len_tokens_by_line_since_command_name <= 0:
                     raise SyntaxError(f'[BUTTON] Take one or more arguments on line {first_token_line.position} !')

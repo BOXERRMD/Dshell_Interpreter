@@ -65,6 +65,7 @@ class DshellInterpreteur:
             '__ret__': None,  # environment variables, '__ret__' is used to store the return value of commands
             '__loop__': None,  # used to store the current loop variable in loop nodes if the loop identifier is not specified
             '__break__': BoolNode(0), # used to break a loop
+            '__permissions__': ListNode([]),  # used to store the current permissions in permission nodes
 
             '__author__': IntNode(message.author.id),
             '__author_name__': StrNode(message.author.name),
@@ -116,7 +117,11 @@ class DshellInterpreteur:
             '__guild_forum_channels__': ListNode([IntNode(channel.id) for channel in message.channel.guild.forum_channels], bypass_limit_elt=True, editable=False),
             '__guild_channels_count__': IntNode(len(message.channel.guild.channels))
 
-        } if message is not None and not debug else {'__ret__': None, '__break__': BoolNode(0)},  # {} is used in debug mode, when ctx is None
+        } if message is not None and not debug else {
+                                                     '__ret__': None,
+                                                     '__break__': BoolNode(0),
+                                                     '__permissions__': ListNode([]),
+                                                     },  # {} is used in debug mode, when ctx is None
                         size_memory=False)
 
 
@@ -174,6 +179,20 @@ class DshellInterpreteur:
     async def _execute_break_node(self, node: BreakNode):
         """Execute a break node."""
         self.env.set('__break__', BoolNode(1))
+
+    async def _execute_allow_permission_node(self, node: AllowedPermissionNode):
+        """Execute an allow permission node."""
+        if not self.env.contains('__permissions__'):
+            self.env.set('__permissions__', ListNode([node]))
+        else:
+            self.env.get('__permissions__').add(node)
+
+    async def _execute_deny_permission_node(self, node: DeniedPermissionNode):
+        """Execute an deny permission node."""
+        if not self.env.contains('__permissions__'):
+            self.env.set('__permissions__', ListNode([node]))
+        else:
+            self.env.get('__permissions__').add(node)
 
     async def _execute_var_node(self, node: VarNode):
         """Execute a variable assignment node."""
@@ -258,6 +277,12 @@ class DshellInterpreteur:
 
                 if isinstance(node, CommandNode):
                     await self._execute_command_node(node)
+
+                elif isinstance(node, AllowedPermissionNode):
+                    await self._execute_allow_permission_node(node)
+
+                elif isinstance(node, DeniedPermissionNode):
+                    await self._execute_deny_permission_node(node)
 
                 elif isinstance(node, ParamNode):
                     params = await get_params(node, self)

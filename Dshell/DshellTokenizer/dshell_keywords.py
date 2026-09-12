@@ -16,6 +16,7 @@ from ..DshellInterpreteur.dshell_iterators import IntIterator
 from ..DISCORD_COMMANDS.utils.utils_type_validation import _validate_required_list_node
 
 from operator import *
+from functools import partial
 
 dshell_keyword: set[str] = {
     'if', 'else', 'elif', 'loop', '#end', 'var', '#loop', '#if', 'sleep',
@@ -24,7 +25,7 @@ dshell_keyword: set[str] = {
 }
 
 dshell_discord_keyword: set[str] = {
-    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission',
+    'embed', '#embed', 'field', 'perm', 'permission', '#perm', '#permission', 'allow', 'deny',
     'button', '#button', 'select', '#select', 'option'
 }
 

@@ -95,11 +95,12 @@ class Scope:
 
 
 @contextmanager
-def new_scope(interpreter, initial_vars: Optional[Dict[str, Any]] = None):
+def new_scope(interpreter, initial_vars: Optional[Dict[str, Any]] = None, size_memory: bool = True):
     """
     Context manager for creating a new scope temporarily.
     :param interpreter: The interpreter instance
     :param initial_vars: Optional initial variables for the new scope
+    :param size_memory: Whether to count the size of the variables in memory management
     """
     parent = interpreter.env
 
@@ -109,7 +110,7 @@ def new_scope(interpreter, initial_vars: Optional[Dict[str, Any]] = None):
     interpreter.env = new_scope
 
     if initial_vars:
-        interpreter.env.update(initial_vars)
+        interpreter.env.update(initial_vars, size_memory=size_memory)
     try:
         yield
     finally:

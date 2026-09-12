@@ -35,6 +35,8 @@ __all__ = [
     'SleepNode',
     'ListNode',
     'ConstructPermissionNode',
+    'AllowedPermissionNode',
+    'DeniedPermissionNode',
     'PermissionNode',
     'EvalGroupNode',
     'ParamNode',
@@ -62,11 +64,24 @@ class ASTNode:
     def __getattr__(self, item):
         raise AttributeError(f"'{type(self).__name__}' node has no attribute '{item}'")
 
+    def condition(self, *args):
+        """
+        This method can be overridden in subclasses to provide a condition for the node.
+        :return:
+        """
+        return True
+
 class DATANode:
     """
     Base class for all Data nodes created during execution
     """
 
+    def condition(self, *args):
+        """
+        This method can be overridden in subclasses to provide a condition for the node.
+        :return:
+        """
+        return True
 
 class StrNode(str, ASTNode, DATANode):
 
@@ -674,6 +689,29 @@ class ConstructPermissionNode(ASTNode):
             "type": "PermissionNode",
             "body": [token.to_dict() for token in self.body]
         }
+
+class AllowedPermissionNode(DATANode):
+    """
+    Node representing allowed permissions in the AST.
+    """
+    def __init__(self, targets: Token, permissions: Token):
+        self.targets = targets
+        self.permissions = permissions
+
+    def __repr__(self):
+        return StrNode(f"<ALLOWED_PERMISSION> - targets : {self.targets} - permissions : {self.permissions}")
+
+class DeniedPermissionNode(DATANode):
+    """
+    Node representing denied permissions in the AST.
+    """
+
+    def __init__(self, targets: Token, permissions: Token):
+        self.targets = targets
+        self.permissions = permissions
+
+    def __repr__(self):
+        return StrNode(f"<DENIED_PERMISSION> - targets : {self.targets} - permissions : {self.permissions}")
 
 class PermissionNode(ASTNode):
     def __init__(self, value: dict[Union[Member, Role, None], PermissionOverwrite]):

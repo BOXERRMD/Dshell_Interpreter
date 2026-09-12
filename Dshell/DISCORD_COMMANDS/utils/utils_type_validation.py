@@ -287,7 +287,7 @@ def _validate_missing_or_type(value, value_name: StrNode, *types_and_command):
         _validate_missing_or_type(value, "Value", int, StrNode, float, "command_name")
     """
     
-    # Check if last parameter is a StrNodeing (command_name), otherwise it's a type
+    # Check if last parameter is a StrNode (command_name), otherwise it's a type
     types = types_and_command
     command_name = ""
     
