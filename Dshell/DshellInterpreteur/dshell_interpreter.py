@@ -5,7 +5,7 @@ from ..DshellParser.ast_nodes import *
 from ..full_import import AutoShardedBot, Interaction, Message, PrivateChannel, random
 from ..DshellParser.dshell_parser import parse, print_ast
 from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
-from .cached_messages import dshell_cached_messages
+from .cached_messages import start_message_cache, reset_message_cache
 from ..DshellTokenizer.dshell_keywords import dshell_commands
 from .utils_interpreter import get_params, eval_expression, eval_expression_inline, regroupe_commandes
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
@@ -132,7 +132,7 @@ class DshellInterpreteur:
         self.vars = StrNode(vars) if vars is not None else StrNode('')
         self.ctx: context = ctx
 
-        dshell_cached_messages.set(dict()) # save all messages view in the current scoop
+        self._message_cache_token = start_message_cache()
 
         if debug:
             print_ast(self.ast)
@@ -382,10 +382,21 @@ class DshellInterpreteur:
 
     def clear(self):
         """
-        Clear the interpreter environment.
+        Release the interpreter environment and its execution-local message cache.
         """
-        self.env.clear()
-        del self.env
+        if hasattr(self, 'env'):
+            self.env.clear()
+            del self.env
+        if hasattr(self, 'ast'):
+            self.ast.clear()
+            del self.ast
+        if hasattr(self, 'vars'):
+            del self.vars
+        if hasattr(self, 'ctx'):
+            self.ctx = None
+        if hasattr(self, '_message_cache_token') and self._message_cache_token is not None:
+            reset_message_cache(self._message_cache_token)
+            self._message_cache_token = None
 
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):

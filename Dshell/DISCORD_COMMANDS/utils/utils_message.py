@@ -7,7 +7,7 @@ from Dshell.full_import import (Message,
                                 Forbidden,
                                 HTTPException)
 
-from ...DshellInterpreteur.cached_messages import dshell_cached_messages
+from ...DshellInterpreteur.cached_messages import get_cached_messages, cache_message
 from ...DshellParser.ast_nodes import StrNode, BoolNode, IntNode
 
 from Dshell.full_import import Union
@@ -39,14 +39,14 @@ async def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> M
         >>> # Par lien
         >>> msg = utils_get_message(ctx, "https://discord.com/channels/111/222/333")
     """
-    cached_messages = dshell_cached_messages.get()
+    cached_messages = get_cached_messages()
 
     if isinstance(message, IntNode):
         if message in cached_messages:
             return cached_messages[message]
 
-        cached_messages[message] = await utils_fetch_partial_message(ctx.channel.get_partial_message(message))
-        dshell_cached_messages.set(cached_messages)
+        fetched_message = await utils_fetch_partial_message(ctx.channel.get_partial_message(message))
+        cache_message(fetched_message)
         return cached_messages[message]
 
     elif isinstance(message, StrNode):
@@ -63,8 +63,8 @@ async def utils_get_message(ctx: Message, message: Union[IntNode, StrNode]) -> M
         channel = ctx.guild.get_channel(channel_id)
         if channel is None:
             raise Exception(f"Channel with ID {channel_id} not found in guild {ctx.guild.name}.")
-        cached_messages[message_id] = await utils_fetch_partial_message(channel.get_partial_message(message_id))
-        dshell_cached_messages.set(cached_messages)
+        fetched_message = await utils_fetch_partial_message(channel.get_partial_message(message_id))
+        cache_message(fetched_message)
         return cached_messages[message_id]
 
     raise Exception(f"Message must be an integer or a string, not {type(message).__name__} !")
@@ -153,5 +153,3 @@ def utils_autorised_mentions(global_mentions: Optional[BoolNode] = None,
                                roles=roles_mentions,
                                users=users_mentions,
                                replied_user=reply_mention)
-
-

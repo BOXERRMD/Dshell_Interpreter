@@ -21,7 +21,7 @@ from .utils.utils_type_validation import (_validate_optional_number,
                                           _validate_optional_eval_group_node,
                                           _validate_required_string,
                                           _validate_optional_poll)
-from ..DshellInterpreteur.cached_messages import dshell_cached_messages
+from ..DshellInterpreteur.cached_messages import cache_message
 from ..DshellInterpreteur.dshell_global_variables import MAX_WAIT_MESSAGE_TIMEOUT
 
 from Dshell.full_import import Optional, Union, compile, DOTALL
@@ -102,9 +102,7 @@ async def dshell_send_message(ctx: Message,
                                                 files=final_files,
                                                 poll=poll_message)
 
-    cached_messages = dshell_cached_messages.get()
-    cached_messages[sended_message.id] = sended_message
-    dshell_cached_messages.set(cached_messages)
+    cache_message(sended_message)
 
     return IntNode(sended_message.id)
 
@@ -158,9 +156,7 @@ async def dshell_respond_message(ctx: Message,
                                      poll=poll_message,
                                      view=view)
 
-    cached_messages = dshell_cached_messages.get()
-    cached_messages[sended_message.id] = sended_message
-    dshell_cached_messages.set(cached_messages)
+    cache_message(sended_message)
 
     return IntNode(sended_message.id)
 
@@ -346,14 +342,11 @@ async def dshell_get_history_messages(ctx: Message,
 
 
 
-    cached_messages = dshell_cached_messages.get()
     messages = ListNode([])
     async for message in search_channel.history(limit=limit):
         message_id = message.id
         messages.add(IntNode(message_id))
-        cached_messages[message_id] = message
-
-    dshell_cached_messages.set(cached_messages)
+        cache_message(message)
     return messages
 
 async def dshell_get_content_message(ctx: Message, message: Optional[Union[IntNode, StrNode]]=None):
@@ -437,10 +430,9 @@ async def dshell_get_channel_pined_messages(ctx: Message, channel: Optional[IntN
 
     messages_list = ListNode([])
 
-    cached_messages = dshell_cached_messages.get()
     for message in pinned_messages:
         messages_list.add(IntNode(message.id))
-        cached_messages[message.id] = message
+        cache_message(message)
 
     return messages_list
 
@@ -515,9 +507,7 @@ async def dshell_scan_message(ctx: Message,
             param_actual += 1 # on ajoute 1 pour compenser l'initialisation à -1. Ainsi, si aucun critère n'est spécifié, le premier message trouvé fera que param_actual = 0, ce qui est égal à param_required, et donc fera sortir de la boucle.
 
 
-        cached_messages = dshell_cached_messages.get()
-        cached_messages[last_message.id] = last_message
-        dshell_cached_messages.set(cached_messages)
+        cache_message(last_message)
 
         return IntNode(last_message.id)
 
@@ -540,5 +530,3 @@ async def dshell_scan_check(target_channel: TextChannel) -> Message:
                 break
 
     return last_message_to_wait
-
-
