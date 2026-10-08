@@ -5,7 +5,7 @@ from ..DshellParser.ast_nodes import *
 from ..full_import import AutoShardedBot, Interaction, Message, PrivateChannel, random
 from ..DshellParser.dshell_parser import parse, print_ast
 from ..DshellTokenizer.dshell_tokenizer import DshellTokenizer
-from .cached_messages import start_message_cache, reset_message_cache
+from .cached_messages import with_message_cache
 from ..DshellTokenizer.dshell_keywords import dshell_commands
 from .utils_interpreter import get_params, eval_expression, eval_expression_inline, regroupe_commandes
 from ..DISCORD_COMMANDS.dshell_embed import build_embed, rebuild_embed
@@ -132,8 +132,6 @@ class DshellInterpreteur:
         self.vars = StrNode(vars) if vars is not None else StrNode('')
         self.ctx: context = ctx
 
-        self._message_cache_token = start_message_cache()
-
         if debug:
             print_ast(self.ast)
 
@@ -256,6 +254,7 @@ class DshellInterpreteur:
             self.env.set(node.variable.value, StrNode(e))
         self.raise_error = False
 
+    @with_message_cache
     async def execute(self, ast: Optional[list[All_nodes]] = None):
         """
         Executes the abstract syntax tree (AST) generated from the Dshell code.
@@ -394,9 +393,6 @@ class DshellInterpreteur:
             del self.vars
         if hasattr(self, 'ctx'):
             self.ctx = None
-        if hasattr(self, '_message_cache_token') and self._message_cache_token is not None:
-            reset_message_cache(self._message_cache_token)
-            self._message_cache_token = None
 
 
 async def call_function(function: Callable, args: ArgsCommandNode, interpreter: DshellInterpreteur):

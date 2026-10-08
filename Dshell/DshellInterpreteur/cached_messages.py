@@ -1,12 +1,9 @@
-from ..full_import import ContextVar
+from functools import wraps
+
+from ..full_import import ContextVar, Callable
 
 # Message objects are scoped to one interpreter execution context.
-dshell_cached_messages = ContextVar('dshell_cached_messages')
-
-
-def start_message_cache() -> object:
-    """Create a cache and return the token needed to restore the previous one."""
-    return dshell_cached_messages.set({})
+dshell_cached_messages = ContextVar('dshell_cached_messages', default=None)
 
 
 def get_cached_messages() -> dict:
@@ -26,6 +23,17 @@ def cache_message(message) -> None:
     get_cached_messages()[message.id] = message
 
 
-def reset_message_cache(token: object) -> None:
-    """Release this execution context and restore its parent context."""
-    dshell_cached_messages.reset(token)
+def with_message_cache(function: Callable) -> Callable:
+    """Give one top-level interpreter execution an isolated message cache."""
+    @wraps(function)
+    async def execute_with_cache(*args, **kwargs):
+        if dshell_cached_messages.get() is not None:
+            return await function(*args, **kwargs)
+
+        token = dshell_cached_messages.set({})
+        try:
+            return await function(*args, **kwargs)
+        finally:
+            dshell_cached_messages.reset(token)
+
+    return execute_with_cache

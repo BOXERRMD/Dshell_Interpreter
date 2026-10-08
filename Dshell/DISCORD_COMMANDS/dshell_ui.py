@@ -432,10 +432,11 @@ async def ui_button_callback(button: ui.Button, interaction: Interaction, data: 
             debug=False,
             vars_env=scope)
 
-        with new_scope(new_interpreter, local_env, size_memory=True):
-            await new_interpreter.execute()
-
-        new_interpreter.clear()
+        try:
+            with new_scope(new_interpreter, local_env, size_memory=True):
+                await new_interpreter.execute()
+        finally:
+            new_interpreter.clear()
 
     else:
         await interaction.response.defer(invisible=True)
@@ -572,10 +573,11 @@ async def ui_select_callback(select: ui.Select, interaction: Interaction, data: 
             debug=False,
             vars_env=scope)
 
-        with new_scope(new_interpreter, local_env, size_memory=False):
-            await new_interpreter.execute()
-
-        new_interpreter.clear()
+        try:
+            with new_scope(new_interpreter, local_env, size_memory=False):
+                await new_interpreter.execute()
+        finally:
+            new_interpreter.clear()
 
     else:
         await interaction.response.defer(invisible=True)

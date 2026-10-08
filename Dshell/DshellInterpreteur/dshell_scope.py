@@ -114,6 +114,5 @@ def new_scope(interpreter, initial_vars: Optional[Dict[str, Any]] = None, size_m
     try:
         yield
     finally:
-        interpreter.clear()
+        new_scope.clear()
         interpreter.env = parent
-
