@@ -226,7 +226,6 @@ dshell_mathematical_operators: dict[str, Operator] = {
     r"%.": (lambda a, b=None : dshell_operator_on_list(mod, a, b), 7, 1, 2, None),
     r"-.": (lambda a, b=None : dshell_operator_on_list(sub, a, b), 7, 1, 2, None),
     r"+.": (lambda a, b=None : dshell_operator_on_list(add, a, b), 7, 1, 2, None),
-    r"#.": (lambda a, b=None : dshell_operator_on_list(len, a, b), 7, 1, 2, None),
     r"~.": (lambda a, b=None : dshell_operator_on_list(invert, a, b), 7, 1, 2, None),
     r"++": (lambda a: a + 1, 6, 1, 1, None),
     r"--": (lambda a: a - 1, 6, 1, 1, None),
