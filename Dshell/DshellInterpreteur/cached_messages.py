@@ -3,7 +3,7 @@ from functools import wraps
 from ..full_import import ContextVar, Callable
 
 # Message objects are scoped to one interpreter execution context.
-dshell_cached_messages = ContextVar('dshell_cached_messages', default=None)
+dshell_cached_messages = ContextVar('dshell_cached_messages', default=dict())
 
 
 def get_cached_messages() -> dict:
@@ -34,6 +34,7 @@ def with_message_cache(function: Callable) -> Callable:
         try:
             return await function(*args, **kwargs)
         finally:
+            dshell_cached_messages.get().clear()
             dshell_cached_messages.reset(token)
 
     return execute_with_cache
