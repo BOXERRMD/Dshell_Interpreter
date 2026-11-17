@@ -292,7 +292,7 @@ def parse(token_lines: list[list[Token]], start_node: ASTNode) -> tuple[list[AST
             elif first_token_line_value == 'field':
                 if len_tokens_by_line_since_command_name <= 0:
                     raise SyntaxError(f'[FIELD] Take one or more arguments on line {first_token_line.position} !')
-                if not isinstance(last_block, EmbedNode):
+                if not isinstance(last_block, ConstructEmbedNode):
                     raise SyntaxError(f'[FIELD] No embed open on line {first_token_line.position} !')
 
                 last_block.fields.append(FieldEmbedNode(tokens_by_line[1:], line=line))

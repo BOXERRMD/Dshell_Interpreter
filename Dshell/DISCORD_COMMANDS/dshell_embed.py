@@ -4,7 +4,7 @@ from ..DshellParser.ast_nodes import FieldEmbedNode, EmbedNode
 
 from ..DshellInterpreteur.utils_interpreter import regroupe_commandes
 
-from Dshell.full_import import Embed
+from Dshell.full_import import EmbedField
 
 from Dshell.full_import import Any, TYPE_CHECKING
 
@@ -22,12 +22,10 @@ async def build_embed_args(body: list[Token], fields: list[FieldEmbedNode], inte
     args_main_embed.pop('*')  # remove unspecified parameters for the embed
     args_main_embed: dict[str, Token]  # specify what it contains from now on
 
-    args_fields: list[dict[str, Token]] = []
+    args_fields: list[dict[str, Any]] = []
     for field in fields:  # do the same for the fields
         y = await regroupe_commandes(field.body, interpreter)
         args_field = y.get_dict_parameters()
-        args_field.pop('*')
-        args_field: dict[str, Token]
         args_fields.append(args_field)
 
     if 'color' in args_main_embed:
@@ -44,7 +42,9 @@ async def build_embed(body: list[Token], fields: list[FieldEmbedNode], interpret
     args_main_embed, args_fields = await build_embed_args(body, fields, interpreter)
     embed = EmbedNode(**args_main_embed)  # build the main embed
     for field in args_fields:
-        embed.add_field(**field)  # add all fields
+        args_field = field.pop("*", ())
+        embed_field = EmbedField(*args_field, **field)  # build the field
+        embed.append_field(embed_field)  # add all fields
 
     return embed
 
@@ -63,6 +63,8 @@ async def rebuild_embed(embed: EmbedNode, body: list[Token], fields: list[FieldE
     if args_fields:
         embed.clear_fields()
         for field in args_fields:
-            embed.add_field(**field)
+            args_field = field.pop("*", ())
+            embed_field = EmbedField(*args_field, **field)  # build the field
+            embed.append_field(embed_field)  # add all fields
 
     return embed
